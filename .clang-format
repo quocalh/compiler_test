@@ -1,0 +1,21 @@
+# Allman
+# BasedOnStyle: llvm
+# IndentWidth: 2
+# AllowShortFunctionsOnASingleLine: None
+# KeepEmptyLinesAtTheStartOfBlocks: false
+# BreakBeforeBraces: Allman
+# ref: https://standage.github.io/formatting-c-code-with-clang-format.html
+
+
+# K&R
+# BreakBeforeBraces: K&R
+# ref: https://www.terminally-incoherent.com/blog/2009/04/10/the-only-correct-indent-style/
+
+# disable format
+DisableFormat: true
+SortIncludes: false
+# ref: https://stackoverflow.com/questions/55833838/clang-format-still-formatting-with-disableformat-true
+
+# region in regards
+# ref: https://stackoverflow.com/questions/24974919/how-to-mark-a-region-so-clang-format-wont-touch-it
+
