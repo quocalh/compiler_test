@@ -23,12 +23,6 @@ Heap HeapInit(size_t size)
   return heap;
 }
 
-// [internal func]to allocated more space to the heap (grow twice each growth)
-void HeapExpand(Heap* heap)
-{
-  
-}
-
 // [interface] append for heap
 bool HeapAdd(Heap* heap, void* item_ptr)
 {
