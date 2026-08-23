@@ -1,7 +1,10 @@
 
 #include "scanner.h"
+#include "token.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 #define FILE_MAX_WIDTH 250
@@ -12,139 +15,193 @@ Scanner ScannerInit(char* source_ptr)
   return scanner;
 }
 
-bool ScannerScan_(Scanner* scanner, char* fileName)
+
+bool buffer_peek_next(int* i, char* buffer, int buffer_size, char expected)
 {
-  FILE *fp = fopen(fileName, "r");
-  if (fp == NULL){
+  // return true if buffer[i + 1] = expected
+  // at the same time, i++ in advance (skip the accepted char)
+  int i_1 = (*i) + 1;
+  if (i_1 >= buffer_size)
+  {
     return false;
   }
+  if (buffer[i_1] != expected)
+  {
+    return false;
+  }
+  (*i)++;
+  return true;
+}
 
-  // finding the end of the file
+bool ScannerConvertIntoTokens(Scanner* scanner_ptr, char* fileName)
+{ 
+  FILE* fp = fopen(fileName, "r");
+  
+  // get length of the file
   fseek(fp, 0, SEEK_END);
   long int length = ftell(fp);
   fseek(fp, 0, SEEK_SET);
-
-  // allocate mem according to the byte length of the file
-  char* string_tokens = (char*)malloc((length + 1) * sizeof(char));
-  if (string_tokens == NULL){
+  
+  // heap array
+  Token* token_array = (Token*)malloc(sizeof(Token) * (length + 1));
+  if (token_array == NULL){
     return false;
   }
-  length = 0;
 
-
-  char line[FILE_MAX_WIDTH];
-
-  // input every single character into the buffer
+  char line_buffer[FILE_MAX_WIDTH];
+  int count = 0;
   int currentLine = 0;
-  while (fgets(line, sizeof(line), fp))
+  // for line in the files 
+  // (god forgive me i can't help myself)
+  while (fgets(line_buffer, sizeof(line_buffer), fp))
   {
-    for (int i  = 0; line[i] != '\n'; i++)
+    printf("line buffer: %s", line_buffer);
+
+    // scaning tokens
+    int l = strlen(line_buffer);
+    int i = 0;
+    currentLine ++;
+    while (i < l)
     {
-      char c = line[i];
-      string_tokens[length] = c;
-      length ++;
+      char c = line_buffer[i]; 
+      Token token;
+      bool isTokenExist = true;
+      switch (c)
+      {
+
+      case '(':
+        token.token_type = LEFT_PAREN;
+        break;
+
+      case ')':
+        token.token_type = RIGHT_PAREN;
+        break;
+
+      case '{':
+        token.token_type = LEFT_BRACE;
+        break;
+
+      case '}':
+        token.token_type = RIGHT_BRACE;
+        break;
+
+      case ',':
+        token.token_type = COMMA;
+        break;
+
+      case '.':
+        token.token_type = DOT;
+        break;
+
+      case '-':
+        token.token_type = MINUS;
+        break;
+
+      case '+':
+        token.token_type = PLUS;
+        break;
+
+      // //
+      case '/':
+        bool isComment = buffer_peek_next(
+            &i, line_buffer, l, '/');
+        if (isComment)
+        {
+          i = l;// force stop next iteration
+          isTokenExist = false;
+          break;
+        }
+        else
+        {
+          token.token_type = SLASH;
+        }
+
+        break;
+
+      case '*':
+        token.token_type = STAR;
+        break;
+
+      case ';':
+        token.token_type = SEMICOLON;
+        break;
+
+      case '!':
+        // != !
+        token.token_type = (
+            buffer_peek_next(&i, line_buffer, l, '=')
+          )? BANG_EQUAL: BANG;
+        break;
+
+      case '=':
+        // = ==
+        token.token_type = (
+            buffer_peek_next(&i, line_buffer, l, '=')
+          )? EQUAL_EQUAL: EQUAL;
+        break;
+
+      case '<':
+        // < <=
+        token.token_type = (
+            buffer_peek_next(&i, line_buffer, l, '=')
+          )? LESS_EQUAL: LESS;
+        break;
+
+      case '>':
+        // < <=
+        token.token_type = (
+            buffer_peek_next(&i, line_buffer, l, '=')
+          )? GREATER_EQUAL: GREATER;
+        break;
+
+      case '\n': 
+        currentLine++;
+      case ' ':
+      case '\t':
+        isTokenExist = false;
+        break;
+
+      default:
+        printf("error: i have never seen this character before (%c)\n", c);
+        return false;
+
+      }
+
+      if (isTokenExist)
+      {
+        token.line = currentLine;
+        // printf("hello: %d\n", token.token_type);
+        token_array[count] = token;
+        count++;
+        printf("%d LINE: %d | char: %c | count: %d\n", i, currentLine, line_buffer[i], count);
+      }
+      i++;
     }
-    currentLine++;
-    printf("i was here\n");
   }
+  printf("no please, %d\n", count);
 
-  // shrink the buffer down
-  char* tmp = realloc(string_tokens, length * sizeof(char));
-  if (tmp == NULL){
-    printf("i have abs no idea how we encounter this bs\n");
-    return false;
-  }
-  string_tokens = tmp;
-
-  // let me test bro
-  for (int i = 0; i < length; i++)
+  // shrink the heap array down   
+  Token* tmp = (Token*)malloc(sizeof(Token) * count);
+  if (tmp == NULL)
   {
-    printf("%c", string_tokens[i]);
-    // printf("%c | %d\n", tokens_ptr[i].lexeme, tokens_ptr[i].line);
+    printf("i have no idea.\n");
+    return 0;
   }
-  printf("\n");
- 
-  // return value into the scanner
-  scanner->string_tokens = string_tokens;
-  scanner->sourceLength = length;
-  scanner->fileName = fileName;
+  token_array = tmp;
+  
 
   fclose(fp);
+  
+  scanner_ptr->fileName = fileName;
+  scanner_ptr->sourceLength = currentLine;
+  scanner_ptr->tokens = token_array;
+  scanner_ptr->tokenCount = count;
 
   return true;
-}
-
-bool ScannerConvertIntoTokens(Scanner* scanner_ptr, char c)
-{ 
-  return 1;
-}
-
-
-bool isAtEnd()
-{
-  // if (scanner) return false;
-  return false;
-}
-
-bool ScannerScanToken(Token* token_ptr)
-{
-  switch (token_ptr->lexeme){
-
-    case '(':
-      token_ptr->token_type = LEFT_PAREN;
-      break;
-
-    case ')':
-      token_ptr->token_type = RIGHT_PAREN;
-      break;
-    
-    case '{':
-      token_ptr->token_type = LEFT_BRACE;
-      break;
-
-    case '}':
-      token_ptr->token_type = RIGHT_BRACE;
-      break;
-
-    case ',':
-      token_ptr->token_type = COMMA;
-      break;
-
-    case '.':
-      token_ptr->token_type = DOT;
-      break;
-
-    case '-':
-      token_ptr->token_type = MINUS;
-      break;
-
-    case '+':
-      token_ptr->token_type = PLUS;
-      break;
-
-    case '/':
-      token_ptr->token_type = SLASH;
-      break;
-
-    case '*':
-      token_ptr->token_type = STAR;
-      break;
-
-    case ';':
-      token_ptr->token_type = SEMICOLON;
-      break;
-
-    default:
-      printf("error: i have never seen this character before (%c)\n", token_ptr->lexeme);
-      return false;
-
-  }
-  return true;
-    
 }
 
 void ScannerDestruct(Scanner* scanner_ptr)
 {
-  free(scanner_ptr->string_tokens);
+  free(scanner_ptr->tokens);
 }
 

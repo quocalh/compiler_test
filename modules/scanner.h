@@ -2,25 +2,24 @@
 #define SCANNER_H
 
 #include <stdbool.h>
+#include <stdio.h>
 #include "token.h"
 
 typedef struct
 {
   char* fileName;
   int sourceLength;
-  char* string_tokens;
   Token* tokens;
+  int tokenCount;
 } Scanner;
 
 Scanner ScannerInit(char* source_ptr);
 
-bool ScannerScan_(Scanner* scanner, char* fileName);
+// bool ScannerScan_(Scanner* scanner, char* fileName);
 
-bool ScannerConvertIntoTokens(Scanner* scanner_ptr, char c);
+Token ScannerScanToken(int* i, int buffer_size, char buffer[]);
 
-void Free(Scanner* scanner);
-
-bool ScannerScanToken(Token* token_ptr);
+bool ScannerConvertIntoTokens(Scanner* scanner_ptr, char* fileName);
 
 void ScannerDestruct(Scanner* scanner_ptr);
 
