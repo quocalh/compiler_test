@@ -1,4 +1,7 @@
 #include "file.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
 
 #define FILE_MAX_WIDTH 250
 
@@ -63,5 +66,51 @@ char* FileReadToString_(char* fileName)
   fclose(fp);
 
   return buffer;
+}
+
+bool ParseFileIntoString_(char* fileName, char** outputArray, int* count)
+{
+  FILE* fp = fopen(fileName, "r");
+  if (fp == NULL)
+  {
+    return false;
+  }
+ 
+  // get length
+  fseek(fp, 0, SEEK_END);
+  long int streamLength = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+
+  // create a heap
+  char* stream = (char*)malloc(sizeof(char) * streamLength + 1);
+  if (stream == NULL)
+  {
+    return false;
+  }
+
+  int i = 0;
+  char c;
+  while(true)
+  {
+    c = fgetc(fp);
+
+    if(feof(fp)){
+      break;
+    }
+    stream[i] = c;
+    i++;
+  }
+ 
+  for (int j = 0; j < i; j++)
+  {
+    printf("%c", stream[j]);
+  }
+  printf("%p\n", stream);
+ 
+  fclose(fp);
+
+  (*outputArray) = stream;
+  (*count) = i;
+  return true;
 }
 

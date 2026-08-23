@@ -15,12 +15,16 @@ typedef struct
 
 Scanner ScannerInit(char* source_ptr);
 
-// bool ScannerScan_(Scanner* scanner, char* fileName);
-
-Token ScannerScanToken(int* i, int buffer_size, char buffer[]);
-
 bool ScannerConvertIntoTokens(Scanner* scanner_ptr, char* fileName);
 
+bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* buffer, int buffer_length);
+
+// bool ScannerString();
+
 void ScannerDestruct(Scanner* scanner_ptr);
+
+bool ScannerNumber();
+
+bool ScannerString();
 
 #endif

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// #include "../misc/heap.h"
 
 
 #define FILE_MAX_WIDTH 250
@@ -178,7 +179,6 @@ bool ScannerConvertIntoTokens(Scanner* scanner_ptr, char* fileName)
       i++;
     }
   }
-  printf("no please, %d\n", count);
 
   // shrink the heap array down   
   Token* tmp = (Token*)malloc(sizeof(Token) * count);
@@ -198,6 +198,36 @@ bool ScannerConvertIntoTokens(Scanner* scanner_ptr, char* fileName)
   scanner_ptr->tokenCount = count;
 
   return true;
+}
+
+// internal function
+char advance(int* i, char* buffer, int buffer_length)
+{
+  // automatically inc i by 1, return buffer[i]
+  // return \0 if found nothing
+  if ((*i) >= buffer_length)
+  {
+    return '\0';
+  }
+  return buffer[(*i)++];
+}
+
+// internal function
+char peek(int i, char* buffer, int buffer_length, int offset) // offset = 1 (default)
+{
+  if (i + offset >= buffer_length)
+  {
+    return '\0';
+  }
+  int o = i + offset; 
+  return buffer[o];
+}
+
+bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* buffer, int buffer_length)
+{
+  int i = 0;
+  // while ()
+  return 1;
 }
 
 void ScannerDestruct(Scanner* scanner_ptr)
