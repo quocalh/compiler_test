@@ -25,8 +25,8 @@ bool ScannerScan_(Scanner* scanner, char* fileName)
   fseek(fp, 0, SEEK_SET);
 
   // allocate mem according to the byte length of the file
-  Token* tokens_ptr = (Token*)malloc((length + 1) * sizeof(Token));
-  if (tokens_ptr == NULL){
+  char* string_tokens = (char*)malloc((length + 1) * sizeof(char));
+  if (string_tokens == NULL){
     return false;
   }
   length = 0;
@@ -41,8 +41,7 @@ bool ScannerScan_(Scanner* scanner, char* fileName)
     for (int i  = 0; line[i] != '\n'; i++)
     {
       char c = line[i];
-      Token token = {0, c, 0, currentLine};
-      tokens_ptr[length] = token;
+      string_tokens[length] = c;
       length ++;
     }
     currentLine++;
@@ -50,23 +49,23 @@ bool ScannerScan_(Scanner* scanner, char* fileName)
   }
 
   // shrink the buffer down
-  Token* tmp = realloc(tokens_ptr, length * sizeof(Token));
+  char* tmp = realloc(string_tokens, length * sizeof(char));
   if (tmp == NULL){
     printf("i have abs no idea how we encounter this bs\n");
     return false;
   }
-  tokens_ptr = tmp;
+  string_tokens = tmp;
 
   // let me test bro
   for (int i = 0; i < length; i++)
   {
-    // printf("%c", tokens_ptr[i]);
-    printf("%c | %d\n", tokens_ptr[i].lexeme, tokens_ptr[i].line);
+    printf("%c", string_tokens[i]);
+    // printf("%c | %d\n", tokens_ptr[i].lexeme, tokens_ptr[i].line);
   }
   printf("\n");
  
   // return value into the scanner
-  scanner->tokens_ptr = tokens_ptr;
+  scanner->string_tokens = string_tokens;
   scanner->sourceLength = length;
   scanner->fileName = fileName;
 
@@ -81,9 +80,10 @@ bool ScannerConvertIntoTokens(Scanner* scanner_ptr, char c)
 }
 
 
-bool isAtEnd(Scanner *scanner, int current_line)
+bool isAtEnd()
 {
   // if (scanner) return false;
+  return false;
 }
 
 bool ScannerScanToken(Token* token_ptr)
@@ -145,6 +145,6 @@ bool ScannerScanToken(Token* token_ptr)
 
 void ScannerDestruct(Scanner* scanner_ptr)
 {
-  free(scanner_ptr->tokens_ptr);
+  free(scanner_ptr->string_tokens);
 }
 
