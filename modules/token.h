@@ -4,7 +4,7 @@
 typedef enum
 {
   // single character tokens
-  LEFT_PAREN, RIGHT_PAREN, 
+  LEFT_PAREN, RIGHT_PAREN,
   LEFT_BRACE, RIGHT_BRACE,
   COMMA,
   DOT,
@@ -17,6 +17,7 @@ typedef enum
   EQUAL, EQUAL_EQUAL, 
   GREATER, GREATER_EQUAL,
   LESS, LESS_EQUAL,
+  LEFT_COMMENT_BRACKET, RIGHT_COMMENT_BRACKET,
 
   // Literals
   IDENTIFIER, STRING, NUMBER,
@@ -29,18 +30,19 @@ typedef enum
   FUNC,
   FOR, WHILE,
   RETURN,
-  PRINT, // what i thought this is a function? (uhmm, i don't do IO manipulation)
+  PRINT, // what i thought this is a function?
   NIL, 
-  LEOF,
+  END_OF_FILE,
 } TokenType;
 
 typedef struct
 {
   TokenType token_type;
-  void* lexeme;
+  char lexeme;
   void* literal_ptr;
   unsigned int line;
 } Token;
+
 
 #endif
 
