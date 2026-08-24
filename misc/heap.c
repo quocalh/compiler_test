@@ -33,17 +33,16 @@ bool HeapAdd(Heap* heap, void* item_ptr)
   // insufficient space -> double the space -> sufficient again
   if (heap->length + 1 > heap->allocated_length)
   {
-    heap->ptr = malloc(heap->size * heap->allocated_length * 2);
-    // broke
-    if (heap->ptr == NULL)
+    void* tmp = realloc(heap->ptr, heap->size * heap->allocated_length * 2);
+    if (tmp == NULL)
     {
-      free(heap->ptr);
       return false;
     }
+    heap->ptr = tmp; 
     heap->allocated_length *= 2;
   }
   // guarantee sufficient -> add an item
-  memcpy((char*)heap->ptr + heap->length,
+  memcpy((char*)heap->ptr + heap->length * heap->size,
          (char*)item_ptr,
          heap->size);
   heap->length += 1;

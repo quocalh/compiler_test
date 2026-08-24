@@ -46,9 +46,10 @@ char* FileReadToString_(char* fileName)
       length ++;
     }
   }
+  buffer[length] = '\0';
 
   // shrink the buffer down
-  char* tmp = realloc(buffer, length * sizeof(char));
+  char* tmp = realloc(buffer, (length + 1) * sizeof(char));
 
   if (tmp == NULL){
     printf("i have abs no idea how we encounter this bs\n");
@@ -68,49 +69,105 @@ char* FileReadToString_(char* fileName)
   return buffer;
 }
 
-bool ParseFileIntoString_(char* fileName, char** outputArray, int* count)
-{
-  FILE* fp = fopen(fileName, "r");
-  if (fp == NULL)
-  {
-    return false;
-  }
- 
-  // get length
-  fseek(fp, 0, SEEK_END);
-  long int streamLength = ftell(fp);
-  fseek(fp, 0, SEEK_SET);
+// bool ParseFileIntoString_(char* fileName, char** outputArray, int* count)
+// {
+//   FILE* fp = fopen(fileName, "r");
+//   if (fp == NULL)
+//   {
+//     fclose(fp);
+//     return false;
+//   }
+//
+//   // get length
+//   fseek(fp, 0, SEEK_END);
+//   long int streamLength = ftell(fp);
+//   fseek(fp, 0, SEEK_SET);
+//
+//   // create a heap
+//   char* stream = (char*)malloc(sizeof(char) * streamLength + 1);
+//   if (stream == NULL)
+//   {
+//     fclose(fp);
+//     return false;
+//   }
+//
+//   int i = 0;
+//   char c;
+//   while(true)
+//   {
+//     c = fgetc(fp);
+//
+//     if(feof(fp)){
+//       break;
+//     }
+//     stream[i] = c;
+//     i++;
+//   }
+//
+//   printf("\n");
+//   printf("test res from file.c ---\n");
+//   for (int j = 0; j < i; j++)
+//   {
+//     printf("%c", stream[j]);
+//   }
+//   printf("%p\n", stream);
+//   printf("\n");
+//
+//   fclose(fp);
+//
+//   (*outputArray) = stream;
+//   (*count) = i;
+//   return true;
+// }
+//
 
-  // create a heap
-  char* stream = (char*)malloc(sizeof(char) * streamLength + 1);
-  if (stream == NULL)
-  {
-    return false;
-  }
-
-  int i = 0;
-  char c;
-  while(true)
-  {
-    c = fgetc(fp);
-
-    if(feof(fp)){
-      break;
+// LLM save me this time
+// i forget the \0 thingy but the LLM code handles the file stream way more smoother than what am doing (using fread)
+bool ParseFileIntoString_(char* fileName, char** outputArray, int* count) {
+    // Open in text mode
+    FILE* fp = fopen(fileName, "r"); 
+    if (fp == NULL) {
+        return false;
     }
-    stream[i] = c;
-    i++;
-  }
- 
-  for (int j = 0; j < i; j++)
-  {
-    printf("%c", stream[j]);
-  }
-  printf("%p\n", stream);
- 
-  fclose(fp);
+    // Get physical file length
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        fclose(fp);
+        return false;
+    }
+    long int fileSize = ftell(fp);
+    if (fileSize < 0) {
+        fclose(fp);
+        return false;
+    }
+    rewind(fp);
 
-  (*outputArray) = stream;
-  (*count) = i;
-  return true;
+    // Allocate memory based on physical size (+1 for '\0')
+    // This is a safe upper bound for text files
+    char* stream = (char*)malloc(sizeof(char) * fileSize + 1);
+    if (stream == NULL) {
+        fclose(fp);
+        return false;
+    }
+
+    // Read the text file
+    size_t bytesRead = fread(stream, sizeof(char), fileSize, fp);
+    
+    stream[bytesRead] = '\0'; 
+
+    fclose(fp);
+
+    // If needed, shrink the buffer to save memory (Optional)
+    // if (bytesRead < (size_t)fileSize) {
+    //     char* smallerStream = (char*)realloc(stream, bytesRead + 1);
+    //     if (smallerStream != NULL) {
+    //         stream = smallerStream;
+    //     }
+    // }
+
+    // Assign outputs
+    *outputArray = stream;
+    *count = (int)bytesRead;
+  
+    return true;
 }
 

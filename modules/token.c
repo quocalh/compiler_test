@@ -1,11 +1,11 @@
 #include "token.h"
 
-Token TokenInit(TokenType token_type, char lexeme,
-  char* literal_ptr, unsigned int line)
-{
-  Token token =  {token_type, lexeme, literal_ptr, line};
-  return token;
-}
+// Token TokenInit(TokenType token_type, char lexeme,
+//   char* literal_ptr, unsigned int line)
+// {
+//   Token token =  {token_type, lexeme, literal_ptr, line};
+//   return token;
+// }
 
 char* TokenToString_(Token token)
 {

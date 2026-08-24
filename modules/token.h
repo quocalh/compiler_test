@@ -1,6 +1,8 @@
 #ifndef TOKEN_C
 #define TOKEN_C
 
+#include "../misc/string_handling.h"
+
 typedef enum
 {
   // single character tokens
@@ -37,8 +39,8 @@ typedef enum
 
 typedef struct
 {
-  TokenType token_type;
-  char lexeme;
+  TokenType TokenType;
+  StaticString lexeme;
   void* literal_ptr;
   unsigned int line;
 } Token;
