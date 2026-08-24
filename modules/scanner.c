@@ -236,9 +236,9 @@ char peek(Scanner* scanner_ptr, int i)
 }
 
 // internal function
-bool match(Scanner* scanner_ptr, int i, char expected, int offset)
+bool match(Scanner* scanner_ptr, int i, char expected)
 {
-  char c = peek(scanner_ptr, i + offset);
+  char c = peek(scanner_ptr, i);
   if (c == '\0') return false;
  
   if (scanner_ptr->stream.array[i] != expected)
@@ -258,7 +258,7 @@ Token Tokenize(Scanner* scanner_ptr, TokenType Type, void* Literal)
   token.lexeme = StaticStringSubstring(&scanner_ptr->stream, scanner_ptr->start, scanner_ptr->current);
   token.line = scanner_ptr->currentLine;
 
-  printf("LINE: %d | TYPE: %d | LITERAL: %p | LEXEME: %s \n", token.line, token.TokenType, token.literal_ptr, token.lexeme.array);
+  // printf("LINE: %d | TYPE: %d | LITERAL: %p | LEXEME: %s \n", token.line, token.TokenType, token.literal_ptr, token.lexeme.array);
   // printf("range: %d -> %d | %s \n", scanner_ptr->start, scanner_ptr->current, token.lexeme.array);
 
 
@@ -282,13 +282,11 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
   ParseFileIntoString_(fileName, &buffer, &buffer_length);
   scanner_ptr->stream = (StaticString){buffer_length, buffer};
 
-  scanner_ptr->current = -1;
-  scanner_ptr->start = -1;
+  scanner_ptr->current = 0;
+  scanner_ptr->start = 0;
   while (true)
   {
     // reset the start to the current, peek the next char
-    scanner_ptr->start = scanner_ptr->current + 1;
-    scanner_ptr->current++;
     char c = peek(scanner_ptr, scanner_ptr->start);
 
     if (buffer[scanner_ptr->start] == '\0')
@@ -300,17 +298,111 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
     {
       case '(':
         TokenAdd(scanner_ptr, LEFT_PAREN, NULL);
-        Token token = ((Token*)scanner_ptr->tokens.ptr)[scanner_ptr->tokens.length - 1];
-        printf("LINE: %d | TYPE: %d | LITERAL: %p | LEXEME: %s \n", token.line, token.TokenType, token.literal_ptr, token.lexeme.array);
-
         break;
 
       case ')':
         TokenAdd(scanner_ptr, RIGHT_PAREN, NULL);
         break;
 
+      case '{':
+        TokenAdd(scanner_ptr, LEFT_BRACE, NULL);
+        break;
+
+      case '}':
+        TokenAdd(scanner_ptr, RIGHT_BRACE, NULL);
+        break;
+
+      case ',':
+        TokenAdd(scanner_ptr, COMMA, NULL);
+        break;
+
+      case '.':
+        TokenAdd(scanner_ptr, DOT, NULL);
+        break;
+
+      case '-':
+        TokenAdd(scanner_ptr, MINUS, NULL);
+        break;
+
+      case '+':
+        TokenAdd(scanner_ptr, PLUS, NULL);
+        break;
+
+      // FORBIDDEN ZONE
+      case '/':
+        // a comment //
+        if (match(scanner_ptr, scanner_ptr->current + 1, '/'))
+        {
+          while (!match(scanner_ptr, ++scanner_ptr->current, '\n'));
+          scanner_ptr->current--; // to catch the \n
+          printf("char: %d\n", scanner_ptr->stream.array[scanner_ptr->current - 1]);
+        }
+        else 
+        { // a slash /
+          TokenAdd(scanner_ptr, SLASH, NULL);
+        }
+        break;
+
+      case '!': 
+        // !=
+        if (match(scanner_ptr, scanner_ptr->current + 1, '='))
+        {
+          scanner_ptr->current++;
+          TokenAdd(scanner_ptr, BANG_EQUAL, NULL);
+        }
+        // !
+        else
+        {
+          TokenAdd(scanner_ptr, BANG, NULL);
+        }
+        break;
+
+      case '=':
+        // ==
+        if (match(scanner_ptr, scanner_ptr->current + 1, '='))
+        {
+          scanner_ptr->current++;
+          TokenAdd(scanner_ptr, EQUAL_EQUAL, NULL);
+        }
+        // =
+        else
+        {
+          TokenAdd(scanner_ptr, EQUAL, NULL);
+        }
+        break;
+
+      case '<':
+         // <=
+        if (match(scanner_ptr, scanner_ptr->current + 1, '='))
+        {
+          scanner_ptr->current++;
+          TokenAdd(scanner_ptr, LESS_EQUAL, NULL);
+        }
+        // >
+        else
+        {
+          TokenAdd(scanner_ptr, LESS, NULL);
+        }
+        break;
+
+      case '>':
+         // >=
+        if (match(scanner_ptr, scanner_ptr->current + 1, '='))
+        {
+          scanner_ptr->current++;
+          TokenAdd(scanner_ptr, GREATER_EQUAL, NULL);
+        }
+        // >
+        else
+        {
+          TokenAdd(scanner_ptr, GREATER, NULL);
+        }
+        break;
+
       case '\n':
         scanner_ptr->currentLine++;
+      case '\t':
+      case '\r':
       case ' ':
         break;
 
@@ -318,6 +410,10 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
         printf("[Scanner]: i have never seen those character before\n");
         break;
     }
+
+    scanner_ptr->start = scanner_ptr->current + 1;
+    scanner_ptr->current++;
+
   }
   return 1;
 }
