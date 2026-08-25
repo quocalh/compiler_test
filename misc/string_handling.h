@@ -3,7 +3,7 @@
 
 typedef struct{
   int length;
-  char* array;
+  char* str;
 } StaticString;
 
 StaticString StaticStringInit(const char* buffer);

@@ -29,8 +29,8 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName);
 
 void ScannerDestruct(Scanner* scanner_ptr);
 
-bool ScannerNumber();
+// bool ScannerNumber();
 
-bool ScannerString();
+// bool ScannerString();
 
 #endif

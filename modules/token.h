@@ -1,6 +1,7 @@
 #ifndef TOKEN_C
 #define TOKEN_C
 
+#include <stdio.h>
 #include "../misc/string_handling.h"
 
 typedef enum
@@ -22,7 +23,9 @@ typedef enum
   LEFT_COMMENT_BRACKET, RIGHT_COMMENT_BRACKET,
 
   // Literals
-  IDENTIFIER, STRING, NUMBER,
+  IDENTIFIER, STRING,
+  NUMBER,
+  INT, FLOAT, DOUBLE,
 
   // key words (verbs)
   IF, ELSE, 
@@ -45,6 +48,7 @@ typedef struct
   unsigned int line;
 } Token;
 
+size_t TokenGetNumberEnumSize(TokenType type);
 
 #endif
 

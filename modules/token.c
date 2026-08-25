@@ -14,6 +14,32 @@ char* TokenToString_(Token token)
   return "nigger";
 }
 
+size_t TokenGetNumberEnumSize(TokenType type)
+{
+  size_t size;
+  switch(type)
+  {
+    case (INT):
+      size = sizeof(int);
+      break;
+
+    case (FLOAT):
+      size = sizeof(float);
+      break;
+
+    case (DOUBLE):
+      size = sizeof(double);
+      break;
+
+    default:
+      printf("[token.c]: you shouldn't be here\n");
+      size = 0;
+      break;
+  }
+  return size; 
+}
+
+
 
 
 

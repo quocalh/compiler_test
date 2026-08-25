@@ -18,7 +18,7 @@ Scanner ScannerInit(char* fileName)
   Scanner scanner;
   scanner.fileName = fileName;
   scanner.tokens = HeapInit(sizeof(Token));
-  ParseFileIntoString_(fileName, &scanner.stream.array, &scanner.stream.length);
+  ParseFileIntoString_(fileName, &scanner.stream.str, &scanner.stream.length);
 
   scanner.current = 0;
   scanner.start = 0;
@@ -232,7 +232,7 @@ char peek(Scanner* scanner_ptr, int i)
     return '\0';
   }
   // printf("voila: %c %d\n", scanner_ptr->stream.array[i], scanner_ptr->stream.array[i]);
-  return scanner_ptr->stream.array[i];
+  return scanner_ptr->stream.str[i];
 }
 
 // internal function
@@ -241,7 +241,7 @@ bool match(Scanner* scanner_ptr, int i, char expected)
   char c = peek(scanner_ptr, i);
   if (c == '\0') return false;
  
-  if (scanner_ptr->stream.array[i] != expected)
+  if (scanner_ptr->stream.str[i] != expected)
   {
     return false;
   }
@@ -266,12 +266,99 @@ Token Tokenize(Scanner* scanner_ptr, TokenType Type, void* Literal)
 }
 
 // internal function
-bool TokenAdd(Scanner* scanner_ptr, TokenType Type, void* Literal)
+bool TokenAdd(Scanner* scanner_ptr, TokenType Type, void* literal_ptr)
 {
-  Token token = Tokenize(scanner_ptr, Type, Literal);
+  Token token = Tokenize(scanner_ptr, Type, literal_ptr);
   HeapAdd(&scanner_ptr->tokens, &token);
   // token = ((Token*)scanner_ptr->tokens.ptr)[scanner_ptr->tokens.length - 1];
   // printf("tikiLINE: %d | TYPE: %d | LITERAL: %p | LEXEME: %s \n", token.line, token.TokenType, token.literal_ptr, token.lexeme.array);
+  return true;
+}
+
+// Number
+void ScannerNumber(Scanner* scanner_ptr, TokenType* type)
+{
+  // note: literal_ptr points to heap
+  // e.g. -> number -> number[type] | float, int, double
+  // e.g. -> string -> static string | dynamic string
+  // TokenType type = INT;
+  // value
+  //
+}
+
+// String
+bool ScannerString(Scanner* scanner_ptr)
+{
+   
+  // usually got send here by the '"'
+  // Heap literal_ptr = heapInit();
+  scanner_ptr->current++;
+  int lineAddend = 0;
+
+  while (true)
+  {
+    bool stop = false;
+    char c = peek(scanner_ptr, scanner_ptr->current);
+    switch (c)
+    {
+      case '\0':
+        printf("[scanner.c]: string terminated by EOF\n");
+        printf("you likely forgot the closing \" (a dangling \" indeed)");
+        return false;
+        break;
+
+      case '\n':
+        lineAddend++;
+        printf("[scanner.c]: string - for now we only deal with simple one line string\n");
+        return false;
+        break;
+
+      // case '\\':
+      //  \" -> char "
+      //  \n -> line breaker
+      //  \t -> tab 
+      //  \r -> carriage return (what?)
+      //  \  -> line reserver
+      
+
+      case '"':
+        stop = true;
+        break;
+
+      default:
+        
+        break;
+    }
+    if (stop == true) break;
+
+    scanner_ptr->current++;
+  }
+  
+  // give the start and the end of the string -> create the string
+    // lexeme
+  StaticString lexeme = StaticStringSubstring(&scanner_ptr->stream,
+                                              scanner_ptr->start,
+                                              scanner_ptr->current);
+    // literal copy
+  StaticString* literal_ptr = (StaticString*)malloc(sizeof(StaticString));
+  if (literal_ptr == NULL) {
+    printf("[scanner.c / string]: Saa \
+      Se sse sse no yoi yoi yoi \
+      Uso ga honto o zenbu nomikonde \
+      Se sse ssei no yoi yoi yoi \
+      Kimi no sono te de isso raku ni shite\n");
+    return false;
+  }
+  StaticString literal = StaticStringSubstring(&scanner_ptr->stream,
+                                               scanner_ptr->start + 1,
+                                               scanner_ptr->current - 1);
+  memcpy(literal_ptr, &literal, sizeof(StaticString));
+
+  TokenAdd(scanner_ptr, STRING, literal_ptr);
+
+  scanner_ptr->currentLine += lineAddend;
+
+  // current at ending ", try to catch no " next current + 1
   return true;
 }
 
@@ -328,14 +415,18 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
         TokenAdd(scanner_ptr, PLUS, NULL);
         break;
 
+      case '*':
+        TokenAdd(scanner_ptr, STAR, NULL);
+        break;
+
       // FORBIDDEN ZONE
       case '/':
         // a comment //
         if (match(scanner_ptr, scanner_ptr->current + 1, '/'))
         {
           while (!match(scanner_ptr, ++scanner_ptr->current, '\n'));
-          scanner_ptr->current--; // to catch the \n
-          printf("char: %d\n", scanner_ptr->stream.array[scanner_ptr->current - 1]);
+          scanner_ptr->current--; // (at the char left to \n) to catch the \n next current + 1
+          printf("char: %d\n", scanner_ptr->stream.str[scanner_ptr->current - 1]);
         }
         else 
         { // a slash /
@@ -399,6 +490,12 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
         }
         break;
 
+      // string // get the current to the next " should be good
+      case '"':
+        bool success = ScannerString(scanner_ptr);
+        if (!success) {return 0;}
+        break;
+
       case '\n':
         scanner_ptr->currentLine++;
       case '\t':
@@ -407,7 +504,7 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
         break;
 
       default:
-        printf("[Scanner]: i have never seen those character before\n");
+        printf("[Scanner]: i have never seen those character before (%c)\n", c);
         break;
     }
 
@@ -424,6 +521,17 @@ void ScannerDestruct(Scanner* scanner_ptr)
   for (int i = 0; i < scanner_ptr->tokens.length; i++){
     Token* token = &((Token*)scanner_ptr->tokens.ptr)[i];
     StaticStringFree(&token->lexeme);
+
+    switch (token->TokenType)
+    {
+      case (STRING):
+        StaticStringFree(((StaticString*)token->literal_ptr));
+        free(token->literal_ptr);
+        break;
+
+      default:
+        break;
+    }
   }
   HeapFree(&scanner_ptr->tokens);
   StaticStringFree(&scanner_ptr->stream);

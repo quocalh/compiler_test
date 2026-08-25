@@ -34,12 +34,14 @@ StaticString StaticStringSubstring(StaticString* str, int start, int end)
   char* heap = (char*)malloc((l + 1) * sizeof(char));
   if (!heap) return (StaticString){0, 0};
 
-  memcpy(heap, str->array + start, l);
+  // add the \0 at the end
+  memcpy(heap, str->str + start, l);
   heap[l] = '\0';
+
   return (StaticString){l, heap};
 }
 
 void StaticStringFree(StaticString* str)
 {
-  free(str->array);
+  free(str->str);
 }

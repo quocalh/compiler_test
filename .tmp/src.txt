@@ -1,0 +1,8 @@
+// those
+// those comments /
+== =  ! ! !==
+<< <= > < >= !
+()()()()()/ // those comments /
+// string testing
+"line 7: deal breaker | scanner basic string reading" == // yes
+"==" <=
