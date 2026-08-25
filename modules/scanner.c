@@ -4,11 +4,13 @@
 #include "token.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../misc/heap.h"
 #include "../misc/file.h"
 #include "../misc/string_handling.h"
+#include "../misc/numbers.h"
 
 
 #define FILE_MAX_WIDTH 250
@@ -276,14 +278,77 @@ bool TokenAdd(Scanner* scanner_ptr, TokenType Type, void* literal_ptr)
 }
 
 // Number
-void ScannerNumber(Scanner* scanner_ptr, TokenType* type)
+TokenType TokenStringNumberGetTokenType(int dot)
+{
+  return (dot == -1)? INT: DOUBLE;
+}
+
+void ScannerNumber(Scanner* scanner_ptr)
 {
   // note: literal_ptr points to heap
   // e.g. -> number -> number[type] | float, int, double
   // e.g. -> string -> static string | dynamic string
   // TokenType type = INT;
   // value
-  //
+  int dot = -1;
+  
+  // get the range of the number string
+  while (true)
+  {
+    char c = peek(scanner_ptr, scanner_ptr->current);
+    if ( (!isdigit(c)) && c!= '.') break;
+
+    // 5. is invalid but 5.0 is not
+    if (c == '.')
+    {
+
+      if (dot != -1){
+        printf("[scanner.c] numbers | you tryna parse an IP or something?\n");
+        break;}
+      char n = peek(scanner_ptr, scanner_ptr->current + 1); 
+      if (!isdigit(n)) {
+        printf("[scanner.c] numbers | (lexical handling is suckass) 5. is not allowed but 5.0 is\n\n");
+        break;}
+
+      dot = scanner_ptr->current - scanner_ptr->start;
+
+    }
+    scanner_ptr->current++;
+  }
+  scanner_ptr->current--;
+
+  // classify it 
+  TokenType type = TokenStringNumberGetTokenType(dot);
+  // printf("what: %zu\n", TokenGetNumberEnumSize(type));
+  
+  // convert it
+  void* literal_ptr = malloc(TokenGetNumberEnumSize(type));
+  if (literal_ptr == NULL){printf("i love medicine\n"); return;}
+  switch (type)
+  {
+    case (INT):
+      NumberStringIntoInt(scanner_ptr->stream.str + scanner_ptr->start, 
+        scanner_ptr->current - scanner_ptr->start + 1, literal_ptr);
+      // printf("hello world: %d\n", *(int*)literal_ptr);
+      break;
+
+    case (DOUBLE):
+      NumberStringIntoDouble(scanner_ptr->stream.str + scanner_ptr->start, 
+        scanner_ptr->current - scanner_ptr->start + 1, dot,literal_ptr);
+      // printf("hello world : %lf\n", *(double*)literal_ptr);
+      break;
+
+    default:
+      printf("[scanner.c] number | why are you here, you re not a number type\n");
+      break;
+  }
+  
+
+  // for now
+  literal_ptr = NULL;
+
+  TokenAdd(scanner_ptr, type, literal_ptr);
+ 
 }
 
 // String
@@ -319,7 +384,6 @@ bool ScannerString(Scanner* scanner_ptr)
       //  \t -> tab 
       //  \r -> carriage return (what?)
       //  \  -> line reserver
-      
 
       case '"':
         stop = true;
@@ -419,6 +483,10 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
         TokenAdd(scanner_ptr, STAR, NULL);
         break;
 
+      case ';':
+        TokenAdd(scanner_ptr, SEMICOLON, NULL);
+        break;
+
       // FORBIDDEN ZONE
       case '/':
         // a comment //
@@ -504,6 +572,10 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
         break;
 
       default:
+        if (isdigit(c)){
+          ScannerNumber(scanner_ptr);
+          break;
+        }
         printf("[Scanner]: i have never seen those character before (%c)\n", c);
         break;
     }

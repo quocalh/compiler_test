@@ -1,6 +1,7 @@
 #include <stdio.h>
 // #include "misc/file.h"
 // #include "misc/file.h"
+// #include "misc/numbers.h"
 #include "modules/scanner.h"
 // #include <stdlib.h>
 
@@ -26,6 +27,13 @@ int main()
 
   ScannerDestruct(&scanner);
 
+  // int res;
+  // NumberStringIntoInt("12345", 5, &res);
+  // printf("res: %d \n", res);
+  //
+  // double dre;
+  // NumberStringIntoDouble("123.123", 7, 3, &dre);
+  // printf("res: %lf \n", dre);
 
   return 0;  
 }

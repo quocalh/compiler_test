@@ -39,7 +39,3 @@ size_t TokenGetNumberEnumSize(TokenType type)
   return size; 
 }
 
-
-
-
-

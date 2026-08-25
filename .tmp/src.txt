@@ -6,3 +6,9 @@
 // string testing
 "line 7: deal breaker | scanner basic string reading" == // yes
 "==" <=
+123.5
+123.123
+5.0;
+5.
+5
+
