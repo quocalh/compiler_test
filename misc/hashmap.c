@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "uthash.h"
+#include <stdio.h>
 
 void HashStrToIntInit(HashStrToInt** map)
 {
@@ -11,7 +12,8 @@ void HashStrToIntInit(HashStrToInt** map)
 
 HashStrToInt* HashStrToIntFind(HashStrToInt** map, char* key)
 {
-  HashStrToInt* item = malloc(sizeof(*item));
+  // HashStrToInt* item = malloc(sizeof(*item));
+  HashStrToInt* item = NULL;
   HASH_FIND_STR(*map, key, item);
   return item;
 }
@@ -19,16 +21,39 @@ HashStrToInt* HashStrToIntFind(HashStrToInt** map, char* key)
 
 bool HashStrToIntAdd(HashStrToInt** map, char* key, int value)
 {
-  HashStrToInt* item =  HashStrToIntFind(map, key);
-  if (item == NULL){
+  HashStrToInt* item = HashStrToIntFind(map, key);
+  if (item == NULL)
+  {
     item = (HashStrToInt*)malloc(sizeof(*item));
     if (!item) return false;
 
-    strcpy(item->strkey, key);
-    HASH_ADD_STR(*map, strkey, item);
+    item->strkey = key;
+    HASH_ADD_KEYPTR(hh, *map, item->strkey, strlen(item->strkey), item);
   }
   item->bucket = value;
   return true;
+}
+
+bool HashStrToIntDelete(HashStrToInt** map, char* key)
+{
+  HashStrToInt* item = HashStrToIntFind(map, key);
+  if (!item)
+  {
+    printf("[hashmap.c] str -> int del | key no found?");
+    return false;
+  }
+  HASH_DEL(*map, item);
+  return true;
+}
+
+void HashStrToIntIterate(HashStrToInt** map) // not sure one this one how to handle
+{
+  printf(" i have no idea how to .. interface? this. Take this as a code sample, yay.\n");
+  HashStrToInt* item;
+
+  for (item = *map; item != NULL; item = (HashStrToInt*)(item->hh.next)) {
+    printf("user id %d: name %s\n", item->bucket, item->strkey);
+  }
 }
 
 void HashStrToIntClear(HashStrToInt** map)
