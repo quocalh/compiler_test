@@ -28,190 +28,6 @@ Scanner ScannerInit(char* fileName)
   return scanner;
 }
 
-
-bool buffer_peek_next(int* i, char* buffer, int buffer_size, char expected)
-{
-  // return true if buffer[i + 1] = expected
-  // at the same time, i++ in advance (skip the accepted char)
-  int i_1 = (*i) + 1;
-  if (i_1 >= buffer_size)
-  {
-    return false;
-  }
-  if (buffer[i_1] != expected)
-  {
-    return false;
-  }
-  (*i)++;
-  return true;
-}
-
-bool ScannerConvertIntoTokens(Scanner* scanner_ptr, char* fileName)
-{ 
-  FILE* fp = fopen(fileName, "r");
-  
-  // get length of the file
-  fseek(fp, 0, SEEK_END);
-  long int length = ftell(fp);
-  fseek(fp, 0, SEEK_SET);
-  
-  // heap array
-  Token* token_array = (Token*)malloc(sizeof(Token) * (length + 1));
-  if (token_array == NULL){
-    return false;
-  }
-
-  char line_buffer[FILE_MAX_WIDTH];
-  int count = 0;
-  int currentLine = 0;
-  // for line in the files 
-  // (god forgive me i can't help myself)
-  while (fgets(line_buffer, sizeof(line_buffer), fp))
-  {
-    printf("line buffer: %s", line_buffer);
-
-    // scaning tokens
-    int l = strlen(line_buffer);
-    int i = 0;
-    currentLine ++;
-    while (i < l)
-    {
-      char c = line_buffer[i]; 
-      Token token;
-      bool isTokenExist = true;
-      switch (c)
-      {
-
-      case '(':
-        token.TokenType = LEFT_PAREN;
-        break;
-
-      case ')':
-        token.TokenType = RIGHT_PAREN;
-        break;
-
-      case '{':
-        token.TokenType = LEFT_BRACE;
-        break;
-
-      case '}':
-        token.TokenType = RIGHT_BRACE;
-        break;
-
-      case ',':
-        token.TokenType = COMMA;
-        break;
-
-      case '.':
-        token.TokenType = DOT;
-        break;
-
-      case '-':
-        token.TokenType = MINUS;
-        break;
-
-      case '+':
-        token.TokenType = PLUS;
-        break;
-
-      // //
-      case '/':
-        bool isComment = buffer_peek_next(
-            &i, line_buffer, l, '/');
-        if (isComment)
-        {
-          i = l;// force stop next iteration
-          isTokenExist = false;
-          break;
-        }
-        else
-        {
-          token.TokenType = SLASH;
-        }
-
-        break;
-
-      case '*':
-        token.TokenType = STAR;
-        break;
-
-      case ';':
-        token.TokenType = SEMICOLON;
-        break;
-
-      case '!':
-        // != !
-        token.TokenType = (
-            buffer_peek_next(&i, line_buffer, l, '=')
-          )? BANG_EQUAL: BANG;
-        break;
-
-      case '=':
-        // = ==
-        token.TokenType = (
-            buffer_peek_next(&i, line_buffer, l, '=')
-          )? EQUAL_EQUAL: EQUAL;
-        break;
-
-      case '<':
-        // < <=
-        token.TokenType = (
-            buffer_peek_next(&i, line_buffer, l, '=')
-          )? LESS_EQUAL: LESS;
-        break;
-
-      case '>':
-        // < <=
-        token.TokenType = (
-            buffer_peek_next(&i, line_buffer, l, '=')
-          )? GREATER_EQUAL: GREATER;
-        break;
-
-      case '\n': 
-        currentLine++;
-      case ' ':
-      case '\t':
-        isTokenExist = false;
-        break;
-
-      default:
-        printf("error: i have never seen this character before (%c)\n", c);
-        return false;
-
-      }
-
-      if (isTokenExist)
-      {
-        token.line = currentLine;
-        // printf("hello: %d\n", token.token_type);
-        token_array[count] = token;
-        count++;
-        printf("%d LINE: %d | char: %c | count: %d\n", i, currentLine, line_buffer[i], count);
-      }
-      i++;
-    }
-  }
-
-  // shrink the heap array down   
-  Token* tmp = (Token*)malloc(sizeof(Token) * count);
-  if (tmp == NULL)
-  {
-    printf("i have no idea.\n");
-    return 0;
-  }
-  token_array = tmp;
-  
-
-  fclose(fp);
-  
-  scanner_ptr->fileName = fileName;
-  // scanner_ptr->sourceLength = currentLine;
-  // scanner_ptr->tokens = token_array;
-  // scanner_ptr->tokenCount = count;
-
-  return true;
-}
-
 // internal function
 char advance(Scanner* scanner_ptr, char* buffer, int buffer_length)
 {
@@ -342,19 +158,16 @@ void ScannerNumber(Scanner* scanner_ptr)
       printf("[scanner.c] number | why are you here, you re not a number type\n");
       break;
   }
-  
 
   // for now
   literal_ptr = NULL;
 
   TokenAdd(scanner_ptr, type, literal_ptr);
- 
 }
 
 // String
 bool ScannerString(Scanner* scanner_ptr)
 {
-   
   // usually got send here by the '"'
   // Heap literal_ptr = heapInit();
   scanner_ptr->current++;
@@ -390,14 +203,14 @@ bool ScannerString(Scanner* scanner_ptr)
         break;
 
       default:
-        
+
         break;
     }
     if (stop == true) break;
 
     scanner_ptr->current++;
   }
-  
+
   // give the start and the end of the string -> create the string
     // lexeme
   StaticString lexeme = StaticStringSubstring(&scanner_ptr->stream,
@@ -425,6 +238,23 @@ bool ScannerString(Scanner* scanner_ptr)
   // current at ending ", try to catch no " next current + 1
   return true;
 }
+
+bool ScannerAlpha(Scanner* scanner_ptr)
+{
+  Heap str_vector = HeapInit(sizeof(char));
+  // go use a hashmap lib at the point
+
+ 
+  do{
+    HeapAdd(&str_vector, &scanner_ptr->stream + (scanner_ptr->current++));
+    // looking for keywords, if found peek next char, if is still alpha -> is a var
+  }while (isalpha(peek(scanner_ptr, scanner_ptr->current)));
+
+  // reaching this point, current always ahead of the lexeme by 1 unit
+
+  return true;
+}
+
 
 bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
 {
@@ -574,6 +404,11 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
       default:
         if (isdigit(c)){
           ScannerNumber(scanner_ptr);
+          break;
+        }
+        else if (isalpha(c))
+        {
+          // ScannerAlpha(scanner_ptr);
           break;
         }
         printf("[Scanner]: i have never seen those character before (%c)\n", c);

@@ -15,7 +15,7 @@ int NumberConvertDigitIntoInt(char c)
 
     case '2':
       return 2;
-      
+
     case '3':
       return 3;
 
@@ -30,7 +30,7 @@ int NumberConvertDigitIntoInt(char c)
 
     case '7':
       return 7;
-      
+
     case '8':
       return 8;
 

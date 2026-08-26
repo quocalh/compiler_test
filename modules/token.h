@@ -28,15 +28,15 @@ typedef enum
   INT, FLOAT, DOUBLE,
 
   // key words (verbs)
-  IF, ELSE, 
-  AND, NOT,
+  IF, ELSE, BREAK,
+  AND, NOT, OR,
   SUPER, CLASS, THIS,
-  TRUE, FAlSE, 
+  TRUE, FAlSE,
   FUNC,
   FOR, WHILE,
   RETURN,
   PRINT, // what i thought this is a function?
-  NIL, 
+  NIL,
   END_OF_FILE,
 } TokenType;
 
