@@ -3,6 +3,12 @@
 
 #include <stdio.h>
 #include "../misc/string_handling.h"
+#include "../misc/hashmap.h"
+
+extern HashStrToInt* mnemonics; // announce this map exist
+
+void TokenClearMnemonicTable(HashStrToInt** mnemonics);
+void TokenCreateMnemonicMap(HashStrToInt** mnemonics);
 
 typedef enum
 {
@@ -49,6 +55,5 @@ typedef struct
 } Token;
 
 size_t TokenGetNumberEnumSize(TokenType type);
-
 #endif
 

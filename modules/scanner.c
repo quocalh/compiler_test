@@ -25,6 +25,11 @@ Scanner ScannerInit(char* fileName)
   scanner.current = 0;
   scanner.start = 0;
   scanner.currentLine = 1;
+
+
+  // create the token mnemonic table
+  TokenCreateMnemonicMap(&mnemonics);
+
   return scanner;
 }
 
@@ -442,5 +447,8 @@ void ScannerDestruct(Scanner* scanner_ptr)
   }
   HeapFree(&scanner_ptr->tokens);
   StaticStringFree(&scanner_ptr->stream);
+
+  // free the mnemonic dict
+  TokenClearMnemonicTable(&mnemonics);
 }
 

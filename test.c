@@ -2,41 +2,43 @@
 #include "assert.h"
 
 #include "misc/hashmap.h"
+#include "modules/scanner.h"
+#include "modules/token.h"
+// #include <stdlib.h>
+// #include "misc/heap.h"
 
 int main()
 {
-  printf("hello world\n");
-
-  HashStrToInt* map = NULL;
-  // HashStrToIntInit(&map);
+  Scanner scanner = ScannerInit("src.txt");
  
- 
-  HashStrToIntAdd(&map, "ching", 67);
-  HashStrToIntAdd(&map, "chong", 123);
-  HashStrToIntAdd(&map, "ding", 76);
-  HashStrToIntAdd(&map, "dong", 52);
+  HashStrToInt* item = HashStrToIntFind(&mnemonics, "for");
+  if (item)
+  {
+    printf("yes love train\n");
+    printf("key: %s | value: %d\n", item->strkey, item->bucket);
+    printf("key: %s | value: %d\n", item->strkey, FOR);
+  }
 
-  HashStrToInt* res = HashStrToIntFind(&map, "dong");
-  printf("%p\n", res);
-  assert(res);
-  printf("key: %s | value: %d\n", res->strkey, res->bucket);
+  int success;
+  success = ScannerConvertIntoTokens1(&scanner, "src.txt");
 
-  // ding check
-  res = HashStrToIntFind(&map, "ding");
-  printf("%p\n", res);
-  assert(res);
-  printf("key: %s | value: %d\n", res->strkey, res->bucket);
-  // ding del
-  HashStrToIntDelete(&map, "ding");
-  // ding check
-  res = HashStrToIntFind(&map, "ding");
-  printf("%p\n", res);
-  // assert(res);
-  // printf("key: %s | value: %d\n", res->strkey, res->bucket);
+  printf("Hello world\n");
 
-  HashStrToIntIterate(&map);
+  for (int i = 0; i < scanner.tokens.length; i++)
+  {
+    // void* pointer thingy, bear through it
+    Token* token = &((Token*)scanner.tokens.ptr)[i];
 
-  HashStrToIntClear(&map);
+    printf("LINE: %d | TYPE: %d | LITERAL: %p | LEXEME: %s \n", 
+           token->line, 
+           token->TokenType, 
+           token->literal_ptr, 
+           token->lexeme.str);
+  }
 
+  ScannerDestruct(&scanner);
+
+
+  return 0; 
 }
 

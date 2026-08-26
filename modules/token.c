@@ -1,11 +1,29 @@
 #include "token.h"
+#include "../misc/hashmap.h"
 
-// Token TokenInit(TokenType token_type, char lexeme,
-//   char* literal_ptr, unsigned int line)
-// {
-//   Token token =  {token_type, lexeme, literal_ptr, line};
-//   return token;
-// }
+HashStrToInt* mnemonics = NULL;
+
+void TokenCreateMnemonicMap(HashStrToInt** mnemonics)
+{
+  HashStrToIntAdd(mnemonics, "if", IF);
+  HashStrToIntAdd(mnemonics, "else", ELSE);
+  HashStrToIntAdd(mnemonics, "break", ELSE);
+
+  HashStrToIntAdd(mnemonics, "and", AND);
+  HashStrToIntAdd(mnemonics, "not", AND);
+  HashStrToIntAdd(mnemonics, "or", OR);
+
+  HashStrToIntAdd(mnemonics, "true", FOR);
+  HashStrToIntAdd(mnemonics, "false", WHILE);
+
+  HashStrToIntAdd(mnemonics, "for", FOR);
+  HashStrToIntAdd(mnemonics, "while", WHILE);
+}
+
+void TokenClearMnemonicTable(HashStrToInt** mnemonics)
+{
+  HashStrToIntClear(mnemonics);
+}
 
 char* TokenToString_(Token token)
 {

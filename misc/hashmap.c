@@ -5,6 +5,7 @@
 #include "uthash.h"
 #include <stdio.h>
 
+
 void HashStrToIntInit(HashStrToInt** map)
 {
   *map = NULL;
