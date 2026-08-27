@@ -155,7 +155,7 @@ void ScannerNumber(Scanner* scanner_ptr)
 
     case (DOUBLE):
       NumberStringIntoDouble(scanner_ptr->stream.str + scanner_ptr->start, 
-        scanner_ptr->current - scanner_ptr->start + 1, dot,literal_ptr);
+        scanner_ptr->current - scanner_ptr->start + 1, dot, literal_ptr);
       // printf("hello world : %lf\n", *(double*)literal_ptr);
       break;
 
@@ -165,7 +165,7 @@ void ScannerNumber(Scanner* scanner_ptr)
   }
 
   // for now
-  literal_ptr = NULL;
+  // literal_ptr = NULL;
 
   TokenAdd(scanner_ptr, type, literal_ptr);
 }
@@ -244,19 +244,50 @@ bool ScannerString(Scanner* scanner_ptr)
   return true;
 }
 
-bool ScannerAlpha(Scanner* scanner_ptr)
+bool isKeyWordValid(char c)
+{
+  if (isalnum(c)) return true;
+  else if (c == '_') return true;
+  return false;
+}
+bool ScannerMnemonic(Scanner* scanner_ptr)
 {
   Heap str_vector = HeapInit(sizeof(char));
-  // go use a hashmap lib at the point
-
+  char tmp = '\0';
+  HeapAdd(&str_vector, &tmp);
  
-  do{
-    HeapAdd(&str_vector, &scanner_ptr->stream + (scanner_ptr->current++));
-    // looking for keywords, if found peek next char, if is still alpha -> is a var
-  }while (isalpha(peek(scanner_ptr, scanner_ptr->current)));
+  TokenType type = IDENTIFIER;
+  HashStrToInt* item;
 
+  while (isKeyWordValid(peek(scanner_ptr, scanner_ptr->current)))
+  {
+    ((char*)str_vector.ptr)[scanner_ptr->current - scanner_ptr->start] = *(
+      scanner_ptr->stream.str + (scanner_ptr->current));
+    HeapAdd(&str_vector, &tmp);
+    printf("[debug] %s | %d\n", (char*)str_vector.ptr, scanner_ptr->current - scanner_ptr->start);
+
+    scanner_ptr->current++;
+
+    // found and next char is not valid -> mnemonics
+    if (  (item = HashStrToIntFind(&mnemonics, str_vector.ptr))  )
+    {
+      if (!isKeyWordValid(peek(scanner_ptr, scanner_ptr->current)))
+      {
+        printf("JACKPOT\n");
+        type = item->bucket;
+        break;
+      }
+      // else: nothing happens
+    }
+  }
   // reaching this point, current always ahead of the lexeme by 1 unit
+  scanner_ptr->current--; // so we shift by 1 unit
+  printf("[debug]: hello\n");
 
+  // to this point, the current should have been in the right place
+  TokenAdd(scanner_ptr, type, NULL);
+
+  HeapFree(&str_vector);
   return true;
 }
 
@@ -413,7 +444,7 @@ bool ScannerConvertIntoTokens1(Scanner* scanner_ptr, char* fileName)
         }
         else if (isalpha(c))
         {
-          // ScannerAlpha(scanner_ptr);
+          ScannerMnemonic(scanner_ptr);
           break;
         }
         printf("[Scanner]: i have never seen those character before (%c)\n", c);

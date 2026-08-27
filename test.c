@@ -9,7 +9,7 @@
 
 int main()
 {
-  Scanner scanner = ScannerInit("src.txt");
+  Scanner scanner = ScannerInit(".tmp/src.txt");
  
   HashStrToInt* item = HashStrToIntFind(&mnemonics, "for");
   if (item)
@@ -20,7 +20,7 @@ int main()
   }
 
   int success;
-  success = ScannerConvertIntoTokens1(&scanner, "src.txt");
+  success = ScannerConvertIntoTokens1(&scanner, scanner.fileName);
 
   printf("Hello world\n");
 

@@ -11,4 +11,10 @@
 5.0;
 5.
 5
+first_var
+second_var
+for
+while
+if
+else
 

@@ -43,6 +43,7 @@ typedef enum
   RETURN,
   PRINT, // what i thought this is a function?
   NIL,
+  VAR,
   END_OF_FILE,
 } TokenType;
 
