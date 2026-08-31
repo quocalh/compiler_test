@@ -33,11 +33,14 @@ typedef enum
   NUMBER,
   INT, FLOAT, DOUBLE,
 
+  // expression
+  EXPRESSION,
+
   // key words (verbs)
   IF, ELSE, BREAK,
   AND, NOT, OR,
   SUPER, CLASS, THIS,
-  TRUE, FAlSE,
+  TRUE, FALSE,
   FUNC,
   FOR, WHILE,
   RETURN,

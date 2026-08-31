@@ -472,6 +472,14 @@ void ScannerDestruct(Scanner* scanner_ptr)
         free(token->literal_ptr);
         break;
 
+      case (INT):
+        free(token->literal_ptr); 
+        break;
+
+      case (DOUBLE):
+        free(token->literal_ptr); 
+        break;
+
       default:
         break;
     }
