@@ -29,61 +29,23 @@ Literal* astInitLiteral(TokenType dtype, void* value){
 }
 
 // [PORT]
-void BinaryAcceptKey(void* visitor, void* binary){
+void BinaryAcceptKey(void* visitor, void* binary, void* ext){
   if (!visitor || !binary) assert(0);
-  ((astVisitorStation*)visitor)->binaryBucketFunction(visitor, binary);
+  ((astVisitorStation*)visitor)->binaryBucketFunction(visitor, binary, ext);
 }
-void GroupAcceptKey(void* visitor, void* group){
+void GroupAcceptKey(void* visitor, void* group, void* ext){
   if (!visitor || !group) assert(0);
-  ((astVisitorStation*)visitor)->groupBucketFunction(visitor, group);
+  ((astVisitorStation*)visitor)->groupBucketFunction(visitor, group, ext);
 }
-void UnaryAcceptKey(void* visitor, void* unary){
+void UnaryAcceptKey(void* visitor, void* unary, void* ext){
   if (!visitor || !unary) assert(0);
-  ((astVisitorStation*)visitor)->unaryBucketFunction(visitor, unary);
+  ((astVisitorStation*)visitor)->unaryBucketFunction(visitor, unary, ext);
 }
-void LiteralAcceptKey(void* visitor, void* literal){
+void LiteralAcceptKey(void* visitor, void* literal, void* ext){
   if (!visitor || !literal) assert(0);
-  ((astVisitorStation*)visitor)->literalBucketFunction(visitor, literal);
+  ((astVisitorStation*)visitor)->literalBucketFunction(visitor, literal, ext);
 }
 
-// all malloc no stack i suppose?
-// void freeExpression(astVisitorStation* station, void* expression); // recursive constructed
-void freeExpression(astVisitorStation* station, Expression* expression){
-  ((Expression*)expression)->accept(station, &expression);
-  free(expression);
-}
-void freeBinary(void* station, void* b){
-  Binary* binary = (Binary*)b;
-  ((Expression*)binary->left)->accept(station, &binary->left); // free children
-  ((Expression*)binary->right)->accept(station, &binary->right); // 1-layer polymorphism
-  free(b); // free itself
-}
-void freeGroup(void* station, void* g){
-  Grouping* group = (Grouping*)g;
-  ((Expression*)group->expression)->accept(station, &group->expression);
-  free(g);
-}
-void freeUnary(void* station, void* u){
-  Unary* unary = u;
-  ((Expression*)unary->expression)->accept(station, unary->expression);
-  free(u);
-}
-void freeLiteral(void* station, void* l){
-  Literal* literal = l;
-  if (literal->address == NULL){printf("[ast.c] null address\n");assert(0);}
-  if (literal->type == EXPRESSION) {
-    literal->accept(station, &literal);
-  }
-  free(literal);
-}
-
-// TODO: not shure of ts gonna work
-void visitorLoadFreeFunctions(astVisitorStation* station){
-  station->binaryBucketFunction = freeBinary;
-  station->groupBucketFunction = freeGroup;
-  station->unaryBucketFunction = freeUnary;
-  station->literalBucketFunction = freeLiteral;
-}
 
 // init free
 astVisitorStation* initVisitorStation(){
@@ -94,3 +56,104 @@ astVisitorStation* initVisitorStation(){
 void freeVisitorStation(astVisitorStation* visitor_bucket){
   free(visitor_bucket);
 }
+
+
+// for drawing arithmetic trees
+void printftab(int n) {for (int i = 0; i < n; i++) printf("\t");}
+void drawExpression(void* station, void* e, void* ext){
+  int* n = (int*)ext;
+  Expression* expression = e;
+  printftab(*n); printf("Expression\{\n");
+  (*n)++;
+  ((Expression*) expression)->accept(station, &expression->expression, n);
+  (*n)--;
+  printftab(*n); printf("}\n");
+}void drawBinary(void* station, void* b, void* ext){
+  int* n = (int*)ext;
+  Binary* binary = b;
+  printftab(*n); printf("Binary\{\n");
+  (*n)++;
+  printftab(*n); printf("left: \n"); ((Expression*)binary->left)->accept(station, binary->left, n);
+  printftab(*n); printf("right: \n"); ((Expression*)binary->right)->accept(station, binary->right, n);
+  (*n)--;
+  printftab(*n); printf("}\n");
+}void drawGrouping(void* station, void* g, void* ext){
+  int* n = (int*)ext; 
+  Grouping* grouping = g;
+  printftab(*n); printf("Grouping: (\n");
+  (*n)++;
+  printftab(*n); ((Expression*)grouping->expression)->accept(station, grouping->expression, n);
+  (*n)--;
+  printftab(*n); printf(")\n");
+}void drawUnary(void* station, void* u, void* ext){
+  int* n = ext;
+  Unary* unary = u;
+  printftab(*n); printf("Unary(\n");
+  (*n)++;
+  printftab(*n); ((Expression*)unary->expression)->accept(station, unary->expression, n);
+  (*n)--;
+  printftab(*n); printf(")\n");
+}void drawLiteral(void* station, void* l, void* ext){
+  int* n = ext;
+  Literal* literal = l;
+  // (*n)++;
+  printftab(*n); printf("(literal): ");
+  switch (literal->type)
+  {
+    case (INT):
+      printf("%d", *(int*)literal->address);
+      break;
+    case (FLOAT):
+      printf("%lf", *(double*)literal->address);
+      break;
+    case (STRING):
+      printf("%s", (char*)literal->address);
+      break;
+    default:
+      printf("[ast.c] literal printing | nigger die ( %d )\n", literal->type);
+      assert(0);
+  }
+  printf("\n");
+  // (*n)--;
+}
+void visitorLoadDebugPrintFunctions(astVisitorStation* station)
+{
+  station->expressionBucketFunction = drawExpression;
+  station->binaryBucketFunction = drawBinary;
+  station->groupBucketFunction = drawGrouping;
+  station->unaryBucketFunction = drawUnary;
+  station->literalBucketFunction = drawLiteral;
+}
+
+// for freeing expressions
+void freeExpression(astVisitorStation* station, Expression* expression, void* ext){
+  ((Expression*)expression)->accept(station, &expression->expression, ext);
+  free(expression);
+}void freeBinary(void* station, void* b, void* ext){
+  Binary* binary = (Binary*)b;
+  ((Expression*)binary->left)->accept(station, &binary->left, ext); // free children
+  ((Expression*)binary->right)->accept(station, &binary->right, ext); // 1-layer polymorphism
+  free(b); // free itself
+}void freeGroup(void* station, void* g, void* ext){
+  Grouping* group = (Grouping*)g;
+  ((Expression*)group->expression)->accept(station, &group->expression, ext);
+  free(g);
+}void freeUnary(void* station, void* u, void* ext){
+  Unary* unary = u;
+  ((Expression*)unary->expression)->accept(station, &unary->expression, ext);
+  free(u);
+}void freeLiteral(void* station, void* l, void* ext){
+  Literal* literal = l;
+  if (literal->address == NULL){printf("[ast.c] null address\n");assert(0);}
+  if (literal->type == EXPRESSION) {
+    literal->accept(station, &literal, ext);
+  }
+  free(literal);}
+
+void visitorLoadFreeFunctions(astVisitorStation* station){
+  station->binaryBucketFunction = freeBinary;
+  station->groupBucketFunction = freeGroup;
+  station->unaryBucketFunction = freeUnary;
+  station->literalBucketFunction = freeLiteral;
+}
+

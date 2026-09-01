@@ -2,18 +2,23 @@
 #define PARSER_H
 
 #include "../misc/heap.h"
+#include "ast.h"
+
+extern bool* PARSER_NIL;
+extern bool* PARSER_TRUE;
+extern void** PARSER_FALSE;
 
 typedef struct
 {
   Heap tokens; 
-  
+  Expression* root;
+
   // working parameters
   int start;
   int current;
-  int currentLine;
 } Parser;
 
-void parserInit(Parser* parser);
+Parser parserInit();
 void parserDestruct(Parser* parser);
 
 /*
@@ -23,7 +28,9 @@ void parserDestruct(Parser* parser);
  * -> term -> factor -> unary -> primary
  * */
 
-void* Primary(Parser* parser);
+
+
+void* parserPrimary(Parser* parser);
 void* parserUnary(Parser* parser);
 void* parserFactor(Parser* parser);
 void* parserTerm(Parser* parser);

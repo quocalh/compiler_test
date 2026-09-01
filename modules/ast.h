@@ -2,7 +2,7 @@
 #define AST_H
 
 #include "token.h"
-#define VISITORBASE void (*accept)(void* visitor, void* obj);
+#define VISITORBASE void (*accept)(void* visitor, void* obj, void* ext);
 
 // polymorphimsm larping for visitor
 // larp all func with visitor-accept interface
@@ -64,6 +64,7 @@
 typedef struct
 {
   VISITORBASE
+    void* expression;
 } Expression;
 
 typedef struct
@@ -99,24 +100,28 @@ typedef struct
 Literal* astInitLiteral(TokenType dtype, void* value);
 
 // unique key to access (for each struct)
-void ExpressionAcceptKey(void* visitor, void* expression);
-void BinaryAcceptKey(void* visitor, void* binary);
-void GroupAcceptKey(void* visitor, void* group);
-void UnaryAcceptKey(void* visitor, void* unary);
-void LiteralAcceptKey(void* visitor, void* literal);
+void ExpressionAcceptKey(void* visitor, void* expression, void* ext);
+void BinaryAcceptKey(void* visitor, void* binary, void* ext);
+void GroupAcceptKey(void* visitor, void* group, void* ext);
+void UnaryAcceptKey(void* visitor, void* unary, void* ext);
+void LiteralAcceptKey(void* visitor, void* literal, void* ext);
 
 typedef struct
 {
-  // void (*expressionBucketFunction)(void* expression);
-  void (*binaryBucketFunction)(void* visitor, void* binary);
-  void (*groupBucketFunction)(void* visitor, void* group);
-  void (*unaryBucketFunction)(void* visitor, void* unary);
-  void (*literalBucketFunction)(void* visitor, void* literal);
+  void (*expressionBucketFunction)(void* visitor, void* expression, void* ext);
+  void (*binaryBucketFunction)(void* visitor, void* binary, void* ext);
+  void (*groupBucketFunction)(void* visitor, void* group, void* ext);
+  void (*unaryBucketFunction)(void* visitor, void* unary, void* ext);
+  void (*literalBucketFunction)(void* visitor, void* literal, void* ext);
 } astVisitorStation;
 
 astVisitorStation* initVisitorStation();
 void freeVisitorStation(astVisitorStation* visitor_bucket);
 
+// for drawing arithmetic trees
+void visitorLoadDebugPrintFunctions(astVisitorStation*);
+
+// for freeing expressions
 void visitorLoadFreeFunctions(astVisitorStation*);
 
 

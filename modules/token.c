@@ -13,8 +13,8 @@ void TokenCreateMnemonicMap(HashStrToInt** mnemonics)
   HashStrToIntAdd(mnemonics, "not", AND);
   HashStrToIntAdd(mnemonics, "or", OR);
 
-  HashStrToIntAdd(mnemonics, "true", FOR);
-  HashStrToIntAdd(mnemonics, "false", WHILE);
+  HashStrToIntAdd(mnemonics, "true", TRUE);
+  HashStrToIntAdd(mnemonics, "false", FALSE);
 
   HashStrToIntAdd(mnemonics, "for", FOR);
   HashStrToIntAdd(mnemonics, "while", WHILE);
