@@ -10,20 +10,26 @@ bool* PARSER_TRUE = NULL;
 void** PARSER_FALSE = NULL;
 
 // internal functions
-Token* scannerpeek(Parser* parser, int i)
+Token* parserpeek(Parser* parser, int i)
 {
   if (!parser || i >= parser->tokens.length) return NULL;
   return parser->tokens.ptr + i;
 }
 bool matchType(Parser* parser, int i, int expect)
 {
-  Token* token = scannerpeek(parser, parser->current);
+  Token* token = parserpeek(parser, parser->current);
   return (token->TokenType == expect);
 }
 
-Token* consume(Parser* parser, int i)
+bool consume(Parser* parser, int i, TokenType expected)
 {
-  return NULL;
+  while(1)
+  {
+    Token* c = parserpeek(parser, parser->current++);
+    if (c->TokenType == expected) return true;
+    if (c == NULL) break; // EOF
+  }
+  return false;
 }
 
 
@@ -35,25 +41,26 @@ Token* consume(Parser* parser, int i)
 // PARSING FUNCTIONS
 void* parserExpression(Parser* parser)
 {
+  printf("hello equality\n");
   return parserEquality(parser);
 }
 
 void* parserEquality(Parser* parser)
 {
   // equality → comparison ( ( "!=" | "==" ) comparison )* ;
+  printf("hello comparison\n");
   void* comp = parserComparison(parser);
 
   while (true)
   {
     // after "void* comp", the next one is guaranteed to be same or higher class
-    parser->current++;
-    Token* token = scannerpeek(parser, parser->current);
+    Token* token = parserpeek(parser, parser->current);
     TokenType op = token->TokenType;
 
     bool t = (op == BANG_EQUAL) || \
              (op == EQUAL_EQUAL);
     if (!t) break;
-
+    parser->current++; // skip the op token, to the term
 
     void* comp2 = parserComparison(parser);
     comp = astInitBinary(comp, op, comp2);
@@ -63,21 +70,23 @@ void* parserEquality(Parser* parser)
 
 void* parserComparison(Parser* parser)
 {
+  printf("hello term\n");
   // comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
   // i don't want a == b == c as statement though (should i?)
   // comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )? ;
   void* term = parserTerm(parser);
  
+
   while (true)
   {
-    parser->current++;
-    Token* token = scannerpeek(parser, parser->current);
+    Token* token = parserpeek(parser, parser->current);
     TokenType op = token->TokenType;
     bool t = (op == GREATER) || \
              (op == GREATER_EQUAL) || \
              (op == LESS) || \
              (op == LESS_EQUAL);
     if (!t) break;
+    parser->current++; // skip the op token, to the term
 
     void* term2 = parserTerm(parser);
     term = astInitBinary(term, op, term2);
@@ -88,15 +97,16 @@ void* parserComparison(Parser* parser)
 
 void* parserTerm(Parser* parser)
 {
+  printf("hello factor\n");
   void* factor = parserFactor(parser);
   while (true)
   {
-    parser->current++;
-    Token* token = scannerpeek(parser, parser->current);
+    Token* token = parserpeek(parser, parser->current);
     TokenType op = token->TokenType;
     bool t = (op == MINUS) || \
-             (op = PLUS);
+             (op == PLUS);
     if (!t) break;
+    parser->current++; // skip the op token, to the term
 
     void* factor2 = parserFactor(parser);
     factor = astInitBinary(factor, op, factor2);
@@ -106,15 +116,16 @@ void* parserTerm(Parser* parser)
 
 void* parserFactor(Parser* parser)
 {
+  printf("hello unary\n");
   void* unary = parserUnary(parser);
   while (true)
   {
-    parser->current++;
-    Token* token = scannerpeek(parser, parser->current);
+    Token* token = parserpeek(parser, parser->current);
     TokenType op = token->TokenType;
     bool t = (op == SLASH) || \
              (op == STAR);
     if (!t) break;
+    parser->current++; // skip the op token, to the term
 
     void* unary2 = parserUnary(parser);
     unary = astInitBinary(unary, op, unary2);
@@ -124,9 +135,10 @@ void* parserFactor(Parser* parser)
 
 void* parserUnary(Parser* parser)
 {
+  printf("hello literal%d\n", parser->current);
   // unary          → ( "!" | "-" ) unary
   //              | primary ;
-  Token* token = scannerpeek(parser, parser->current);
+  Token* token = parserpeek(parser, parser->current);
   TokenType op = token->TokenType;
   bool t = (op == MINUS) || \
            (op == BANG);
@@ -142,24 +154,40 @@ void* parserUnary(Parser* parser)
 
 void* parserPrimary(Parser* parser)
 {
+  printf("hello mem\n");
   // primary        → NUMBER | STRING | "true" | "false" | "nil"
   //                | "(" expression ")" ;
-  Token* token = scannerpeek(parser, parser->current);
+  Token* token = parserpeek(parser, parser->current);
+  // printf("hello mem%p\n", token);
+
   TokenType type = token->TokenType;
   switch (type)
   {
-    // smelly code right here no? // create an address for them?
     case TRUE:
       return astInitLiteral(type, PARSER_TRUE);
     case FALSE:
       return astInitLiteral(type, PARSER_FALSE);
     case NIL:
       return astInitLiteral(type, PARSER_NIL);
+
     case FLOAT:
     case INT:
     case STRING:
+      printf("don't you have a human heart: %d %d\n", INT, token->TokenType);
       return astInitLiteral(type, token->literal_ptr);
+
+    case LEFT_PAREN:;
+      void* c = parserExpression(parser);
+      if (parserpeek(parser, ++parser->current)->TokenType == RIGHT_PAREN)
+      {
+        printf("neeat.\n");
+        return c;
+      }
+      else {
+        assert(0);
+      }
       break;
+
     default:
       printf("you shouldn't be here no?\n");
       assert(0);

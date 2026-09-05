@@ -24,6 +24,10 @@ bool HeapAdd(Heap* heap, void* item_ptr);
 void HeapFree(Heap* heap);
 
 
+// to create custom ins (slightly faster interface)
+// panic quit :D
+void* HeapInsInit(size_t size);
+void HeapInsFree(void* heap);
 
 #endif
 

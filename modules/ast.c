@@ -25,6 +25,8 @@ Literal* astInitLiteral(TokenType dtype, void* value){
   Literal* l = malloc(sizeof(*l));
   if (!l) {printf("[ast.c] init literal | nah\n"); return NULL;}
   *((Literal*)l) = (Literal){.address = value, .type = dtype, .accept = LiteralAcceptKey};
+  printf("a new value: %d %p\n", dtype, value);
+  printf("the number: %d\n", *((int*)value));
   return l;
 }
 
@@ -60,12 +62,60 @@ void freeVisitorStation(astVisitorStation* visitor_bucket){
 
 // for drawing arithmetic trees
 void printftab(int n) {for (int i = 0; i < n; i++) printf("\t");}
+
+// NOTE: figure out to inject this to every visitor to handle the NULL expression (not the NIL token)
+// closure + wrapper
+// nah stupid nigger: an accept helper is enough bruh
+//
+// typedef struct
+// {
+//   void (*ptr)(void* station, void* e, void* ext);
+// } NullSafeCheckClosure;
+//
+// void NullSafeCheckWrapperInnerFunc(void* station, void* e, void* ext)
+// {
+//   void (*f)(void*, void*, void*);
+//   int* n = (int*)ext;
+//   if (station == NULL){printf("[ast.c] check station | null\n"); assert(0);}
+//
+//   if (e == NULL){
+//     printftab(*n); printf("NULL\n");}
+//   else{
+//     f(station, e, ext);
+//     // TODO: fix this closure mess
+//   }
+// }
+//
+// NullSafeCheckClosure* NullClosureSetup(void* f)
+// {
+//   // return the struct pointer (c), not the func pointer (c->ptr)
+//   // to get the function pointer, type <var>->ptr;
+//   NullSafeCheckClosure* c = malloc(sizeof(*c));
+//   c->ptr = NullSafeCheckWrapperInnerFunc;
+//   return c;
+// }
+//
+
+void acceptSafe(void* station, void* e, void* ext){
+  int* n = (int*)ext;
+  if (station == NULL){printf("[ast.c] check station | null\n"); assert(0);}
+
+  if (e == NULL){
+    // printf("hello world%p\n", e);
+    printftab(*n); printf("NULL\n");
+    return;
+  }
+  printf("hello\n");
+  ((Expression*)e)->accept(station, e, ext);
+}
+
 void drawExpression(void* station, void* e, void* ext){
   int* n = (int*)ext;
   Expression* expression = e;
   printftab(*n); printf("Expression\{\n");
   (*n)++;
-  ((Expression*) expression)->accept(station, &expression->expression, n);
+  // ((Expression*) expression->expression)->accept(station, expression->expression, n);
+  acceptSafe(station, expression->expression, n);
   (*n)--;
   printftab(*n); printf("}\n");
 }void drawBinary(void* station, void* b, void* ext){
@@ -73,16 +123,19 @@ void drawExpression(void* station, void* e, void* ext){
   Binary* binary = b;
   printftab(*n); printf("Binary\{\n");
   (*n)++;
-  printftab(*n); printf("left: \n"); ((Expression*)binary->left)->accept(station, binary->left, n);
-  printftab(*n); printf("right: \n"); ((Expression*)binary->right)->accept(station, binary->right, n);
+  printftab(*n); printf("left: \n");
+  acceptSafe(station, binary->left, n);
+  printftab(*n); printf("right: \n");
+  acceptSafe(station, binary->right, n);
   (*n)--;
   printftab(*n); printf("}\n");
 }void drawGrouping(void* station, void* g, void* ext){
-  int* n = (int*)ext; 
+  int* n = (int*)ext;
   Grouping* grouping = g;
   printftab(*n); printf("Grouping: (\n");
   (*n)++;
-  printftab(*n); ((Expression*)grouping->expression)->accept(station, grouping->expression, n);
+  printftab(*n);
+  acceptSafe(station, grouping->expression, n);
   (*n)--;
   printftab(*n); printf(")\n");
 }void drawUnary(void* station, void* u, void* ext){
@@ -90,7 +143,7 @@ void drawExpression(void* station, void* e, void* ext){
   Unary* unary = u;
   printftab(*n); printf("Unary(\n");
   (*n)++;
-  printftab(*n); ((Expression*)unary->expression)->accept(station, unary->expression, n);
+  acceptSafe(station, unary->expression, n);
   (*n)--;
   printftab(*n); printf(")\n");
 }void drawLiteral(void* station, void* l, void* ext){
@@ -109,6 +162,13 @@ void drawExpression(void* station, void* e, void* ext){
     case (STRING):
       printf("%s", (char*)literal->address);
       break;
+    case (EXPRESSION):;
+      Expression* e = (Expression*)((Literal*)literal->address);
+      printf("\n");
+      (*n)++;
+      acceptSafe(station, e, n);
+      (*n)--;
+      break;
     default:
       printf("[ast.c] literal printing | nigger die ( %d )\n", literal->type);
       assert(0);
@@ -126,29 +186,68 @@ void visitorLoadDebugPrintFunctions(astVisitorStation* station)
 }
 
 // for freeing expressions
+void acceptfreeSafe(void* station, void* e, void* ext){
+  if (station == NULL){printf("[ast.c] check station | null\n"); assert(0);}
+  if (e == NULL){
+    printf("free NULL\n");
+    return;
+  }
+  ((Expression*)e)->accept(station, e, ext);
+}
 void freeExpression(astVisitorStation* station, Expression* expression, void* ext){
-  ((Expression*)expression)->accept(station, &expression->expression, ext);
+  printf("free expression\n");
+  // ((Expression*)expression)->accept(station, expression->expression, ext);
+  acceptfreeSafe(station, expression->expression, ext);
   free(expression);
 }void freeBinary(void* station, void* b, void* ext){
+  printf("bin\n");
   Binary* binary = (Binary*)b;
-  ((Expression*)binary->left)->accept(station, &binary->left, ext); // free children
-  ((Expression*)binary->right)->accept(station, &binary->right, ext); // 1-layer polymorphism
+  // ((Expression*)binary->left)->accept(station, binary->left, ext); // free children
+  // ((Expression*)binary->right)->accept(station, binary->right, ext); // 1-layer polymorphism
+  acceptfreeSafe(station, binary->left, ext);
+  acceptfreeSafe(station, binary->right, ext);
   free(b); // free itself
 }void freeGroup(void* station, void* g, void* ext){
+  printf("free group\n");
   Grouping* group = (Grouping*)g;
-  ((Expression*)group->expression)->accept(station, &group->expression, ext);
+  // ((Expression*)group->expression)->accept(station, group->expression, ext);
+  acceptfreeSafe(station, group->expression, ext);
   free(g);
 }void freeUnary(void* station, void* u, void* ext){
+  printf("free unary\n");
   Unary* unary = u;
-  ((Expression*)unary->expression)->accept(station, &unary->expression, ext);
+  // ((Expression*)unary->expression)->accept(station, unary->expression, ext);
+  acceptfreeSafe(station, unary->expression, ext);
   free(u);
 }void freeLiteral(void* station, void* l, void* ext){
+  printf("free literal\n");
   Literal* literal = l;
   if (literal->address == NULL){printf("[ast.c] null address\n");assert(0);}
   if (literal->type == EXPRESSION) {
-    literal->accept(station, &literal, ext);
+    acceptfreeSafe(station, literal->address, ext);
+    // return;
   }
-  free(literal);}
+  switch ((TokenType)literal->type)
+  {
+    case (EXPRESSION):
+      break;
+    case (FLOAT):
+    case (INT):
+      // printf("hello igger\n");
+      // free(literal->address);
+      // this, if only they only get me the data from the sea (heap)
+      break;
+
+    case (STRING):
+      StaticStringFree(literal->address);
+      break;
+
+    default:
+      printf("[ast.c] you shouldn't be here no? (or can't free the address from the stack)\n"); assert(0);
+      break;
+  }
+  free(literal);
+}
 
 void visitorLoadFreeFunctions(astVisitorStation* station){
   station->binaryBucketFunction = freeBinary;

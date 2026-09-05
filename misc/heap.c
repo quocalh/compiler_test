@@ -1,4 +1,5 @@
 #include "heap.h"
+#include <assert.h>
 
 // [internal func]
 bool HeapSucessfullyAllocated(void* ptr)
@@ -59,4 +60,17 @@ void HeapFree(Heap* heap)
 void what(){
   printf("thy end is now\n");
 }
+
+// over engineer at its best
+void* HeapInsInit(size_t size)
+{
+  void* ptr = malloc(size);
+  if (!ptr) {printf("[heap.c] can't allocate"); assert(0);}
+  return ptr;
+}
+void HeapInsFree(void* heap)
+{
+  free(heap);
+}
+
 

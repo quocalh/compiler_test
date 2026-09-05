@@ -484,7 +484,8 @@ void ScannerDestruct(Scanner* scanner_ptr)
         break;
     }
   }
-  HeapFree(&scanner_ptr->tokens);
+  // scanner will do it for ya
+  // HeapFree(&scanner_ptr->tokens);
   StaticStringFree(&scanner_ptr->stream);
 
   // free the mnemonic dict

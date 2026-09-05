@@ -113,15 +113,28 @@ typedef struct
   void (*groupBucketFunction)(void* visitor, void* group, void* ext);
   void (*unaryBucketFunction)(void* visitor, void* unary, void* ext);
   void (*literalBucketFunction)(void* visitor, void* literal, void* ext);
+  
+  // i have no direct solution to closure handling (this is the trade off)
+  // this will be freed afterward if the funcs are closures (malloc allocated)
+  void* closureExpression;
+  void* closureBinary;
+  void* closureGrouping;
+  void* closureUnary;
+  void* closureLiteral;
+
 } astVisitorStation;
+
 
 astVisitorStation* initVisitorStation();
 void freeVisitorStation(astVisitorStation* visitor_bucket);
 
 // for drawing arithmetic trees
+void acceptSafe(void* station, void* e, void* ext);
 void visitorLoadDebugPrintFunctions(astVisitorStation*);
+void visitorFlushDebugPrintFunctionsClosure(astVisitorStation*);
 
 // for freeing expressions
+void acceptfreeSafe(void* station, void* e, void* ext);
 void visitorLoadFreeFunctions(astVisitorStation*);
 
 
