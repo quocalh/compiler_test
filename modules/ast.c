@@ -105,10 +105,8 @@ void acceptSafe(void* station, void* e, void* ext){
     printftab(*n); printf("NULL\n");
     return;
   }
-  printf("hello\n");
   ((Expression*)e)->accept(station, e, ext);
 }
-
 void drawExpression(void* station, void* e, void* ext){
   int* n = (int*)ext;
   Expression* expression = e;

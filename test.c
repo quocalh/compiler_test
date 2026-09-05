@@ -70,9 +70,10 @@ int main()
 
   for (int i = 0; i < scanner.tokens.length; i++)
   {
-    Token* token = &((Token*)scanner.tokens.ptr)[i];
+    // Token* token = &((Token*)scanner.tokens.ptr)[i];
+    Token* token = (Token*)scanner.tokens.ptr + i;
 
-    printf("LINE: %d | TYPE: %d | LITERAL: %p | LEXEME: %s \n", 
+    printf("LINE: %d | TYPE: %d | LITERAL: %p | LEXEME: %s \n",
            token->line,
            token->TokenType,
            token->literal_ptr,
@@ -81,9 +82,16 @@ int main()
   }
 
   parser.tokens = scanner.tokens;
-  // printf("hello world, (%d - 5 = %d)\n", );
+  for (int i = 0; i < scanner.tokens.length; i++)
+  {
+    Token* token = (Token*)scanner.tokens.ptr + i;
+    printf("LINE: %d | TYPE: %d | LITERAL: %p | LEXEME: %s \n",
+      token->line,
+      token->TokenType,
+      token->literal_ptr,
+      token->lexeme.str);
+  }
   parser.root = parserExpression(&parser);
-
   // draw the tree
   printf("draw the tree\n");
   visitorLoadDebugPrintFunctions(station);

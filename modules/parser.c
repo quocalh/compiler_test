@@ -13,7 +13,7 @@ void** PARSER_FALSE = NULL;
 Token* parserpeek(Parser* parser, int i)
 {
   if (!parser || i >= parser->tokens.length) return NULL;
-  return parser->tokens.ptr + i;
+  return parser->tokens.ptr + sizeof(Token) * i;
 }
 bool matchType(Parser* parser, int i, int expect)
 {
@@ -55,6 +55,7 @@ void* parserEquality(Parser* parser)
   {
     // after "void* comp", the next one is guaranteed to be same or higher class
     Token* token = parserpeek(parser, parser->current);
+    if (!token) break;
     TokenType op = token->TokenType;
 
     bool t = (op == BANG_EQUAL) || \
@@ -80,6 +81,7 @@ void* parserComparison(Parser* parser)
   while (true)
   {
     Token* token = parserpeek(parser, parser->current);
+    if (!token) break;
     TokenType op = token->TokenType;
     bool t = (op == GREATER) || \
              (op == GREATER_EQUAL) || \
@@ -102,9 +104,15 @@ void* parserTerm(Parser* parser)
   while (true)
   {
     Token* token = parserpeek(parser, parser->current);
+    if (!token) break;
     TokenType op = token->TokenType;
     bool t = (op == MINUS) || \
              (op == PLUS);
+    printf("thug back %d %d\n", parser->current, op);
+    
+    Token* debug = parserpeek(parser, 1);
+    printf("%s\n", debug->lexeme.str);
+    
     if (!t) break;
     parser->current++; // skip the op token, to the term
 
@@ -121,6 +129,7 @@ void* parserFactor(Parser* parser)
   while (true)
   {
     Token* token = parserpeek(parser, parser->current);
+    if (!token) break;
     TokenType op = token->TokenType;
     bool t = (op == SLASH) || \
              (op == STAR);
@@ -158,9 +167,11 @@ void* parserPrimary(Parser* parser)
   // primary        → NUMBER | STRING | "true" | "false" | "nil"
   //                | "(" expression ")" ;
   Token* token = parserpeek(parser, parser->current);
+  parser->current++;
   // printf("hello mem%p\n", token);
 
   TokenType type = token->TokenType;
+  printf("hello the world\n");
   switch (type)
   {
     case TRUE:
@@ -173,19 +184,27 @@ void* parserPrimary(Parser* parser)
     case FLOAT:
     case INT:
     case STRING:
-      printf("don't you have a human heart: %d %d\n", INT, token->TokenType);
       return astInitLiteral(type, token->literal_ptr);
 
     case LEFT_PAREN:;
+      // parser->current++; // skip the left paren
       void* c = parserExpression(parser);
-      if (parserpeek(parser, ++parser->current)->TokenType == RIGHT_PAREN)
+
+      // astVisitorStation* station = initVisitorStation();
+      // visitorLoadDebugPrintFunctions(station);
+      // int n = 0;
+      // acceptSafe(station, c, &n);
+      // freeVisitorStation(station);
+      
+      if (parserpeek(parser, parser->current)->TokenType == RIGHT_PAREN)
       {
         printf("neeat.\n");
+        parser->current++;
         return c;
       }
-      else {
-        assert(0);
-      }
+      // else {
+      //   assert(0);
+      // }
       break;
 
     default:
