@@ -8,5 +8,13 @@
 int main()
 { 
   printf("hello world\n");
+  System* system = SystemInit("src.txt");
+  Scanner* scanner = ScannerInit(system);
+  
+  ScannerScan(scanner);
+
+  ScannerDestruct(scanner);
+  SystemDestruct(system);
+
   return 0; 
 }

@@ -15,6 +15,7 @@ bool HeapSucessfullyAllocated(void* ptr)
 Heap* HeapInit(size_t size)
 {
   void* ptr = malloc(size * 1);
+  if (!ptr) {printf("can't allocate heap\n"); assert(0);}
   return ptr;
 }
 

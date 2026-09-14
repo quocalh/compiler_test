@@ -7,8 +7,8 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                // "${file}",
-                "test.c",
+                "${file}",
+                // "test.c",
 
                 "./modules/*.c", 
                 "./misc/*.c", 

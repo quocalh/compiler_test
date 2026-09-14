@@ -1,7 +1,7 @@
 #ifndef SCANNER_H
 #define SCANNER_H
 
-#include "misc/heap.h"
+#include "../misc/heap.h"
 #include "system.h"
 
 typedef struct
@@ -19,7 +19,8 @@ typedef struct
 } Scanner;
 
 Scanner* ScannerInit(System* system);
-void ScannerFree(Scanner* scanner);
+void ScannerDestruct(Scanner* scanner);
 
+void ScannerScan(Scanner* scanner);
 
 #endif

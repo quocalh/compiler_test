@@ -1,7 +1,7 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include "heap.h"
+#include "../misc/heap.h"
 
 typedef struct{
     Heap* tokens;

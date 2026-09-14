@@ -12,7 +12,7 @@ System* SystemInit(const char* file_name)
 {
     Heap* new_heap = HeapInit(sizeof(Token));
 
-    System* system = malloc(sizof(*system));
+    System* system = malloc(sizeof(*system));
     ASSERT(system, SYSTEM, "can't allocate mem for system");
 
     system->tokens = new_heap;
@@ -24,4 +24,5 @@ System* SystemInit(const char* file_name)
 void* SystemDestruct(System* system)
 {
    HeapFree(system->tokens);
+   free(system);
 }
