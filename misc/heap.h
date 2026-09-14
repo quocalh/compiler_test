@@ -17,9 +17,9 @@ typedef struct Heap
 // [internal func]: check if we have successfully allocate the space
 bool HeapSucessfullyAllocated(void* ptr);
 //
-Heap HeapInit(size_t size);
+Heap* HeapInit(size_t size);
 // [internal func]to allocated more space to the heap (grow twice each growth)
-bool HeapAdd(Heap* heap, void* item_ptr);
+bool HeapAdd(Heap* heap, const void* item_ptr);
 // free mem
 void HeapFree(Heap* heap);
 

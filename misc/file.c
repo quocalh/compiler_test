@@ -5,6 +5,9 @@
 
 #define FILE_MAX_WIDTH 250
 
+// DEPRICATED
+// things will be all done in scannner.c
+
 /*
  * turning a file into bunch of keywords
  * saved into the heap array (discard all the \n thingy)
@@ -15,7 +18,7 @@
 
 char* FileReadToString_(char* fileName)
 {
-  FILE *fp = fopen("src.txt", "r");
+  FILE *fp = fopen(fileName, "r");
 
   if (fp == NULL){
     return (char*)0; // equals to NULL
@@ -69,57 +72,6 @@ char* FileReadToString_(char* fileName)
   return buffer;
 }
 
-// bool ParseFileIntoString_(char* fileName, char** outputArray, int* count)
-// {
-//   FILE* fp = fopen(fileName, "r");
-//   if (fp == NULL)
-//   {
-//     fclose(fp);
-//     return false;
-//   }
-//
-//   // get length
-//   fseek(fp, 0, SEEK_END);
-//   long int streamLength = ftell(fp);
-//   fseek(fp, 0, SEEK_SET);
-//
-//   // create a heap
-//   char* stream = (char*)malloc(sizeof(char) * streamLength + 1);
-//   if (stream == NULL)
-//   {
-//     fclose(fp);
-//     return false;
-//   }
-//
-//   int i = 0;
-//   char c;
-//   while(true)
-//   {
-//     c = fgetc(fp);
-//
-//     if(feof(fp)){
-//       break;
-//     }
-//     stream[i] = c;
-//     i++;
-//   }
-//
-//   printf("\n");
-//   printf("test res from file.c ---\n");
-//   for (int j = 0; j < i; j++)
-//   {
-//     printf("%c", stream[j]);
-//   }
-//   printf("%p\n", stream);
-//   printf("\n");
-//
-//   fclose(fp);
-//
-//   (*outputArray) = stream;
-//   (*count) = i;
-//   return true;
-// }
-//
 
 // LLM save me this time
 // i forget the \0 thingy but the LLM code handles the file stream way more smoother than what am doing (using fread)

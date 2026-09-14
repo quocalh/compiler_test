@@ -12,43 +12,39 @@ bool HeapSucessfullyAllocated(void* ptr)
 
 }
 //
-Heap HeapInit(size_t size)
+Heap* HeapInit(size_t size)
 {
   void* ptr = malloc(size * 1);
-  if (!HeapSucessfullyAllocated(ptr))
-  {
-    Heap heap = {0}; // equals to NULL
-    return heap;
-  }
-  Heap heap = {size, ptr, 0, 1};
-  return heap;
+  return ptr;
 }
 
 // [interface] append for heap
-bool HeapAdd(Heap* heap, void* item_ptr)
+bool HeapAdd(Heap* heap, const void* item)
 {
-  if (heap->ptr == NULL){
-    printf("null heap pointer");
-    return false;
-  }
-  // insufficient space -> double the space -> sufficient again
-  if (heap->length + 1 > heap->allocated_length)
-  {
-    void* tmp = realloc(heap->ptr, heap->size * heap->allocated_length * 2);
-    if (tmp == NULL)
-    {
-      return false;
-    }
-    heap->ptr = tmp; 
-    heap->allocated_length *= 2;
-  }
-  // guarantee sufficient -> add an item
-  memcpy((char*)heap->ptr + heap->length * heap->size,
-         (char*)item_ptr,
-         heap->size);
-  heap->length += 1;
+    if (heap == NULL || heap->ptr == NULL || item == NULL)
+        return false;
 
-  return true;
+    if (heap->length >= heap->allocated_length)
+    {
+        size_t new_length = heap->allocated_length == 0
+                        ? 1
+                        : heap->allocated_length * 2;
+
+        void* new_ptr = realloc(heap->ptr, new_length * heap->size);
+        if (new_ptr == NULL)
+            return false;
+
+        heap->ptr = new_ptr;
+        heap->allocated_length = new_length;
+    }
+
+    void* destination =
+        (char*)heap->ptr + heap->length * heap->size;
+
+    memcpy(destination, item, heap->size);
+    heap->length++;
+
+    return true;
 }
 
 // free mem
@@ -57,11 +53,6 @@ void HeapFree(Heap* heap)
   free(heap->ptr);
 }
 
-void what(){
-  printf("thy end is now\n");
-}
-
-// over engineer at its best
 void* HeapInsInit(size_t size)
 {
   void* ptr = malloc(size);
