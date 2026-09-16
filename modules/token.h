@@ -1,3 +1,4 @@
+#include "../misc/string_handling.h"
 
 typedef enum {
     // evil
@@ -35,7 +36,7 @@ typedef enum {
 
 typedef struct{
     TokenType type;
-    const char* lexeme;
+    StaticString lexeme;
     void* literal;
     int line;
 } Token;

@@ -47,3 +47,5 @@ make an proper error handling system in parsing file
 read: https://www.reddit.com/r/C_Programming/comments/1bvnasy/what_naming_convention_do_you_prefer_in_c/
 read: https://www.reddit.com/r/C_Programming/comments/1bvnasy/comment/ky0ylwh/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
 
+
+https://martinfowler.com/bliki/ArchitectureDecisionRecord.html

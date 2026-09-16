@@ -12,7 +12,13 @@
         res? 1:\
             REPORT(file, debug_string); \
             assert(res); \
-    } while(0)
+    } while(0);
+
+#define ERROR(file, debug_string) \
+    do { \
+        REPORT(file, debug_string); \
+        assert(0); \
+    } while (0);
 
 #endif
 

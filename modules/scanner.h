@@ -2,6 +2,7 @@
 #define SCANNER_H
 
 #include "../misc/heap.h"
+#include "../misc/string_handling.h"
 #include "system.h"
 
 typedef struct
@@ -11,6 +12,7 @@ typedef struct
 
     // import attribs
     Heap* tokens;    
+    StaticString stream;
 
     // working attribs
     int start;

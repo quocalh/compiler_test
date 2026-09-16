@@ -3,6 +3,7 @@
 #include "../misc/assert_.h"
 #include "scanner.h"
 #include "token.h"
+#include "../misc/string_handling.h"
 #include "../misc/heap.h"
 
 #define SCANNER "scanner"
@@ -23,7 +24,31 @@ Scanner* ScannerInit(System* system)
     return scanner;
 }
 
-// void ScannerPeek(Scanner* scanner, int)
+void ScannerAddToken(Scanner* scanner, TokenType type, void* literal)
+{
+    printf("hello world\n");
+    Token token;
+    token.lexeme = StaticStringSubstring(&scanner->stream, scanner->start, scanner->current);
+    token.line = scanner->line;
+    token.literal = literal;
+    token.type = type;
+    HeapAdd(scanner->tokens, &token);
+}
+
+char CharStreamPeek(StaticString* stream, int index)
+{
+    if (index >= stream->length) ERROR(SCANNER, "peek | given index exceed the available length of the heap array.");
+    if (!stream->str) ERROR(SCANNER, "peek | the ptr in the stream is a NULL pointer.");
+    // slash-new line behavior here
+    return ((char*)stream->str)[index];
+}
+void ScannerDiscardComment(Scanner* scanner)
+{
+    while (true){
+        char c = CharStreamPeek(&scanner->stream, ++scanner->current);
+        if (c == '\n') break;
+    }
+}
 void ScannerScan(Scanner* scanner)
 {
     // read file
@@ -42,37 +67,28 @@ void ScannerScan(Scanner* scanner)
     int i = 0;
     char c;
     while ((c = fgetc(file)) != EOF){
-        /*
-         * skip the escape string
-         * example:
-         * printf("hello world");
-         * 
-         * is equivalent to this:
-         * printf("hello \
-         *        world"); // skips all the ' ', '\t', and '\n' after it
-         */
-        if (c == '\\'){
-            bool skipped = false;
-            // skips the ' ', '\t', '\n'
-            while (
-                   ((c = fgetc(file)) != EOF) &&
-                   (c == ' ' || c == '\t' || c == '\n')
-                ){skipped = true;}
-            
-            // if haven't skipped -> pretend nothing happens
-            if (!skipped) {
-                stream[i++] = '\\';}
-        }
-        
+    //     if (c == '\\'){
+    //         bool skipped = false;
+    //         // skips the ' ', '\t', '\n'
+    //         while (
+    //                ((c = fgetc(file)) != EOF) &&
+    //                (c == ' ' || c == '\t' || c == '\n')
+    //             ){skipped = true;}
+    //         // if haven't skipped (false) -> pretend nothing happens
+    //         if (!skipped) {
+    //             stream[i++] = '\\';}
+    //     }
         stream[i++] = c;
     }
-    i--;
     stream[i] = '\0'; i++;
-    
     // shrink the stream down to its correct size
     char* tmp = realloc(stream, i * sizeof(*tmp));
     ASSERT(tmp, SCANNER, "can't shrink the allocated string stream.");
     stream = tmp;
+
+    // scanner->stream (Static string init) 
+    scanner->stream.str = stream;
+    scanner->stream.length = i;
     
     // debug this
     printf("debug string\n");
@@ -84,40 +100,79 @@ void ScannerScan(Scanner* scanner)
     
     // translating string into tokens, add into token array
     // NOTE: last element should be EOF
-    while (false)
+    int* start = &scanner->start;
+    int* current = &scanner->current;
+    int* line = &scanner->line;
+    Heap* tokens = scanner->tokens;
+
+    while ((*start) < (scanner->stream).length)
     {
-        Token new_token;
-        scanner->start = scanner->current;
+        *start = *current;
+
         char c = stream[scanner->start];
+        // TODO: to recreat the c slash-newline behavior
+        // to handling current-start relation
+        // add token policy
 
         // need planning
-        TokenType type;
+        
         switch (c)
         {
             case '(':
+                ScannerAddToken(scanner, LEFT_PAREN, NULL);
                 break;
             case ')':
+                ScannerAddToken(scanner, RIGHT_PAREN, NULL);
                 break;
 
             case '+':
+                ScannerAddToken(scanner, PLUS, NULL);
                 break;
             case '-':
+                ScannerAddToken(scanner, MINUS, NULL);
                 break;
             case '*':
+                ScannerAddToken(scanner, STAR, NULL);
                 break;
             
             case '\n':
+                (*line)++;
+            case '\t':
             case ' ':
                 break;
             
-            case '\\':
+            case '/':;
+                // peek the next char
+                char next = CharStreamPeek(&(scanner->stream), (*current) + 1);
+
+                if (next == '/')
+                {
+                    ScannerDiscardComment(scanner);
+                }
+                else{
+                    ScannerAddToken(scanner, SLASH, NULL);     
+                }
                 break;
+            
+            // string
+            case '"':
+                break;
+
 
             default:
                 // handling keywords
                 // handling var
                 break;
         }
+        (*current)++;
+    }
+    // debug token testing
+    for (int i = 0; i < scanner->tokens->length; i++)
+    {
+        Heap* heap = scanner->tokens;
+        Token* token = heap->ptr + i * heap->size;
+        // Token token = (heap->ptr)[i];
+        printf("Line: %d | TokenTypeID: %d | Lexeme: %s\n", token->line, token->type, token->lexeme);
     }
     
     
