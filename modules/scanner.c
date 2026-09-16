@@ -35,17 +35,35 @@ void ScannerAddToken(Scanner* scanner, TokenType type, void* literal)
     HeapAdd(scanner->tokens, &token);
 }
 
-char CharStreamPeek(StaticString* stream, int index)
+char CharStreamPeek(StaticString* stream, int* i)
 {
+    int index = *i;
     if (index >= stream->length) ERROR(SCANNER, "peek | given index exceed the available length of the heap array.");
     if (!stream->str) ERROR(SCANNER, "peek | the ptr in the stream is a NULL pointer.");
-    // slash-new line behavior here
-    return ((char*)stream->str)[index];
+
+    // slash-newline skipping behavior
+    int skipped_index = index;
+
+    const char* str = (const char *)stream->str;
+    if (str[skipped_index] == '\\')
+    {
+        while(str[++skipped_index] == ' '  ||
+              str[skipped_index]   == '\t' || 
+              str[skipped_index]   == '\n');
+
+        if (skipped_index > index + 1){
+            *i = skipped_index;
+        }
+    }
+
+    if (skipped_index >= stream->length) ERROR(SCANNER, "peek | given skipped index exceed the available length of the heap array.");
+    return ((char*)stream->str)[*i];
 }
 void ScannerDiscardComment(Scanner* scanner)
 {
     while (true){
-        char c = CharStreamPeek(&scanner->stream, ++scanner->current);
+        ++scanner->current;
+        char c = CharStreamPeek(&scanner->stream, &scanner->current);
         if (c == '\n') break;
     }
 }
@@ -67,20 +85,10 @@ void ScannerScan(Scanner* scanner)
     int i = 0;
     char c;
     while ((c = fgetc(file)) != EOF){
-    //     if (c == '\\'){
-    //         bool skipped = false;
-    //         // skips the ' ', '\t', '\n'
-    //         while (
-    //                ((c = fgetc(file)) != EOF) &&
-    //                (c == ' ' || c == '\t' || c == '\n')
-    //             ){skipped = true;}
-    //         // if haven't skipped (false) -> pretend nothing happens
-    //         if (!skipped) {
-    //             stream[i++] = '\\';}
-    //     }
         stream[i++] = c;
     }
     stream[i] = '\0'; i++;
+
     // shrink the stream down to its correct size
     char* tmp = realloc(stream, i * sizeof(*tmp));
     ASSERT(tmp, SCANNER, "can't shrink the allocated string stream.");
@@ -97,6 +105,18 @@ void ScannerScan(Scanner* scanner)
         printf("%c", stream[j]);
     }
     printf("\n");
+
+    // debug string
+    printf("DEBUG\n");
+    int j = 0;
+    while (j < i)
+    {
+        char c = CharStreamPeek(&scanner->stream, &j);
+        printf("%c", c);
+        j++;
+    }
+    printf("DEBUG\n");
+
     
     // translating string into tokens, add into token array
     // NOTE: last element should be EOF
@@ -104,13 +124,18 @@ void ScannerScan(Scanner* scanner)
     int* current = &scanner->current;
     int* line = &scanner->line;
     Heap* tokens = scanner->tokens;
+    
 
-    while ((*start) < (scanner->stream).length)
+    // DISABLED
+    while ((*start) >= (scanner->stream).length)
     {
         *start = *current;
 
         char c = stream[scanner->start];
         // TODO: to recreat the c slash-newline behavior
+        //      currently disable the token scanning loop
+        // * testing with slash new line skipping behavior in stream peek
+        // 
         // to handling current-start relation
         // add token policy
 
@@ -143,7 +168,9 @@ void ScannerScan(Scanner* scanner)
             
             case '/':;
                 // peek the next char
-                char next = CharStreamPeek(&(scanner->stream), (*current) + 1);
+                current++;
+                char next = CharStreamPeek(&(scanner->stream), current);
+                // char next = CharStreamPeek(&(scanner->stream), (*current) + 1);
 
                 if (next == '/')
                 {
@@ -172,7 +199,7 @@ void ScannerScan(Scanner* scanner)
         Heap* heap = scanner->tokens;
         Token* token = heap->ptr + i * heap->size;
         // Token token = (heap->ptr)[i];
-        printf("Line: %d | TokenTypeID: %d | Lexeme: %s\n", token->line, token->type, token->lexeme);
+        printf("Line: %d | TokenTypeID: %d | Lexeme: %s\n", token->line, token->type, token->lexeme.str);
     }
     
     
