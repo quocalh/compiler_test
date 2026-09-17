@@ -19,14 +19,13 @@ Scanner* ScannerInit(System* system)
 
         .start = 0,
         .current = 0,
-        .line = 0,
+        .line = 1,
     };
     return scanner;
 }
 
 void ScannerAddToken(Scanner* scanner, TokenType type, void* literal)
 {
-    printf("hello world\n");
     Token token;
     token.lexeme = StaticStringSubstring(&scanner->stream, scanner->start, scanner->current);
     token.line = scanner->line;
@@ -35,43 +34,49 @@ void ScannerAddToken(Scanner* scanner, TokenType type, void* literal)
     HeapAdd(scanner->tokens, &token);
 }
 
-char CharStreamPeek(StaticString* stream, int* i)
+char CharStreamPeek(Scanner* scanner)
 {
-    int index = *i;
-    if (index >= stream->length) ERROR(SCANNER, "peek | given index exceed the available length of the heap array.");
-    if (!stream->str) ERROR(SCANNER, "peek | the ptr in the stream is a NULL pointer.");
+    int current = scanner->current;
+    StaticString* stream = &(scanner->stream);
+
+    if (current >= stream->length) return '\0';
+    if (!stream->str) ERROR("peek | the ptr in the stream is a NULL pointer.");
 
     // slash-newline skipping behavior
-    int skipped_index = index;
+    int skipped_index = current;
 
     const char* str = (const char *)stream->str;
     if (str[skipped_index] == '\\')
     {
-        while(str[++skipped_index] == ' '  ||
-              str[skipped_index]   == '\t' || 
-              str[skipped_index]   == '\n');
+        do{
+            if (str[++skipped_index] == '\n') scanner->line++;
+        }
+        while(str[skipped_index] == ' '  ||
+              str[skipped_index] == '\t' || 
+              str[skipped_index] == '\n' );
 
-        if (skipped_index > index + 1){
-            *i = skipped_index;
+        if (skipped_index > current + 1){
+            scanner->current = skipped_index;
         }
     }
 
-    if (skipped_index >= stream->length) ERROR(SCANNER, "peek | given skipped index exceed the available length of the heap array.");
-    return ((char*)stream->str)[*i];
+    if (scanner->current >= stream->length) ERROR("peek | given skipped index exceed the available length of the heap array.");
+    return ((char*)stream->str)[scanner->current];
 }
 void ScannerDiscardComment(Scanner* scanner)
 {
     while (true){
-        ++scanner->current;
-        char c = CharStreamPeek(&scanner->stream, &scanner->current);
-        if (c == '\n') break;
+        (++(scanner->current));
+        char c = CharStreamPeek(scanner);
+        if (c == '\0') break;
+        if (c == '\n') {++scanner->line;break;}
     }
 }
 void ScannerScan(Scanner* scanner)
 {
     // read file
     FILE* file = fopen(scanner->file_name, "r");
-    ASSERT(file, SCANNER, "can't allocate space for string stream. (file ~ fopen)");
+    ASSERT(file, "can't allocate space for string stream. (file ~ fopen)");
     
     // allocating space for the file string stream
     fseek(file, 0, SEEK_END);
@@ -80,7 +85,7 @@ void ScannerScan(Scanner* scanner)
     
     // fetch the stream, put into the heap
     char* stream = malloc((stream_length + 1) * sizeof(*stream));
-    ASSERT(stream, SCANNER, "can't allocate mem for the string stream.");
+    ASSERT(stream, "can't allocate mem for the string stream.");
 
     int i = 0;
     char c;
@@ -91,13 +96,14 @@ void ScannerScan(Scanner* scanner)
 
     // shrink the stream down to its correct size
     char* tmp = realloc(stream, i * sizeof(*tmp));
-    ASSERT(tmp, SCANNER, "can't shrink the allocated string stream.");
+    ASSERT(tmp, "can't shrink the allocated string stream.");
     stream = tmp;
 
     // scanner->stream (Static string init) 
     scanner->stream.str = stream;
     scanner->stream.length = i;
     
+    // /*
     // debug this
     printf("debug string\n");
     for (int j = 0; j < i; j++)
@@ -105,17 +111,7 @@ void ScannerScan(Scanner* scanner)
         printf("%c", stream[j]);
     }
     printf("\n");
-
-    // debug string
-    printf("DEBUG\n");
-    int j = 0;
-    while (j < i)
-    {
-        char c = CharStreamPeek(&scanner->stream, &j);
-        printf("%c", c);
-        j++;
-    }
-    printf("DEBUG\n");
+    // */
 
     
     // translating string into tokens, add into token array
@@ -126,20 +122,23 @@ void ScannerScan(Scanner* scanner)
     Heap* tokens = scanner->tokens;
     
 
-    // DISABLED
-    while ((*start) >= (scanner->stream).length)
+    while ((*start) < (scanner->stream).length)
     {
         *start = *current;
 
         char c = stream[scanner->start];
         // TODO: to recreat the c slash-newline behavior
-        //      currently disable the token scanning loop
-        // * testing with slash new line skipping behavior in stream peek
+        // testing with slash new line skipping behavior in stream peek (DONE)
         // 
+        // BUG FOUND ASSERT (FIXED)
+        // COMMENT FIXING (FIXED)
+        // 
+        // FIX ALONG THE CLUNK AHH SCANNER.C TOKENIZE FUNCTION
+        // 
+        // BEFORE MOVING ON TO THE
         // to handling current-start relation
-        // add token policy
+        // add token policies
 
-        // need planning
         
         switch (c)
         {
@@ -168,9 +167,8 @@ void ScannerScan(Scanner* scanner)
             
             case '/':;
                 // peek the next char
-                current++;
-                char next = CharStreamPeek(&(scanner->stream), current);
-                // char next = CharStreamPeek(&(scanner->stream), (*current) + 1);
+                (*current)++;
+                char next = CharStreamPeek(scanner);
 
                 if (next == '/')
                 {

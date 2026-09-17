@@ -1,25 +1,33 @@
 #ifndef ASSERT__H
 #define ASSERT__H
 
+#include <stdio.h>
 #include <assert.h>
 
-#define REPORT(file, debug_string) \
-    printf("[%s.c]: %s\n", file, debug_string);
+// printf("[%s.c: %d]: %s\n", file, __LINE__, debug_string);
+// printf("[%s: %d]: %s\n", __FILE__, __LINE__, debug_string);
+#define REPORT(debug_string) \
+    printf("[%s:%d]: %s\n", __FILE__, __LINE__, debug_string);
 
-#define ASSERT(res, file, debug_string) \
+#define ASSERT(res, debug_string) \
     do { \
         /* if res is false, then stop instantly*/ \
         res? 1:\
-            REPORT(file, debug_string); \
+            REPORT(debug_string); \
             assert(res); \
     } while(0);
 
-#define ERROR(file, debug_string) \
+#define ERROR(debug_string) \
     do { \
-        REPORT(file, debug_string); \
+        REPORT(debug_string); \
         assert(0); \
-    } while (0);
+    } while(0);
 
+#define ERROR_TE(debug_string) \
+    do { \
+        printf("[%s:%d]: %s\n", __FILE__, __LINE__, debug_string); \
+        assert(0); \
+    } while(0);
 #endif
 
 

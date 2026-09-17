@@ -1,5 +1,6 @@
-((()))
+// hello world
+((())) // hello world
 +
 -
-printf("hello \\\
-        world\n");\
+// yes my kind
+//
