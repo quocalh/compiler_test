@@ -5,6 +5,7 @@ void* HeapInsInit(size_t size)
 {
     void* ptr = malloc(size);
     if (!ptr) {printf("[heap.c] can't allocate"); assert(0);}
+    
     return ptr;
 }
 void HeapInsFree(void* heap)
@@ -15,30 +16,43 @@ void HeapInsFree(void* heap)
 // [internal func]
 bool HeapSucessfullyAllocated(void* ptr)
 {
-  if (ptr != NULL)
-  {
-    return true;
-  }
+  if (ptr != NULL) return true;
   return false;
 
 }
 
+// Heap Init but not in heap
+// sorry for this bullshit
 Heap* HeapInit(size_t size)
 {
     void* ptr = malloc(size * 1);
-    if (!HeapSucessfullyAllocated(ptr))
-    {
-        Heap heap = {0}; // equals to NULL
-        return NULL;
-    }
-    Heap* heap = HeapInsInit(sizeof(*heap));
+    if (!ptr) return NULL;
+
+    Heap* heap = malloc(sizeof(*heap));
+    if (!heap) return NULL;
+
     heap->ptr = ptr;
     heap->size = size;
     heap->length = 0;
     heap->allocated_length = 1;
-    
+
     return heap;
 }
+// Heap* HeapInit(size_t size)
+// {
+//     void* ptr = malloc(size * 1);
+//     if (!HeapSucessfullyAllocated(ptr)) return NULL;
+
+//     Heap* heap = HeapInsInit(sizeof(*heap));
+//     Heap copy = HeapInit_(size);
+    
+//     memcpy(heap, &copy, sizeof(Heap));
+
+//     // any debug code pin here
+    
+//     return heap;
+// }
+
 
 // [interface] append for heap
 bool HeapAdd(Heap* heap, const void* item)

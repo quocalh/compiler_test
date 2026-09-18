@@ -2,9 +2,11 @@
 #define SYSTEM_H
 
 #include "../misc/heap.h"
+#include "../misc/string_handling.h"
 
 typedef struct{
     Heap* tokens;
+    StaticString* stream;
     const char* file_name;
 } System;
 

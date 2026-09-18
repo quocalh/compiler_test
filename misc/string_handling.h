@@ -6,7 +6,7 @@ typedef struct{
   char* str;
 } StaticString;
 
-StaticString StaticStringInit(const char* buffer);
+StaticString* StaticStringInit(const char* buffer);
 
 StaticString StaticStringSubstring(StaticString* str, int start, int end);
 

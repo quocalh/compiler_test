@@ -8,11 +8,11 @@
 typedef struct
 {  
     // internal attribs
-    const char* file_name;
 
-    // import attribs
+    // import attribs (System)
+    const char* file_name;
     Heap* tokens;    
-    StaticString stream;
+    StaticString* stream;
 
     // working attribs
     int start;
@@ -21,8 +21,9 @@ typedef struct
 } Scanner;
 
 Scanner* ScannerInit(System* system);
+Scanner ScannerInitHeap(System* system);
 void ScannerDestruct(Scanner* scanner);
 
-void ScannerScan(Scanner* scanner);
+void ScannerScan(Scanner* scanner, System* system);
 
 #endif

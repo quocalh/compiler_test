@@ -10,12 +10,14 @@
 
 System* SystemInit(const char* file_name)
 {
-    Heap* new_heap = HeapInit(sizeof(Token));
+    StaticString* ss = StaticStringInit(file_name);
 
     System* system = malloc(sizeof(*system));
-    ASSERT(system, "can't allocate mem for system");
+    if (!system) return NULL;
 
-    system->tokens = new_heap;
+    // scanner will fill those
+    system->tokens = NULL;
+    system->stream = NULL;
     system->file_name = file_name;
 
     return system;
@@ -23,6 +25,7 @@ System* SystemInit(const char* file_name)
 
 void* SystemDestruct(System* system)
 {
-   HeapFree(system->tokens);
-   free(system);
+    HeapFree(system->tokens);
+    StaticStringFree(system->stream);
+    free(system);
 }

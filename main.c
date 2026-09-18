@@ -10,7 +10,7 @@ int main()
   System* system = SystemInit("src.txt");
   Scanner* scanner = ScannerInit(system);
   
-  ScannerScan(scanner);
+  ScannerScan(scanner, system);
 
   ScannerDestruct(scanner);
   SystemDestruct(system);
