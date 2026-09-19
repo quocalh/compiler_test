@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include "assert.h"
 
-#include "modules/ast.h"
+// #include "modules/ast.h"
 #include "modules/scanner.h"
-#include "modules/parser.h"
+// #include "modules/parser.h"
 #include "modules/token.h"
 // #include "modules/token.h"
 
@@ -75,7 +75,7 @@ int main()
            token->line,
            token->TokenType,
            token->literal_ptr,
-           token->lexeme.str);
+           token->lexeme->str);
   }
 
   parser.tokens = scanner.tokens;

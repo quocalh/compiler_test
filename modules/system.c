@@ -25,7 +25,27 @@ System* SystemInit(const char* file_name)
 
 void* SystemDestruct(System* system)
 {
+    // free the heap pointers, and all the lexeme (StaticString) in token
+    for (int i = 0; i < system->tokens->length; i++)
+    {
+        Token* token = system->tokens->ptr + i * sizeof(Token);
+        
+        StaticStringFree(token->lexeme);
+        
+        switch (token->type)
+        {
+            case STRING: 
+                printf("delete: \"%s\"\n", ((StaticString*)token->literal)->str);
+                StaticStringFree(token->literal);
+                break;
+            case NUMBER:
+                break;
+            default: 
+                break;
+        }
+    }
     HeapFree(system->tokens);
+
     StaticStringFree(system->stream);
     free(system);
 }

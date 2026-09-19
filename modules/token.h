@@ -36,7 +36,7 @@ typedef enum {
 
 typedef struct{
     TokenType type;
-    StaticString lexeme;
+    StaticString* lexeme;
     void* literal;
     int line;
 } Token;

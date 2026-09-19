@@ -18,16 +18,15 @@
  * FIX ALONG THE CLUNK AHH SCANNER.C TOKENIZE FUNCTION (FIXED)
  * 
  * STRING HANDLING (DONE)
- *      -> FREE THE FUNCITON TO FREE THE STING TOKEN (*)
- * BEFORE THAT: (**)
- *  - THE HEAP IN SYSTEM SHOULD NOT BE HEAP*
+ *      (*)(DONE FIXED BUT JUST THE WHITE BOX OVERALL CHECK, ONE LAST TIME)
  *      - BROKEN ONES // SEPARATE FUNCTIONS FOR HEAP INIT AND STACKK INIT:
  *          - STRING_HANDLING (FIXED)
  *          - HEAP (FIXED)
  *          - SYSTEM (FIXED)
  *          - SCANNER (~FIXED, BE CAREFUL WITH THIS ONE*)
  *          - MAY BE EVEN TOKEN? (NO)
- *      - AN ADDITIONAL OVERLAY SHOULD BE ADDED FOR THOSE WANT TO HEAP INIT IN THE HEAP
+ *      - AN ADDITIONAL OVERLAY SHOULD BE ADDED FOR THOSE WANT TO HEAP INIT IN THE HEAP (FIXED, LGTM)
+ *      -> FREE THE FUNCITON TO FREE THE STRING TOKEN
  *  - SCANNER.C USE STREAM A LOT 
  *      - MAKE IT STATIC STRING* (INFER BEING EXTRACTED FROM THE SYSTEM)
  *      - SAME FOR TOKENS (GOOD THAT WE DONE THAT ALREADY)
@@ -56,7 +55,7 @@ Scanner* ScannerInit(System* system)
         .line = 1,
     };
     
-    // subscriber
+    // told you, it would be filled
     system->tokens = scanner->tokens;
     system->stream = scanner->stream;
 
@@ -133,10 +132,9 @@ void ScannerScanString(Scanner* scanner)
     }
     
     // StaticString string retrieval O(N) + Tokenize the string
-    
-    StaticString *ss = StaticStringInit(str_vector->ptr);
+    StaticString* ss = StaticStringInit(str_vector->ptr);
+    // StaticString* ss = StaticStringSubstring(scanner->stream, scanner->start, scanner->current);
     ScannerAddToken(scanner, STRING, ss);
-
     free(str_vector);
 }
 void ScannerScan(Scanner* scanner, System* system)
@@ -170,8 +168,6 @@ void ScannerScan(Scanner* scanner, System* system)
     scanner->stream->str = stream;
     scanner->stream->length = i;
     
-    
-    
     // /*
     // debug
     scanner->current = 0;
@@ -193,8 +189,6 @@ void ScannerScan(Scanner* scanner, System* system)
     int* current = &scanner->current;
     int* line = &scanner->line;
     Heap* tokens = scanner->tokens;
-    
-
     while ((*start) < scanner->stream->length)
     {
         *start = *current;
@@ -263,7 +257,7 @@ void ScannerScan(Scanner* scanner, System* system)
         Heap* heap = scanner->tokens;
         Token* token = heap->ptr + i * heap->size;
         // Token token = (heap->ptr)[i];
-        printf("Line: %d | TokenTypeID: %d | Lexeme: %s\n", token->line, token->type, token->lexeme.str);
+        printf("Line: %d | TokenTypeID: %d | Lexeme: %s\n", token->line, token->type, token->lexeme->str);
     }
     
     

@@ -23,27 +23,29 @@ StaticString* StaticStringInit(const char* buffer)
 }
 
 
-StaticString StaticStringSubstring(StaticString* str, int start, int end)
+StaticString* StaticStringSubstring(StaticString* str, int start, int end)
 {
-  if (str == NULL) return (StaticString){0, 0};
-  if (start > end)
-  {
-    return (StaticString){0, 0};
-  }
-  if (start < 0 || end >= str->length)
-  {
-    return (StaticString){0, 0};
-  }
+  if (str == NULL) return NULL;
+  if (start > end) return NULL;
+  if (start < 0 || end >= str->length) return NULL;
   
   int l = end - start + 1;
   char* heap = (char*)malloc((l + 1) * sizeof(char));
-  if (!heap) return (StaticString){0, 0};
+  if (!heap) return NULL;
 
   // add the \0 at the end
   memcpy(heap, str->str + start, l);
   heap[l] = '\0';
+  
+  // create the static string in heap
+  StaticString* ptr = malloc(sizeof(*ptr));
+  if (!ptr) return NULL;
+  *ptr = (StaticString){
+    .str = heap,
+    .length = l
+  };
 
-  return (StaticString){l, heap};
+  return ptr;
 }
 
 void StaticStringFree(StaticString* str)

@@ -8,7 +8,7 @@ typedef struct{
 
 StaticString* StaticStringInit(const char* buffer);
 
-StaticString StaticStringSubstring(StaticString* str, int start, int end);
+StaticString* StaticStringSubstring(StaticString* str, int start, int end);
 
 void StaticStringFree(StaticString* str);
 
