@@ -12,7 +12,10 @@ typedef enum {
     SEMICOLON, 
 
     // literal
-    NUMBER, STRING, 
+    LITERAL,
+    NUMBER,
+    DOUBLE, INT, 
+    STRING, 
     TRUE, FALSE, NIL,
 
 
@@ -30,7 +33,7 @@ typedef enum {
     RETURN, 
 } TokenType;
 /*
- * I KNOW IM NOT DOING INT FLOAT SEPERATION, 
+ * I KNOW IM NOT DOING INT DOUBLE SEPERATION, 
  * I WANT TO SEE MY TREE WALK INTEPRETER DOES WORK 
  */
 

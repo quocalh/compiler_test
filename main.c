@@ -2,6 +2,7 @@
 
 #include "misc/assert_.h"
 #include "modules/scanner.h"
+#include "misc/numbers.h"
 
 #define WHITE "WHITE"
 

@@ -1,4 +1,5 @@
 #include "numbers.h"
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -79,9 +80,7 @@ int ipow(int base, int exp)
     if (exp % 2 == 1){
       res *= base;
     }
-    
     exp /= 2;
-
     base *= base; 
   }
   return res; 
@@ -95,7 +94,7 @@ void NumberStringIntoDouble(char* str, int l, int dot, double* d)
   }
   if (str[dot] != '.'){
     printf("[numbers.c] a slight misaligment in floating paramater (%*s have a dot at %d?)\n", l, str, dot + 1);
-    return;
+    assert(0);
   }
   if (str == NULL) return;
   int number = 0;

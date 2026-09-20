@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <ctype.h>
 
 #include "../misc/assert_.h"
 #include "scanner.h"
 #include "token.h"
 #include "../misc/string_handling.h"
+#include "../misc/numbers.h"
 #include "../misc/heap.h"
 
 #define SCANNER "scanner"
@@ -26,14 +28,19 @@
  *          - SCANNER (~FIXED, BE CAREFUL WITH THIS ONE*)
  *          - MAY BE EVEN TOKEN? (NO)
  *      - AN ADDITIONAL OVERLAY SHOULD BE ADDED FOR THOSE WANT TO HEAP INIT IN THE HEAP (FIXED, LGTM)
- *      -> FREE THE FUNCITON TO FREE THE STRING TOKEN
- *  - SCANNER.C USE STREAM A LOT 
+ *      -> FREE THE FUNCITON TO FREE THE STRING TOKEN (DONE)
+ *  - DONE* NOTE: SCANNER.C USE STREAM A LOT 
  *      - MAKE IT STATIC STRING* (INFER BEING EXTRACTED FROM THE SYSTEM)
  *      - SAME FOR TOKENS (GOOD THAT WE DONE THAT ALREADY)
  * 
- * NUMBER HANDLING (FLOAT AND INT ONLY)
+ * NUMBER HANDLING (DOUBLE AND INT ONLY) (*)
+ *  NUMBER DOUBLE HAS PROBLEM
+ *  CONSIDERING THE SIZE MISMATCH (MEM ALLOCATION FOR THE RES) (TABLET TIME)
  * KEYWORD HANDLING
+ *  REDESIGN THE DICTIONARY INTERFACE
  * VAR_NAME HANDLING
+ * FINISH THE EXTRA TOKENS (< << >> <=)
+ * REWORK ON THE POLYMORPHISM SYSTEM (TABLET + SEPARATED PROJECT)
  * MOVE ON TO MAKING A PARSER :D
  * 
  */
@@ -136,6 +143,43 @@ void ScannerScanString(Scanner* scanner)
     // StaticString* ss = StaticStringSubstring(scanner->stream, scanner->start, scanner->current);
     ScannerAddToken(scanner, STRING, ss);
     free(str_vector);
+}
+void ScannerScanNumber(Scanner* scanner)
+{
+    // scan the number + determine if that is float or int
+    bool dot = false;
+    
+    // scan the number's lexeme
+    char c;
+    while (isdigit(c = ScannerStreamPeek(scanner)) || c == '.') {
+        scanner->current++;
+        if (c == '.') dot = true;
+    }
+
+    scanner->current--;
+    StaticString* lexeme = StaticStringSubstring(
+        scanner->stream, scanner->start, scanner->current
+    );
+
+    TokenType type;
+    void* cache;
+    if (dot){
+        type = DOUBLE;
+        cache = HeapInsInit(sizeof(double));
+        *(double*)cache = (double) atof(lexeme->str);
+    }
+    else {
+        type = INT;
+        cache = HeapInsInit(sizeof(int));
+        *(int*)cache = (int) atoi(lexeme->str);
+    }
+    void* tmp = NULL;
+
+    ScannerAddToken(scanner, type, cache);
+}
+void ScannerScanLiteral(Scanner* scanner)
+{
+
 }
 void ScannerScan(Scanner* scanner, System* system)
 {
@@ -244,8 +288,13 @@ void ScannerScan(Scanner* scanner, System* system)
 
 
             default:
+                // handling numbers
+                if (isdigit(c))
+                {
+                    ScannerScanNumber(scanner);
+                    break;
+                }
                 // handling keywords
-                // handling var
                 break;
         }
         (*current)++;

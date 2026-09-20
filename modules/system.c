@@ -35,11 +35,14 @@ void* SystemDestruct(System* system)
         switch (token->type)
         {
             case STRING: 
-                printf("delete: \"%s\"\n", ((StaticString*)token->literal)->str);
                 StaticStringFree(token->literal);
                 break;
-            case NUMBER:
+
+            case INT:
+            case DOUBLE:
+                free(token->literal);
                 break;
+                
             default: 
                 break;
         }
