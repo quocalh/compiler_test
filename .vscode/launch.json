@@ -9,15 +9,26 @@
         "type": "cppdbg",
         "request": "launch",
         // "program": "${fileDirname}\\${fileBasenameNoExtension}.exe""${fileDirname}/.tmp/prog",
-        "program": "${fileDirname}/.tmp/prog",
+
+        // "program": "${fileDirname}/.tmp/prog",
+        "program": "${workspaceFolder}/.tmp/prog",
         "args": [],
         "stopAtEntry": false,
-        "cwd": "${fileDirname}",
+
+        // "cwd": "${fileDirname}",
+        "cwd": "${workspaceFolder}",
         "environment": [],
         "externalConsole": false,
         "MIMode": "gdb",
-        "miDebuggerPath":"/usr/bin/gcc",
+
         // "miDebuggerPath": "C:\\msys64\\mingw64\\bin\\gdb.exe""/usr/bin/gcc",
+        "miDebuggerPath":"/usr/bin/gdb",
+
+        // CRITICAL: RECOMPILES AND BUILDS THE LATEST CODE BEFORE LAUNCHING THE DEBUGGER SO YOU NEVER RUN OLD CODE ON F5
+        // AUTOMATICALLY BUILDS AND UPDATES THE EXECUTABLE BEFORE RUNNING GDB TO PREVENT RUNNING OLD BUGGY BINARIES
+        // WITHOUT IT, THE DEBUG FILE WILL RUN UPON THE PREVIOUS COMPILED FILE (OBSOLETE)
+        "preLaunchTask": "C/C++: gcc build active file", // task.json build
+
         "setupCommands": [
         {
             "description": "Enable pretty-printing for gdb",

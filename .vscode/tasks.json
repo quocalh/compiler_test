@@ -7,9 +7,7 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                // "${file}",
                 "main.c",
-                // "test.c",
 
                 "./modules/*.c", 
                 "./misc/*.c", 
@@ -19,10 +17,7 @@
                 "-I ./misc", 
 
                 "-o",
-                "${fileDirname}/.tmp/prog",
-
-                // ";",
-                // "${fileDirname}/.tmp/prog",
+                "${workspaceFolder}/.tmp/prog",
 
             ],
             "options": {
