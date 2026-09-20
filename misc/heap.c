@@ -57,7 +57,7 @@ Heap* HeapInit(size_t size)
 // [interface] append for heap
 bool HeapAdd(Heap* heap, const void* item)
 {
-    if (heap == NULL || heap->ptr == NULL || item == NULL)
+    if (heap == NULL || heap->ptr == NULL)
         return false;
 
     if (heap->length >= heap->allocated_length)

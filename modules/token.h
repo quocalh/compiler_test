@@ -12,25 +12,26 @@ typedef enum {
     SEMICOLON, 
 
     // literal
+    IDENTIFIER,
     LITERAL,
     NUMBER,
     DOUBLE, INT, 
     STRING, 
-    TRUE, FALSE, NIL,
 
 
     // truth operations
-    AND, OR, 
     EQUAL, EQUAL_EQUAL, 
     BANG, BANG_EQUAL, 
     LESS, LESS_EQUAL,
     GREATER, GREATER_EQUAL, 
 
     // key word
-    IF, FOR, WHILE, 
-    VAR, 
+    AND, OR, 
+    TRUE, FALSE, NIL,
+    IF, ELSE, FOR, WHILE, 
+    VAR, PRINT,
+    RETURN,
 
-    RETURN, 
 } TokenType;
 /*
  * I KNOW IM NOT DOING INT DOUBLE SEPERATION, 

@@ -34,9 +34,9 @@
  *      - SAME FOR TOKENS (GOOD THAT WE DONE THAT ALREADY)
  * 
  * NUMBER HANDLING (DOUBLE AND INT ONLY) (*)
- *  NUMBER DOUBLE HAS PROBLEM
+ *  NUMBER DOUBLE HAS PROBLEM (DONE FIXED)
  *  CONSIDERING THE SIZE MISMATCH (MEM ALLOCATION FOR THE RES) (TABLET TIME)
- * KEYWORD HANDLING
+ * KEYWORD HANDLING (*)
  *  REDESIGN THE DICTIONARY INTERFACE
  * VAR_NAME HANDLING
  * FINISH THE EXTRA TOKENS (< << >> <=)
@@ -52,8 +52,9 @@ Scanner* ScannerInit(System* system)
     StaticString* stream = HeapInsInit(sizeof(StaticString));
     
     *scanner = (Scanner){
+        .hashmap = NULL,
+
         .file_name = system->file_name,
-        
         .tokens = tokens,
         .stream = stream,
 
@@ -62,6 +63,20 @@ Scanner* ScannerInit(System* system)
         .line = 1,
     };
     
+    // hashmap, filling keywords
+    HashStrToIntAdd(&scanner->hashmap, "while", WHILE);
+    HashStrToIntAdd(&scanner->hashmap, "if", IF);
+    HashStrToIntAdd(&scanner->hashmap, "else", ELSE);
+    HashStrToIntAdd(&scanner->hashmap, "for", FOR);
+    HashStrToIntAdd(&scanner->hashmap, "while", WHILE);
+    HashStrToIntAdd(&scanner->hashmap, "true", TRUE);
+    HashStrToIntAdd(&scanner->hashmap, "false", FALSE);
+    HashStrToIntAdd(&scanner->hashmap, "and", AND);
+    HashStrToIntAdd(&scanner->hashmap, "or", OR);
+    HashStrToIntAdd(&scanner->hashmap, "nil", NIL);
+    HashStrToIntAdd(&scanner->hashmap, "var", VAR);
+    HashStrToIntAdd(&scanner->hashmap, "return", RETURN);
+   
     // told you, it would be filled
     system->tokens = scanner->tokens;
     system->stream = scanner->stream;
@@ -173,13 +188,34 @@ void ScannerScanNumber(Scanner* scanner)
         cache = HeapInsInit(sizeof(int));
         *(int*)cache = (int) atoi(lexeme->str);
     }
-    void* tmp = NULL;
 
     ScannerAddToken(scanner, type, cache);
 }
-void ScannerScanLiteral(Scanner* scanner)
+void ScannerScanKeyWordsAndVars(Scanner* scanner) 
 {
+    Heap* array = HeapInit(sizeof(char));
 
+    char c;
+    char null = '\0';
+    
+    HeapAdd(array, &null);
+    char* str = array->ptr;
+    while(isalnum(c = ScannerStreamPeek(scanner)) || c == '_')
+    {
+        HeapAdd(array, &null);
+        str[array->length -1 -1] = c;
+        scanner->current++;
+    }
+    scanner->current--;
+    
+    // get token type: either var or [keywords]
+    TokenType type;
+    HashStrToInt *res = HashStrToIntFind(&scanner->hashmap, str);
+    if (!res) type = IDENTIFIER;
+    else type = res->bucket;
+   
+    ScannerAddToken(scanner, type, NULL);
+    HeapFree(array);
 }
 void ScannerScan(Scanner* scanner, System* system)
 {
@@ -294,8 +330,12 @@ void ScannerScan(Scanner* scanner, System* system)
                     ScannerScanNumber(scanner);
                     break;
                 }
-                // handling keywords
-                break;
+                // handling keywords and vars
+                else if (isalpha(c))
+                {
+                    ScannerScanKeyWordsAndVars(scanner); 
+                    break;
+                }
         }
         (*current)++;
     }
@@ -308,13 +348,13 @@ void ScannerScan(Scanner* scanner, System* system)
         // Token token = (heap->ptr)[i];
         printf("Line: %d | TokenTypeID: %d | Lexeme: %s\n", token->line, token->type, token->lexeme->str);
     }
-    
-    
     // collapse
     fclose(file);
 }
 
 void ScannerDestruct(Scanner* scanner)
 {
+    printf("free hash\n");
+    HashStrToIntFree(&scanner->hashmap);
     free(scanner);
 }

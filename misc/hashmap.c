@@ -40,7 +40,7 @@ bool HashStrToIntDelete(HashStrToInt** map, char* key)
   HashStrToInt* item = HashStrToIntFind(map, key);
   if (!item)
   {
-    printf("[hashmap.c] str -> int del | key no found?");
+    printf("[hashmap.c] str -> int del | key not found?");
     return false;
   }
   HASH_DEL(*map, item);
@@ -57,7 +57,7 @@ void HashStrToIntIterate(HashStrToInt** map) // not sure one this one how to han
   }
 }
 
-void HashStrToIntClear(HashStrToInt** map)
+void HashStrToIntFree(HashStrToInt** map)
 {
   HashStrToInt* current;
   HashStrToInt* tmp;

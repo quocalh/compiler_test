@@ -26,7 +26,7 @@ bool HashStrToIntAdd(HashStrToInt** map, char* key, int value); // already do th
 // bool HashStrToIntModify(HashStrToInt** map, char* key, int new_value); // render this redundant
 bool HashStrToIntDelete(HashStrToInt** map, char* key);
 void HashStrToIntIterate(HashStrToInt** map); // not sure one this one how to handle
-void HashStrToIntClear(HashStrToInt** map);
+void HashStrToIntFree(HashStrToInt** map);
 // later on, we can try the struct -> struct (no pointer allowed)
 
 #endif

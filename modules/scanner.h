@@ -4,10 +4,12 @@
 #include "../misc/heap.h"
 #include "../misc/string_handling.h"
 #include "system.h"
+#include "../misc/hashmap.h"
 
 typedef struct
 {  
     // internal attribs
+    HashStrToInt* hashmap; 
 
     // import attribs (System)
     const char* file_name;

@@ -2,7 +2,7 @@
 
 #include "misc/assert_.h"
 #include "modules/scanner.h"
-#include "misc/numbers.h"
+#include "misc/hashmap.h"
 
 #define WHITE "WHITE"
 
@@ -15,6 +15,19 @@ int main()
 
   ScannerDestruct(scanner);
   SystemDestruct(system);
+  
+  // HashStrToInt* hash = NULL;
+
+  // void* tmp = NULL;
+
+  // HashStrToIntAdd(&hash, "ching", 67);
+  // tmp = NULL;
+  // HashStrToIntAdd(&hash, "chong", 123);
+  // tmp = NULL;
+  // HashStrToIntAdd(&hash, "ding", 67);
+  // tmp = NULL;
+  // HashStrToIntAdd(&hash, "ching", 123);
+  // tmp = NULL;
 
   return 0; 
 }
