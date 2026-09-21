@@ -18,9 +18,7 @@
  * COMMENT FIXING (FIXED)
  * 
  * FIX ALONG THE CLUNK AHH SCANNER.C TOKENIZE FUNCTION (FIXED)
- * 
- * STRING HANDLING (DONE)
- *      (*)(DONE FIXED BUT JUST THE WHITE BOX OVERALL CHECK, ONE LAST TIME)
+ * (DONE FIXED BUT JUST THE WHITE BOX OVERALL CHECK, ONE LAST TIME)
  *      - BROKEN ONES // SEPARATE FUNCTIONS FOR HEAP INIT AND STACKK INIT:
  *          - STRING_HANDLING (FIXED)
  *          - HEAP (FIXED)
@@ -33,14 +31,14 @@
  *      - MAKE IT STATIC STRING* (INFER BEING EXTRACTED FROM THE SYSTEM)
  *      - SAME FOR TOKENS (GOOD THAT WE DONE THAT ALREADY)
  * 
- * NUMBER HANDLING (DOUBLE AND INT ONLY) (*)
+ * NUMBER HANDLING (DOUBLE AND INT ONLY) (DONE)
  *  NUMBER DOUBLE HAS PROBLEM (DONE FIXED)
  *  CONSIDERING THE SIZE MISMATCH (MEM ALLOCATION FOR THE RES) (TABLET TIME)
- * KEYWORD HANDLING (*)
- *  REDESIGN THE DICTIONARY INTERFACE
- * VAR_NAME HANDLING
- * FINISH THE EXTRA TOKENS (< << >> <=)
- * REWORK ON THE POLYMORPHISM SYSTEM (TABLET + SEPARATED PROJECT)
+ * KEYWORD HANDLING (DONE)
+ *  REDESIGN THE DICTIONARY INTERFACE (NO NEED)
+ * VAR_NAME HANDLING (DONE)
+ * FINISH THE EXTRA TOKENS (< << >> <=) (DONE)
+ * REWORK ON THE POLYMORPHISM SYSTEM (TABLET + SEPARATED PROJECT) (* | PLEASE BE CONSIDERATE ABOUT THE VISITOR PATTERN)
  * MOVE ON TO MAKING A PARSER :D
  * 
  */
@@ -65,18 +63,26 @@ Scanner* ScannerInit(System* system)
     
     // hashmap, filling keywords
     HashStrToIntAdd(&scanner->hashmap, "while", WHILE);
+    HashStrToIntAdd(&scanner->hashmap, "for", FOR);
+
     HashStrToIntAdd(&scanner->hashmap, "if", IF);
     HashStrToIntAdd(&scanner->hashmap, "else", ELSE);
-    HashStrToIntAdd(&scanner->hashmap, "for", FOR);
-    HashStrToIntAdd(&scanner->hashmap, "while", WHILE);
+
     HashStrToIntAdd(&scanner->hashmap, "true", TRUE);
     HashStrToIntAdd(&scanner->hashmap, "false", FALSE);
+    HashStrToIntAdd(&scanner->hashmap, "nil", NIL);
+
     HashStrToIntAdd(&scanner->hashmap, "and", AND);
     HashStrToIntAdd(&scanner->hashmap, "or", OR);
-    HashStrToIntAdd(&scanner->hashmap, "nil", NIL);
+
     HashStrToIntAdd(&scanner->hashmap, "var", VAR);
     HashStrToIntAdd(&scanner->hashmap, "return", RETURN);
    
+    HashStrToIntAdd(&scanner->hashmap, "function", FUNCTION);
+    HashStrToIntAdd(&scanner->hashmap, "print", PRINT);
+    HashStrToIntAdd(&scanner->hashmap, "super", SUPER);
+    HashStrToIntAdd(&scanner->hashmap, "class", CLASS);
+
     // told you, it would be filled
     system->tokens = scanner->tokens;
     system->stream = scanner->stream;
@@ -284,7 +290,12 @@ void ScannerScan(Scanner* scanner, System* system)
             case ')':
                 ScannerAddToken(scanner, RIGHT_PAREN, NULL);
                 break;
-
+            case '{':
+                ScannerAddToken(scanner, LEFT_BRACE, NULL);
+                break;
+            case '}':
+                ScannerAddToken(scanner, RIGHT_BRACE, NULL);
+                break;
             case '+':
                 ScannerAddToken(scanner, PLUS, NULL);
                 break;
@@ -296,15 +307,68 @@ void ScannerScan(Scanner* scanner, System* system)
                 break;
             case '\\':
                 ScannerAddToken(scanner, BACKSLASH, NULL);
-            
+                break;
+ 
             case '\n':
                 (*line)++;
             case '\t':
             case ' ':
+                break;           
+
+            case '!':
+                // peek the next char
+                (*current)++;
+                if ((c = ScannerStreamPeek(scanner)) == '=') // !=
+                {
+                    ScannerAddToken(scanner, BANG_EQUAL, NULL);
+                }
+                else
+                {
+                    (*current)--;
+                    ScannerAddToken(scanner, BANG, NULL);
+                }
                 break;
             
+            case '=':
+                (*current)++;
+                if ((c = ScannerStreamPeek(scanner)) == '=')
+                {
+                    ScannerAddToken(scanner, EQUAL_EQUAL, NULL);
+                }
+                else
+                {
+                    (*current)--;
+                    ScannerAddToken(scanner, EQUAL, NULL);
+                }
+                break;
+
+             case '<':
+                (*current)++;
+                if ((c = ScannerStreamPeek(scanner)) == '=')
+                {
+                    ScannerAddToken(scanner, LESS_EQUAL, NULL);
+                }
+                else
+                {
+                    (*current)--;
+                    ScannerAddToken(scanner, LESS, NULL);
+                }
+                break;
+
+             case '>':
+                (*current)++;
+                if ((c = ScannerStreamPeek(scanner)) == '=')
+                {
+                    ScannerAddToken(scanner, GREATER_EQUAL, NULL);
+                }
+                else
+                {
+                    (*current)--;
+                    ScannerAddToken(scanner, GREATER, NULL);
+                }
+                break;
+
             case '/':;
-                // peek the next char
                 (*current)++;
                 char next = ScannerStreamPeek(scanner);
 
@@ -313,6 +377,7 @@ void ScannerScan(Scanner* scanner, System* system)
                     ScannerDiscardComment(scanner);
                 }
                 else{
+                    (*current)--;
                     ScannerAddToken(scanner, SLASH, NULL);     
                 }
                 break;

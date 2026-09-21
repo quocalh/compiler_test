@@ -29,8 +29,11 @@ typedef enum {
     AND, OR, 
     TRUE, FALSE, NIL,
     IF, ELSE, FOR, WHILE, 
-    VAR, PRINT,
+    VAR,
     RETURN,
+    FUNCTION,
+    THIS, SUPER, PRINT,
+    CLASS, 
 
 } TokenType;
 /*
