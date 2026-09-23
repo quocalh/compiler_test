@@ -11,38 +11,40 @@
 // use tablet to determine the struct
 
 typedef struct{
-    void (*connect)(PORT_ARG_CONFIG);
+    void* (*connect)(PORT_ARG_CONFIG);
     const char* name;
     int age;
     int level;
 } Player;
 
 typedef struct{
-    void (*human_port)(STATION_ARG_CONFIG); 
-    void (*monster_port)(STATION_ARG_CONFIG);
+    void* (*human_port)(STATION_ARG_CONFIG); 
+    void* (*monster_port)(STATION_ARG_CONFIG);
 } Station;
 
 // passing va_list into another func: https://stackoverflow.com/questions/36881533/passing-va-list-to-other-functions
 // count can be ommited since C23 for va_start
 // each va_start va_end must be called at the same function
-void human_port(PORT_ARG_CONFIG)
+void* human_port(PORT_ARG_CONFIG)
 {
     Station* _station = station;
     va_list ap, passing_ap;
     // duplicate the ap to pass it down
     va_start(ap); 
     va_copy(passing_ap, ap);
-    _station->human_port(station, self, passing_ap);
+    void* ptr = _station->human_port(station, self, passing_ap);
     va_end(ap);
+    return ptr;
 }
-void monster_port(PORT_ARG_CONFIG)
+void* monster_port(PORT_ARG_CONFIG)
 {
     Station* _station = station;
     va_list ap, passing_ap;
     va_start(ap);
     va_copy(passing_ap, ap);
-    _station->monster_port(station, self, passing_ap);
+    void* ptr = _station->monster_port(station, self, passing_ap);
     va_end(ap);
+    return ptr;
 }
 
 Player* PlayerInit(int age, int level, const char* name)
@@ -57,7 +59,7 @@ Player* PlayerInit(int age, int level, const char* name)
 }
 
 
-void StationHumanLoadSayHello(void* station, void* self, va_list ap)
+void* StationHumanLoadSayHello(void* station, void* self, va_list ap)
 {
     printf("hello: %d, %d, %d, %d\n",
         va_arg(ap, int), 
@@ -68,7 +70,7 @@ void StationHumanLoadSayHello(void* station, void* self, va_list ap)
     va_end(ap);
 }
 
-void StationMonsterLoadSayHello(void* station, void* self, va_list ap)
+void* StationMonsterLoadSayHello(void* station, void* self, va_list ap)
 {
     printf("hello: %d, %d, %d, %d\n",
         va_arg(ap, int) * 2, 
@@ -113,7 +115,7 @@ void example1(void* station, void* self, ...)
     va_end(ap);
 }
 
-int main_tmp()
+int main()
 {
     printf("hello world\n");
     
