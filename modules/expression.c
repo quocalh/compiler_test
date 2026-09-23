@@ -10,30 +10,57 @@
         ERROR("self is null"); \
 
 // port functions (accept)
-void* port_expression(PORT_ARG_CONFIG){
+void* ExPortExpression(PORT_ARG_CONFIG){
     PORT_SAFECHECK;
     ExStation* station_ = station;
-    
     va_list ap, passing_ap;
-    va_start(ap); va_copy(passing_ap, ap);
+    va_start(ap); 
+
+    va_copy(passing_ap, ap);
     void* ptr = station_->port_expression(station, self, passing_ap);
+    va_end(passing_ap);
 
     va_end(ap);
     return ptr;
 }
-void* port_binary(PORT_ARG_CONFIG){
+void* ExPortBinary(PORT_ARG_CONFIG){
     PORT_SAFECHECK;
-    return NULL;
-}
-void* port_unary(PORT_ARG_CONFIG){
+    ExStation* station_ = station;
+    va_list ap, passing_ap;
+    va_start(ap);
 
+    va_copy(passing_ap, ap);
+    void* ptr = station_->port_binary(station, self, passing_ap);
+    va_end(passing_ap);
+
+    va_end(ap);
+    return ptr;
+}
+void* ExPortUnary(PORT_ARG_CONFIG){
     PORT_SAFECHECK;
-    return NULL;
+    ExStation* station_ = station;
+    va_list ap, passing_ap;
+    va_start(ap);
+
+    va_copy(passing_ap, ap);
+    void* ptr = station_->port_unary(station, self, passing_ap);
+    va_end(passing_ap);
+
+    va_end(ap);
+    return ptr;
 }
 void* ExPortLiteral(PORT_ARG_CONFIG){
-
     PORT_SAFECHECK;
-    return NULL;
+    ExStation* station_ = station;
+    va_list ap, passing_ap;
+    va_start(ap); 
+
+    va_copy(passing_ap, ap);
+    void* ptr = station_->port_literal(station, self, passing_ap);
+    va_end(passing_ap);
+
+    va_end(ap);
+    return ptr;
 }
 
 

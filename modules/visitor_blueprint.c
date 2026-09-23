@@ -115,7 +115,7 @@ void example1(void* station, void* self, ...)
     va_end(ap);
 }
 
-int main()
+int main_tmp()
 {
     printf("hello world\n");
     

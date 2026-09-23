@@ -10,20 +10,18 @@ typedef struct
 {  
     // internal attribs
     HashStrToInt* hashmap; 
+    int start;
+    int current;
+    int line;
 
     // import attribs (System)
     const char* file_name;
     Heap* tokens;    
     StaticString* stream;
 
-    // working attribs
-    int start;
-    int current;
-    int line;
 } Scanner;
 
 Scanner* ScannerInit(System* system);
-Scanner ScannerInitHeap(System* system);
 void ScannerDestruct(Scanner* scanner);
 
 void ScannerScan(Scanner* scanner, System* system);
