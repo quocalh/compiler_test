@@ -9,61 +9,66 @@
     if (!self) \
         ERROR("self is null"); \
 
+// Using 'macro_i' to prevent variable collisions in the body function
+#define UNPACK_VARIADIC_ARGS(count_var, array_name) \
+    void* array_name[(count_var)]; \
+    do { \
+        va_list macro_ap; \
+        va_start(macro_ap); \
+        for (int macro_i = 0; macro_i < (count_var); macro_i++) { \
+            array_name[macro_i] = va_arg(macro_ap, void*); \
+        } \
+        va_end(macro_ap); \
+    } while(0)
+
 // port functions (accept)
 void* ExPortExpression(PORT_ARG_CONFIG){
     PORT_SAFECHECK;
     ExStation* station_ = station;
-    va_list ap, passing_ap;
-    va_start(ap); 
 
-    va_copy(passing_ap, ap);
-    void* ptr = station_->port_expression(station, self, passing_ap);
-    va_end(passing_ap);
+    // get the stream of args
+    UNPACK_VARIADIC_ARGS(argc, args);
 
-    va_end(ap);
+    // passing down
+    void* ptr = station_->port_expression(station, self, argc, args);
     return ptr;
 }
 void* ExPortBinary(PORT_ARG_CONFIG){
     PORT_SAFECHECK;
     ExStation* station_ = station;
-    va_list ap, passing_ap;
-    va_start(ap);
 
-    va_copy(passing_ap, ap);
-    void* ptr = station_->port_binary(station, self, passing_ap);
-    va_end(passing_ap);
+    // get the stream of args
+    UNPACK_VARIADIC_ARGS(argc, args);
 
-    va_end(ap);
+    // passing down
+    void* ptr = station_->port_binary(station, self, argc, args);
     return ptr;
 }
 void* ExPortUnary(PORT_ARG_CONFIG){
     PORT_SAFECHECK;
     ExStation* station_ = station;
-    va_list ap, passing_ap;
-    va_start(ap);
 
-    va_copy(passing_ap, ap);
-    void* ptr = station_->port_unary(station, self, passing_ap);
-    va_end(passing_ap);
+    // get the stream of args
+    UNPACK_VARIADIC_ARGS(argc, args);
 
-    va_end(ap);
+    // passing down
+    void* ptr = station_->port_unary(station, self, argc, args);
     return ptr;
 }
 void* ExPortLiteral(PORT_ARG_CONFIG){
     PORT_SAFECHECK;
     ExStation* station_ = station;
-    va_list ap, passing_ap;
-    va_start(ap); 
 
-    va_copy(passing_ap, ap);
-    void* ptr = station_->port_literal(station, self, passing_ap);
-    va_end(passing_ap);
+    // get the stream of args
+    UNPACK_VARIADIC_ARGS(argc, args);
 
-    va_end(ap);
+    // passing down
+    void* ptr = station_->port_literal(station, self, argc, args);
     return ptr;
 }
 
 
+// expressions
 Expression* ExpExpressionInit(void* expression)
 {
     Expression* e = HeapInsInit(sizeof(*e));
@@ -73,7 +78,7 @@ Expression* ExpExpressionInit(void* expression)
     };
     return e;
 }
-Binary* ExBinaryInit(void* left, void* right, Token* op)
+Binary* ExBinaryInit(void* left, void* right, TokenType op)
 {
     Binary* b = HeapInsInit(sizeof(*b));
     *b = (Binary){
@@ -84,7 +89,7 @@ Binary* ExBinaryInit(void* left, void* right, Token* op)
     };
     return b;
 }
-Unary* ExUnaryInit(void* expression, Token* op)
+Unary* ExUnaryInit(void* expression, TokenType op)
 {
     Unary* u = HeapInsInit(sizeof(*u));
     *u = (Unary){
@@ -103,4 +108,15 @@ Literal* ExLiteralInit(void* literal, TokenType type)
         .connect = ExPortLiteral
     };
     return l;
+}
+
+// station
+ExStation* ExStationInit()
+{
+    ExStation* ptr = HeapInsInit(sizeof(*ptr));
+    return ptr;
+}
+void ExStationDestruct(ExStation* station)
+{
+    free(station);
 }

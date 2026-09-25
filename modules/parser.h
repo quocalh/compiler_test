@@ -5,10 +5,6 @@
 #include "../misc/heap.h"
 #include "system.h"
 
-// print expression
-// arithmetic perform
-// free expression
-
 typedef struct{
     // internal attribs
     int current;
@@ -28,22 +24,22 @@ void ParserParser(Parser* parser);
 
 // print AST debug tree
 void ExStationLoadDebugPrint(ExStation* station);
-void ExStationDebugPrintPortExpression(STATION_ARG_CONFIG);
-void ExStationDebugPrintPortBinary(STATION_ARG_CONFIG);
-void ExStationDebugPrintPortUnary(STATION_ARG_CONFIG);
-void ExStationDebugPrintPortLiteral(STATION_ARG_CONFIG);
+void* ExStationDebugPrintPortExpression(STATION_ARG_CONFIG);
+void* ExStationDebugPrintPortBinary(STATION_ARG_CONFIG);
+void* ExStationDebugPrintPortUnary(STATION_ARG_CONFIG);
+void* ExStationDebugPrintPortLiteral(STATION_ARG_CONFIG);
 
 // build an AST tree () thinking of an error catcher in advance
 void ExStationLoadBuild(ExStation* station);
-void ExStationBuildPortExpression(STATION_ARG_CONFIG);
-void ExStationBuildPortBinary(STATION_ARG_CONFIG);
-void ExStationBuildPortUnary(STATION_ARG_CONFIG);
-void ExStationBuildPortLiteral(STATION_ARG_CONFIG);
+void* ExStationBuildPortExpression(STATION_ARG_CONFIG);
+void* ExStationBuildPortBinary(STATION_ARG_CONFIG);
+void* ExStationBuildPortUnary(STATION_ARG_CONFIG);
+void* ExStationBuildPortLiteral(STATION_ARG_CONFIG);
 
 // free expressions
 void ExStationLoadFree(ExStation* station);
-void ExStationFreePortExpression(STATION_ARG_CONFIG);
-void ExStationFreePortBinary(STATION_ARG_CONFIG);
-void ExStationFreePortUnary(STATION_ARG_CONFIG);
-void ExStationFreePortLiteral(STATION_ARG_CONFIG);
+void* ExStationFreePortExpression(STATION_ARG_CONFIG);
+void* ExStationFreePortBinary(STATION_ARG_CONFIG);
+void* ExStationFreePortUnary(STATION_ARG_CONFIG);
+void* ExStationFreePortLiteral(STATION_ARG_CONFIG);
 #endif

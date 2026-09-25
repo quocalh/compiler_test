@@ -4,8 +4,8 @@
 #include <stdarg.h>
 #include "token.h"
 
-#define PORT_ARG_CONFIG void* station, void* self, ...
-#define STATION_ARG_CONFIG void* station, void* self, va_list ap
+#define PORT_ARG_CONFIG void* station, void* self, int argc, ...
+#define STATION_ARG_CONFIG void* station, void* self, int argc, void* args[argc]
 #define VISITORBASE void* (*connect)(PORT_ARG_CONFIG)
 
 typedef struct{
@@ -16,12 +16,12 @@ typedef struct{
     VISITORBASE;
     void* left;
     void* right;
-    Token* op;
+    TokenType op;
 } Binary;
 typedef struct{
     VISITORBASE;
     void* expression; 
-    Token* op;
+    TokenType op;
 } Unary; 
 typedef struct{
     VISITORBASE;
@@ -30,8 +30,8 @@ typedef struct{
 } Literal;
 
 Expression* ExpExpressionInit(void* expression);
-Binary* ExBinaryInit(void* left, void* right, Token* op);
-Unary* ExUnaryInit(void* expression, Token* op);
+Binary* ExBinaryInit(void* left, void* right, TokenType op);
+Unary* ExUnaryInit(void* expression, TokenType op);
 Literal* ExLiteralInit(void* literal, TokenType type);
 
 /* 
@@ -44,6 +44,8 @@ typedef struct{
     void* (*port_unary)(STATION_ARG_CONFIG);
     void* (*port_literal)(STATION_ARG_CONFIG);
 } ExStation;
+ExStation* ExStationInit();
+void ExStationDestruct(ExStation* station);
 
 // create the corresponding key for each struct(connect functions)
 void* ExPortExpression(PORT_ARG_CONFIG);

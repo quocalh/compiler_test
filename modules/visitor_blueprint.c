@@ -31,8 +31,11 @@ void* human_port(PORT_ARG_CONFIG)
     va_list ap, passing_ap;
     // duplicate the ap to pass it down
     va_start(ap); 
+
     va_copy(passing_ap, ap);
     void* ptr = _station->human_port(station, self, passing_ap);
+    va_end(passing_ap);
+
     va_end(ap);
     return ptr;
 }
@@ -41,8 +44,11 @@ void* monster_port(PORT_ARG_CONFIG)
     Station* _station = station;
     va_list ap, passing_ap;
     va_start(ap);
+
     va_copy(passing_ap, ap);
     void* ptr = _station->monster_port(station, self, passing_ap);
+    va_end(passing_ap);
+
     va_end(ap);
     return ptr;
 }
