@@ -36,7 +36,6 @@ int main()
         )
     );
 
-
     ExStation* station = ExStationInit();
     ExStationLoadDebugPrint(station);
 
