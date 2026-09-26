@@ -28,6 +28,12 @@
         printf("[%s:%d]: %s\n", __FILE__, __LINE__, debug_string); \
         assert(0); \
     } while(0);
+
+#define REPORT_VARIADIC(debug_string, ...) \
+    printf(debug_string __VA_OPT__(,) __VA_ARGS__); 
+    // printf(debug_string, ##__VA_ARGS__)
+
+
 #endif
 
 

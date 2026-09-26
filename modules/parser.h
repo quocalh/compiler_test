@@ -12,13 +12,23 @@ typedef struct{
     // import attribs (System)
     Heap* tokens;
     const char* file_name;
+
 } Parser;
 
 Parser* ParserInit(System* system);
 void ParserDestruct(Parser* parser);
 
 // build the AST tree
-void ParserParser(Parser* parser);
+void ParserParse(Parser* parser);
+Expression* ParserExpression(Parser* parser);
+Expression* ParserEquality(Parser* parser);
+Expression* ParserComparison(Parser* parser);
+Expression* ParserTerm(Parser* parser);
+Expression* ParserFactor(Parser* parser);
+Expression* ParserUnary(Parser* parser);
+Expression* ParserExponent(Parser* parser);
+Expression* ParserGrouping(Parser* parser);
+Expression* ParserPrimary(Parser* parser);
 
 // visitor patterns domain
 
