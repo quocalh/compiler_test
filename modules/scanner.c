@@ -309,6 +309,9 @@ void ScannerScan(Scanner* scanner, System* system)
             case '\\':
                 ScannerAddToken(scanner, BACKSLASH, NULL);
                 break;
+            case '^':
+                ScannerAddToken(scanner, HAT, NULL);
+                break;
  
             case '\n':
                 (*line)++;

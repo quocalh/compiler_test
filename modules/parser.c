@@ -42,7 +42,13 @@ Token* ParserTokenPeekCustom(Parser* parser, int index)
 // wrapper
 Token* ParserTokenPeek(Parser* parser)
 {
-    return ParserTokenPeekCustom(parser, parser->current);
+    // return ParserTokenPeekCustom(parser, parser->current);
+    if (parser->current >= parser->tokens->length)
+    {
+        ERROR("peek out of bound.");
+    }
+    Heap* tokens = parser->tokens;
+    return tokens->ptr + parser->current * sizeof(Token);
 }
 
 
@@ -52,36 +58,124 @@ void ParserParse(Parser* parser);
 Expression* ParserExpression(Parser* parser)
 {
     // for now
-    return ParserTerm(parser);
+    return ParserEquality(parser);
 }
-Expression* ParserEquality(Parser* parser);
-Expression* ParserComparison(Parser* parser);
-Expression* ParserTerm(Parser* parser)
+Expression* ParserEquality(Parser* parser)
 {
-    void* a = ParserPrimary(parser);
+    void* expr = ParserComparison(parser);
+
+    // equality = comparison ((!= | ==) comparison)*
     while (parser->current < parser->tokens->length)
     {
-        Token* op_token = ParserTokenPeek(parser);
-        TokenType op = op_token->type;
-        if (op != PLUS &&
-            op != MINUS) break;
+        TokenType op = ParserTokenPeek(parser)->type;
+        if (op != EQUAL_EQUAL && op != BANG_EQUAL)
+            break;
+        
+        parser->current++;
+
+        void* rhs = ParserComparison(parser);
+        expr = ExBinaryInit(expr, rhs, op);
+    }
+
+    return expr;
+}
+Expression* ParserComparison(Parser* parser)
+{
+    void* expr = ParserTerm(parser);
+
+    // comparison = term ((!= | ==) term)*
+    while (parser->current < parser->tokens->length)
+    {
+        TokenType op = ParserTokenPeek(parser)->type;
+        if (op != LESS && op != LESS_EQUAL &&
+            op != GREATER && op != GREATER_EQUAL)
+            break;
+        
+        parser->current++;
+
+        void* rhs = ParserTerm(parser);
+        expr = ExBinaryInit(expr, rhs, op);
+    }
+
+    return expr;
+}
+Expression* ParserTerm(Parser* parser)
+{
+    void* expr = ParserFactor(parser);
+
+    // term = factor ((+ | -) factor)*
+    while (parser->current < parser->tokens->length)
+    {
+        TokenType op = ParserTokenPeek(parser)->type;
+
+        if (op != PLUS && op != MINUS)
+            break;
 
         parser->current++;
-        void* b = ParserPrimary(parser);
-        a = ExBinaryInit(a, b, op);
+
+        void* rhs = ParserFactor(parser);
+        expr = ExBinaryInit(expr, rhs, op);
     }
-    return a;
-    
+
+    return expr;
 }
-Expression* ParserFactor(Parser* parser);
-Expression* ParserUnary(Parser* parser);
-Expression* ParserExponent(Parser* parser);
-Expression* ParserGrouping(Parser* parser);
+Expression* ParserFactor(Parser* parser)
+{
+    void* expr = ParserExponent(parser);
+
+    // term = unary ((* | /) unary)*
+    while (parser->current < parser->tokens->length)
+    {
+        TokenType op = ParserTokenPeek(parser)->type;
+
+        if (op != STAR && op != SLASH)
+            break;
+
+        parser->current++;
+
+        void* rhs = ParserExponent(parser);
+        expr = ExBinaryInit(expr, rhs, op);
+    }
+
+    return expr;
+}
+Expression* ParserExponent(Parser* parser)
+{
+    void* expr = ParserUnary(parser);
+    
+    // exponent = primary ((** | ^) primary)*
+    while (parser->current < parser->tokens->length)
+    {
+        TokenType op = ParserTokenPeek(parser)->type;
+        if (op != HAT && op != EXPONENT)
+            break;
+
+        parser->current++;
+
+        void* rhs = ParserUnary(parser);
+        expr = ExBinaryInit(expr, rhs, op);
+    }
+
+    return expr;
+}
+Expression* ParserUnary(Parser* parser)
+{
+
+    // unary = (! | -)* exponent
+    TokenType op = ParserTokenPeek(parser)->type;
+
+    if (op != BANG & op != MINUS)
+        return ParserPrimary(parser);
+
+    parser->current++;
+    void* expr = ParserUnary(parser);
+    expr =  ExUnaryInit(expr, op);
+    return expr;
+}
 Expression* ParserPrimary(Parser* parser)
 {
     Token* token = ParserTokenPeek(parser);
-    void* literal;
-    TokenType type;
+    void* expr;
     
     switch (token->type)
     {
@@ -89,37 +183,25 @@ Expression* ParserPrimary(Parser* parser)
         case DOUBLE: 
         case STRING:
             parser->current++;
-            literal = ExLiteralInit(token->literal, token->type);
+            expr = ExLiteralInit(token->literal, token->type);
             break;
+
         case LEFT_PAREN:
-            parser->current++; // skip the left paren
-            
-            // search for the closing right paren (check valid)
-            int stack_layer = 1;
-            int search_index = parser->current - 1;
-            Token* chkpnt;
-            while (true)
-            {
-                chkpnt = ParserTokenPeekCustom(parser, ++search_index);
-                
-                if (search_index >= parser->tokens->length) ERROR("right paren not found.");
+            parser->current++;
 
-                if (chkpnt->type == LEFT_PAREN) stack_layer++;
-                else if (chkpnt->type == RIGHT_PAREN) stack_layer--;
-                
-                // found the right closing right paren
-                if (stack_layer <= 0) break;
-            }
+            expr = ParserExpression(parser);
 
-            // done validate the grammar, proceed to continue the expression creation 
-            literal = ParserExpression(parser);
+            if (ParserTokenPeek(parser)->type != RIGHT_PAREN) 
+                ERROR("expect a ')'.")
 
-            // skip the right paren
-            if (ParserTokenPeek(parser)->type != RIGHT_PAREN) ERROR("your arithmetic seems to be broken.")
             parser->current++; 
             break;
+
+        default:
+            ERROR("expect an expression.");
     }
-    return literal;
+
+    return expr;
 }
 
 #define PRINT_TABS(cache, count)\

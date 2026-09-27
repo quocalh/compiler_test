@@ -25,8 +25,8 @@ Expression* ParserEquality(Parser* parser);
 Expression* ParserComparison(Parser* parser);
 Expression* ParserTerm(Parser* parser);
 Expression* ParserFactor(Parser* parser);
-Expression* ParserUnary(Parser* parser);
 Expression* ParserExponent(Parser* parser);
+Expression* ParserUnary(Parser* parser);
 Expression* ParserGrouping(Parser* parser);
 Expression* ParserPrimary(Parser* parser);
 
@@ -52,4 +52,5 @@ void* ExStationFreePortExpression(STATION_ARG_CONFIG);
 void* ExStationFreePortBinary(STATION_ARG_CONFIG);
 void* ExStationFreePortUnary(STATION_ARG_CONFIG);
 void* ExStationFreePortLiteral(STATION_ARG_CONFIG);
+
 #endif

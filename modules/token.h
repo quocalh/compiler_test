@@ -7,6 +7,7 @@ typedef enum {
 
     // arithmetic operations
     COMMA, DOT, MINUS, PLUS, 
+    EXPONENT, HAT,
     STAR, SLASH, BACKSLASH,
 
     SEMICOLON, 
