@@ -23,16 +23,31 @@
         assert(0); \
     } while(0);
 
-#define ERROR_TE(debug_string) \
-    do { \
-        printf("[%s:%d]: %s\n", __FILE__, __LINE__, debug_string); \
-        assert(0); \
-    } while(0);
-
 #define REPORT_VARIADIC(debug_string, ...) \
-    printf(debug_string __VA_OPT__(,) __VA_ARGS__); 
-    // printf(debug_string, ##__VA_ARGS__)
+    do{ \
+        printf("[%s:%d]: ", __FILE__, __LINE__); \
+        printf(debug_string __VA_OPT__(,)__VA_ARGS__); \
+        printf("\n"); \
+    } while (0)
 
+#define ERROR_VARIADIC(debug_string, ...) \
+    do{ \
+        printf("[%s:%d]: ", __FILE__, __LINE__); \
+        printf(debug_string __VA_OPT__(,)__VA_ARGS__); \
+        printf("\n"); \
+        assert(0); \
+    } while(0)
+
+#define ASSERT_VARIADIC(res, debug_stirng, ...) \
+    do{ \
+        if (!res) \
+        { \
+            printf("[%s:%d]: ", __FILE__, __LINE__); \
+            printf(debug_string __VA_OPT__(,)__VA_ARGS__); \
+            printf("\n"); \
+            assert(res); \
+        } \
+    } while(0)
 
 #endif
 
