@@ -5,22 +5,29 @@
 #include "parser.h"
 
 typedef struct{
+    VISITORBASE;
     Expression* expr;
-    Literal* literal;
-} Statement;
-
+} Stmt;
 typedef struct{
+    VISITORBASE;
     Expression* expr;
 } ExprStmt;
-
 typedef struct{
+    VISITORBASE;
     Expression* expr;
 } PrintStmt;
-
 typedef struct{
+    VISITORBASE;
     const char* name;
     Expression* expr;  
 } DeclareStmt;
+
+typedef struct
+{
+    void* (*port_expr_stmt)(STATION_ARG_CONFIG);
+    void* (*port_print_stmt)(STATION_ARG_CONFIG);
+    void* (*declare_smth)(STATION_ARG_CONFIG);
+} ExStationStmt;
 
 void ParserParse(Parser* parser);
 Expression* ParserDeclaration(Parser* parser);

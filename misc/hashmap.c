@@ -4,6 +4,7 @@
 #include <string.h>
 #include "uthash.h"
 #include <stdio.h>
+#include "assert_.h"
 
 
 void HashStrToIntInit(HashStrToInt** map)
@@ -66,6 +67,53 @@ void HashStrToIntFree(HashStrToInt** map)
     free(current);
   }
 }
+
+// void HashStrToPtrInit(HashStrToPtr** map)
+// {
+//     *map = NULL;
+// }
+// void* HashStrToPtrFind(HashStrToPtr** map, char* key)
+// {
+//     HashStrToPtr* item = NULL;
+//     HASH_FIND_STR(*map, key, item);
+//     return item;
+// }
+// void HashStrToPtrAdd(HashStrToPtr** map, char* key, void* ptr)
+// {
+//     HashStrToPtr* item = HashStrTOPTrFind(map, key);
+//     if (item == NULL)
+//     {
+//         item = (HashStrToPtr*)malloc(sizeof(*item));
+//         if (!item) ERROR("failed to allocate pointers for item.");
+
+//         item->strkey = key;
+//         HASH_ADD_KEYPTR(hh, *map, item->strkey, strlen(item->strkey), item);
+//     }
+//     item->bucket = ptr;
+// }
+// void HashStrToPtrModify(HashStrToPtr** map, char* key, void* new_ptr)
+// {
+//     HashStrToPtr* item = HashStrToPtrFind(map, key);
+//     ASSERT_VARIADIC(item, "hash key not found(key: %s)", key);
+//     item->bucket = new_ptr;
+
+// }
+// void HashStrToPtrDelete(HashStrToPtr** map, char* key)
+// {
+//     HashStrToPtr* item = HashStrToPtrFind(map, key);
+//     ASSERT_VARIADIC(item, "hash key not found (key: %s)", key);
+//     HASH_DEL(*map, item);
+// }
+// void HashStrToPtrFree(HashStrToPtr** map)
+// {
+//     // sample code
+//     HashStrToInt* current;
+//     HashStrToInt* tmp;
+//     HASH_ITER(hh, *map, current, tmp){
+//         HASH_DEL(*map, current);
+//         free(current);
+//     }
+// }
 
 // reference code: https://troydhanson.github.io/uthash/userguide.html#_your_structure
 /*

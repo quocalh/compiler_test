@@ -33,6 +33,18 @@ void* ExPortExpression(PORT_ARG_CONFIG){
     void* ptr = station_->port_expression(station, self, argc, args);
     return ptr;
 }
+void* ExPortVariable(PORT_ARG_CONFIG){
+    PORT_SAFECHECK;
+    ExStation* station_ = station;
+
+    // get the stream of args
+    UNPACK_VARIADIC_ARGS(argc, args);
+
+    // passing down
+    void* ptr = station_->port_variable(station, self, argc, args);
+    return ptr;
+
+}
 void* ExPortBinary(PORT_ARG_CONFIG){
     PORT_SAFECHECK;
     ExStation* station_ = station;
@@ -78,12 +90,13 @@ Expression* ExpExpressionInit(void* expression)
     };
     return e;
 }
-Assign* ExAssignInit(void* expr, const char* name)
+Variable* ExVariableInit(void* expr, const char* name)
 {
-    Assign* a = HeapInsInit(sizeof(*a));
-    *a = (Assign){
+    Variable* a = HeapInsInit(sizeof(*a));
+    *a = (Variable){
         .expr = expr,
-        .name = name
+        .name = name,
+        .connect = ExPortVariable,
     };
     return a;
 }

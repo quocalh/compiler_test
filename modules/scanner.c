@@ -391,6 +391,9 @@ void ScannerScan(Scanner* scanner, System* system)
                 ScannerScanString(scanner);
                 break;
 
+            case ';':
+                ScannerAddToken(scanner, SEMICOLON, NULL);
+                break;
 
             default:
                 // handling numbers

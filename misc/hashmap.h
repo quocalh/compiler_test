@@ -29,6 +29,19 @@ void HashStrToIntIterate(HashStrToInt** map); // not sure one this one how to ha
 void HashStrToIntFree(HashStrToInt** map);
 // later on, we can try the struct -> struct (no pointer allowed)
 
+// typedef struct{
+//   const char* strkey;
+//   void* bucket;
+//   UT_hash_handle hh;
+// } HashStrToPtr;
+
+// HashStrToPtr* HashStrToPtrInit(HashStrToPtr** map);
+// void HashStrToPtrFind(HashStrToPtr** map, char* key);
+// void HashStrToPtrAdd(HashStrToPtr** map, char* key, void* ptr);
+// void HashStrToPtrModify(HashStrToPtr** map, char* key, void* new_ptr);
+// void HashStrToPtrDelete(HashStrToPtr** map, char* key);
+// void HashStrToPtrFree(HashStrToPtr** map);
+
 #endif
 
 /*

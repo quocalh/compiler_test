@@ -27,8 +27,11 @@ int main()
     // scanner phase
     ScannerScan(scanner, system);
 
-    // scanner end phase
+    // parser phase
+    ParserParse(parser);
 
+
+    /* OLD TEST
     // parser phase
     ExStation* station = ExStationInit();
 
@@ -52,8 +55,8 @@ int main()
 
 
     // parser phase end
-
     ExStationDestruct(station);
+    */
 
     ScannerDestruct(scanner);
     ParserDestruct(parser);

@@ -4,6 +4,7 @@
 #include "expression.h"
 #include "../misc/heap.h"
 #include "system.h"
+#include "environment.h"
 
 typedef struct{
     // internal attribs
@@ -16,6 +17,7 @@ typedef struct{
     // exclusive attribs
     ExStation* station;
     Heap* statements;
+    Environment* env;
 
 } Parser;
 

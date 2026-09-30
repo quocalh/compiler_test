@@ -7,7 +7,7 @@
 // standing at the current's processing token
 void ParserParse(Parser* parser)
 {
-    while (parser->current >= parser->tokens->length)
+    while (parser->current < parser->tokens->length)
     {
         HeapAdd(parser->statements, ParserDeclaration(parser));
     }
@@ -15,6 +15,7 @@ void ParserParse(Parser* parser)
 
 Expression* ParserDeclaration(Parser* parser)
 {
+    Expression* literal = NULL;
     TokenType type = ParserTokenPeek(parser)->type;
     switch (type)
     {
@@ -22,12 +23,15 @@ Expression* ParserDeclaration(Parser* parser)
             ParserVarDeclaration(parser);
             break;
         default:
-            ParserStatement(parser);
+            literal = ParserStatement(parser);
             break; 
     }
     Token* token = ParserTokenPeek(parser);
-    ASSERT_VARIADIC(token->type != SEMICOLON, 
+    ASSERT_VARIADIC(token->type == SEMICOLON, 
         "expect a ';' after an expression.");
+    parser->current++;
+
+    return literal;
 }
 
 Expression* ParserStatement(Parser* parser)
@@ -38,8 +42,7 @@ Expression* ParserStatement(Parser* parser)
 }
 void ParserVarDeclaration(Parser* parser)
 {
-    // var x = expression;
-    // NOTE: pls
+    // var x = expression
 
     // skip the VAR token
     parser->current++;
@@ -50,16 +53,24 @@ void ParserVarDeclaration(Parser* parser)
         "var not found. (%s)", identifier->lexeme);
     parser->current++;
 
-    ASSERT(ParserTokenPeek(parser), "where is the '='?");
-    parser->current++;
+    // catch the = (if catched, then fetch the following expression)
+    if (ParserTokenPeek(parser)->type == EQUAL)
+    {
+        parser->current++;
+        
+        // build a tree & evaluate
+        void* args[0];
+        Expression* expr = ParserExpression(parser);
+        ExStationEvaluateBuild(parser->station);
+        Expression* literal = expr->connect(parser->station, expr, 0);
 
-    // build a tree & evaluate
-    ExStationEvaluateBuild(parser->station);
-    Expression* expr = ParserExpression(parser);
-    Expression* literal = NULL;
+        // free
+        ExStationLoadFree(parser->station);
+        expr->connect(parser->station, expr, 0);
 
-    // free
-    ExStationLoadFree(parser->station);
+        // 
+    }
+
 }
 
 Expression* ParserExprStmt(Parser* parser)
@@ -98,6 +109,6 @@ void* ParserPrintStmt(Parser* parser)
     void* args1[0] = {};
     ExStationFreePortLiteral(parser->station, tree, 0, args1);
 
-    return NULL;
+    return literal;
     
 }

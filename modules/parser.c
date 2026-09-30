@@ -26,15 +26,31 @@ Parser* ParserInit(System* system)
         .file_name = system->file_name,
 
         .statements = HeapInit(sizeof(Expression*)),
-        .station = ExStationInit()
+        .station = ExStationInit(),
+        .env = EnvironmentInit(),
     };
     return ptr;
 }
 void ParserDestruct(Parser* parser)
 {
     HeapFree(parser->statements);
-    ExStationDestruct(parser->station);
 
+    // environment clean up
+    VarMap* current;  
+    VarMap* tmp;  
+    HASH_ITER(hh, parser->env->map, current, tmp)
+    {
+        HASH_DEL(parser->env->map, current);
+        // free literal
+        if (current != NULL)
+        {
+            void* args[0];
+            ExStationFreePortLiteral(parser->station, current->ptr, 0, args);
+        }
+        free(current->ptr);
+    }
+
+    ExStationDestruct(parser->station);
     free(parser);
 }
 
@@ -47,7 +63,7 @@ Token* ParserTokenPeekCustom(Parser* parser, int index)
     Token* tokens = parser->tokens->ptr;
     return tokens + index; // index * sizeof(Token);
 }
-// wrapper
+
 Token* ParserTokenPeek(Parser* parser)
 {
     // return ParserTokenPeekCustom(parser, parser->current);
@@ -58,9 +74,6 @@ Token* ParserTokenPeek(Parser* parser)
     Heap* tokens = parser->tokens;
     return tokens->ptr + parser->current * sizeof(Token);
 }
-
-
-
 
 Expression* ParserExpression(Parser* parser)
 {
@@ -196,6 +209,11 @@ Expression* ParserPrimary(Parser* parser)
             expr = ExLiteralInit(token->literal, token->type);
             break;
 
+        case IDENTIFIER:
+            parser->current++;
+            expr =  ExVariableInit(token->literal, token->lexeme->str);
+            break;
+
         case LEFT_PAREN:
             parser->current++;
             expr = ParserGrouping(parser);
@@ -317,7 +335,7 @@ void* ExStationDebugPrintPortLiteral(STATION_ARG_CONFIG)
             printf("%lf", *((double*)literal->literal));
             break;
         case STRING:
-            printf("%s", (char*)literal->literal);
+            printf("%s", (char*)((StaticString*)literal->literal)->str);
             break;
         default:
             break;
@@ -489,6 +507,16 @@ void* ExStationEvaluatePortBinary(STATION_ARG_CONFIG)
             }
             break;
         }
+
+        case EQUAL_EQUAL:
+        case BANG_EQUAL:
+        case LESS_EQUAL:
+        case GREATER_EQUAL:
+        case LESS:
+        case GREATER:
+            break;
+        default:
+            break;
     }        
 
     return literal;

@@ -8,14 +8,15 @@
 #define STATION_ARG_CONFIG void* station, void* self, int argc, void* args[argc]
 #define VISITORBASE void* (*connect)(PORT_ARG_CONFIG)
 
+// Expression
 typedef struct{
     VISITORBASE;
     void* expression;
 } Expression;
 typedef struct{
     VISITORBASE;
-    void* expr;
     const char* name;
+    void* expression;
 } Assign;
 typedef struct{
     VISITORBASE;
@@ -33,9 +34,14 @@ typedef struct{
     void* literal;
     TokenType type;
 } Literal;
+typedef struct{
+    VISITORBASE;
+    void* expr;
+    const char* name;
+} Variable;
 
 Expression* ExpExpressionInit(void* expression);
-Assign* ExAssignInit(void* expr, const char* name);
+Variable* ExVariableInit(void* expr, const char* name);
 Binary* ExBinaryInit(void* left, void* right, TokenType op);
 Unary* ExUnaryInit(void* expression, TokenType op);
 Literal* ExLiteralInit(void* literal, TokenType type);
@@ -50,6 +56,7 @@ typedef struct{
     void* (*port_binary)(STATION_ARG_CONFIG);
     void* (*port_unary)(STATION_ARG_CONFIG);
     void* (*port_literal)(STATION_ARG_CONFIG);
+    void* (*port_variable)(STATION_ARG_CONFIG);
 } ExStation;
 ExStation* ExStationInit();
 void ExStationDestruct(ExStation* station);
