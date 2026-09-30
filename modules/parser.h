@@ -3,6 +3,7 @@
 
 #include "expression.h"
 #include "../misc/heap.h"
+#include "statement.h"
 #include "system.h"
 #include "environment.h"
 
@@ -16,6 +17,7 @@ typedef struct{
     
     // exclusive attribs
     ExStation* ex_station;
+    StmtStation* stmt_station;
     Heap* statements;
     Environment* env;
 
@@ -27,6 +29,8 @@ Token* ParserTokenPeek(Parser* parser);
 
 // build the AST tree
 void ParserParse(Parser* parser);
+
+// Expression 
 Expression* ParserExpression(Parser* parser);
 Expression* ParserEquality(Parser* parser);
 Expression* ParserComparison(Parser* parser);
@@ -47,7 +51,7 @@ void* ExStationDebugPrintPortUnary(STATION_ARG_CONFIG);
 void* ExStationDebugPrintPortLiteral(STATION_ARG_CONFIG);
 
 // evaluate an AST tree () thinking of an error catcher in advance
-void ExStationEvaluateBuild(ExStation* station);
+void ExStationLoadEvaluate(ExStation* station);
 bool ExTruthCheck(TokenType type, void* literal);
 void* ExStationEvaluatePortExpression(STATION_ARG_CONFIG);
 void* ExStationEvaluatePortBinary(STATION_ARG_CONFIG);

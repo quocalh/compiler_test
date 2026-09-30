@@ -3,23 +3,7 @@
 #include "../misc/heap.h"
 #include "../misc/assert_.h"
 
-#define PORT_SAFECHECK \
-    if (!station) \
-        ERROR("station is null"); \
-    if (!self) \
-        ERROR("self is null"); \
 
-// Using 'macro_i' to prevent variable collisions in the body function
-#define UNPACK_VARIADIC_ARGS(count_var, array_name) \
-    void* array_name[(count_var)]; \
-    do { \
-        va_list macro_ap; \
-        va_start(macro_ap); \
-        for (int macro_i = 0; macro_i < (count_var); macro_i++) { \
-            array_name[macro_i] = va_arg(macro_ap, void*); \
-        } \
-        va_end(macro_ap); \
-    } while(0)
 
 // port functions (accept)
 void* ExPortExpression(PORT_ARG_CONFIG){

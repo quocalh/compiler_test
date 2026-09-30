@@ -2,7 +2,7 @@
 #define STATEMENT_H
 
 #include "expression.h"
-#include "parser.h"
+// #include "parser.h"
 
 typedef struct{
     VISITORBASE;
@@ -18,25 +18,30 @@ typedef struct{
 } PrintStmt;
 typedef struct{
     VISITORBASE;
-    const char* name;
+    char* name;
     Expression* expr;  
 } DeclareStmt;
 
-typedef struct
-{
+// init statement
+Stmt* StmtStmtInit(Expression* expr);
+DeclareStmt* StmtDeclareStmtInit(char* name, Expression* expr);
+ExprStmt* StmtExprStmtInit(Expression* expr);
+PrintStmt* StmtPrintStmtInit(Expression* expr);
+
+typedef struct{
+    void* (*port_stmt)(STATION_ARG_CONFIG);
     void* (*port_expr_stmt)(STATION_ARG_CONFIG);
     void* (*port_print_stmt)(STATION_ARG_CONFIG);
-    void* (*declare_smth)(STATION_ARG_CONFIG);
+    void* (*port_declare_smth)(STATION_ARG_CONFIG);
 } StmtStation;
 
-void ParserParse(Parser* parser);
-Expression* ParserDeclaration(Parser* parser);
+StmtStation* StmtStationInit();
+void StmtStationDestruct(StmtStation* station);
 
-Expression* ParserStatement(Parser* parser);
-void ParserVarDeclaration(Parser* parser);
-
-Expression* ParserExprStmt(Parser* parser);
-void* ParserPrintStmt(Parser* parser);
+void* StmtPortStmt(PORT_ARG_CONFIG);
+void* StmtPortExprStmt(PORT_ARG_CONFIG);
+void* StmtPortPrintStmt(PORT_ARG_CONFIG);
+void* StmtPortDeclareStmt(PORT_ARG_CONFIG);
 
 
 #endif

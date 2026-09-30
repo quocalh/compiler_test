@@ -25,32 +25,20 @@ Parser* ParserInit(System* system)
         .tokens = system->tokens,
         .file_name = system->file_name,
 
-        .statements = HeapInit(sizeof(Expression*)),
+        .statements = HeapInit(sizeof(void*)),
         .ex_station = ExStationInit(),
+        .stmt_station = StmtStationInit(),
         .env = EnvironmentInit(),
     };
     return ptr;
 }
 void ParserDestruct(Parser* parser)
 {
-    HeapFree(parser->statements);
-
-    // environment clean up
-    VarMap* current;  
-    VarMap* tmp;  
-    HASH_ITER(hh, parser->env->map, current, tmp)
-    {
-        HASH_DEL(parser->env->map, current);
-        // free literal
-        if (current != NULL)
-        {
-            void* args[0];
-            ExStationFreePortLiteral(parser->ex_station, current->ptr, 0, args);
-        }
-        free(current->ptr);
-    }
-
+    StmtStationDestruct(parser->stmt_station);
     ExStationDestruct(parser->ex_station);
+    HeapFree(parser->statements);
+    EnvironmentDestruct(parser->env);
+
     free(parser);
 }
 
@@ -328,7 +316,6 @@ void* ExStationDebugPrintPortLiteral(STATION_ARG_CONFIG)
     switch (literal->type)
     {
         case INT:
-            // printf("%d", *(int*)literal->literal));
             printf("%d", *AS(int*, literal->literal));
             break;
         case DOUBLE:
@@ -527,9 +514,34 @@ void* ExStationEvaluatePortUnary(STATION_ARG_CONFIG)
 }
 void* ExStationEvaluatePortLiteral(STATION_ARG_CONFIG)
 {
-    return self;
+    Literal* source = self;
+    Literal* copy = HeapInsInit(sizeof(*copy));
+    *copy = *source;
+
+    switch (source->type)
+    {
+        case INT:
+            copy->literal = HeapInsInit(sizeof(int));
+            *(int*)copy->literal = *(int*)source->literal;
+            break;
+
+        case DOUBLE:
+            copy->literal = HeapInsInit(sizeof(double));
+            *(double*)copy->literal = *(double*)source->literal;
+            break;
+
+        case STRING:
+            copy->literal = StaticStringInit(((StaticString*)source->literal)->str);
+            ASSERT(copy->literal != NULL, "failed to copy string literal");
+            break;
+
+        default:
+            ERROR_VARIADIC("cannot copy literal (token type %d)", source->type);
+    }
+
+return copy;
 }
-void ExStationEvaluateBuild(ExStation* station)
+void ExStationLoadEvaluate(ExStation* station)
 {
     station->port_expression = ExStationEvaluatePortExpression;
     station->port_binary = ExStationEvaluatePortBinary;

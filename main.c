@@ -4,6 +4,7 @@
 #include "misc/hashmap.h"
 #include "modules/expression.h"
 #include "misc/assert_.h"
+#include "modules/intepreter.h"
 
 /*
 TODO: 
@@ -28,8 +29,11 @@ int main()
     ScannerScan(scanner, system);
 
     // parser phase
-    // ParserParse(parser);
-
+    ParserParse(parser);
+    
+    Interpreter* interpreter = InterpreterInit(parser);
+    InterpreterInterpret(interpreter);
+     
 
     /* OLD TEST
     // parser phase
@@ -44,7 +48,7 @@ int main()
     res->connect(station, res, 1, &indent);
 
     // evaluate 
-    ExStationEvaluateBuild(station);
+    ExStationLoadEvaluate(station);
     Literal* eva = res->connect(station, res, 0);
 
     printf("%lf\n", (double*)eva->literal);
@@ -58,6 +62,7 @@ int main()
     ExStationDestruct(station);
     */
 
+    InterpreterDestruct(interpreter);
     ScannerDestruct(scanner);
     ParserDestruct(parser);
     SystemDestruct(system);

@@ -51,6 +51,7 @@ void VarMapFree(VarMap** var_map)
     }
 }
 
+// Environment* EnvironmentInit(Environment* enclosing)
 Environment* EnvironmentInit()
 {
     Environment* env = malloc(sizeof(*env));
@@ -64,10 +65,12 @@ void EnvironmentDestruct(Environment* env)
 {
     VarMap* current;
     VarMap* tmp;
+
     HASH_ITER(hh, env->map, current, tmp)
     {
         Literal* literal = current->ptr;
         HASH_DEL(env->map, current);
     }
+
     free(env);
 }

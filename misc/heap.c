@@ -82,31 +82,6 @@ bool HeapAdd(Heap* heap, const void* item)
 
     return true;
 }
-// bool HeapAdd(Heap* heap, const void* item_ptr)
-// {
-//   if (heap->ptr == NULL){
-//     printf("null heap pointer");
-//     return false;
-//   }
-//   // insufficient space -> double the space -> sufficient again
-//   if (heap->length + 1 > heap->allocated_length)
-//   {
-//     void* tmp = realloc(heap->ptr, heap->size * heap->allocated_length * 2);
-//     if (tmp == NULL)
-//     {
-//       return false;
-//     }
-//     heap->ptr = tmp; 
-//     heap->allocated_length *= 2;
-//   }
-//   // guarantee sufficient -> add an item
-//   memcpy((char*)heap->ptr + heap->length * heap->size,
-//          (char*)item_ptr,
-//          heap->size);
-//   heap->length += 1;
-
-//   return true;
-// }
 
 // free mem
 void HeapFree(Heap* heap)

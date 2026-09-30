@@ -1,114 +1,82 @@
 #include "statement.h"
 #include "parser.h"
+#include "expression.h"
+#include "../misc/misc.h"
 #include "../misc/assert_.h"
 
 
-// after every layer, the pointer must appear after the done processing layer, 
-// standing at the current's processing token
-void ParserParse(Parser* parser)
+Stmt* StmtStmtInit(Expression* expr)
 {
-    while (parser->current < parser->tokens->length)
-    {
-        HeapAdd(parser->statements, ParserDeclaration(parser));
-    }
+    Stmt* stmt = HeapInsInit(sizeof(*stmt));
+    *stmt = (Stmt){
+        .connect = StmtPortStmt,
+        .expr = expr,
+    };
+    return stmt;
+}
+ExprStmt* StmtExprStmtInit(Expression* expr)
+{
+    ExprStmt* expr_stmt = HeapInsInit(sizeof(*expr_stmt));
+    *expr_stmt = (ExprStmt){
+        .connect = StmtPortExprStmt,
+        .expr = expr,
+    };
+    return expr_stmt;
+}
+PrintStmt* StmtPrintStmtInit(Expression* expr)
+{
+    PrintStmt* print_stmt = HeapInsInit(sizeof(*print_stmt));
+    *print_stmt = (PrintStmt){
+        .connect = StmtPortPrintStmt,
+        .expr = expr,
+    };
+    return print_stmt;
+}
+DeclareStmt* StmtDeclareStmtInit(char* name, Expression* expr)
+{
+    DeclareStmt* declare_stmt = HeapInsInit(sizeof(*declare_stmt));
+    *declare_stmt = (DeclareStmt){
+        .connect = StmtPortDeclareStmt,
+        .name = name,
+        .expr = expr,
+    };
+    return declare_stmt;
 }
 
-Expression* ParserDeclaration(Parser* parser)
+// station
+StmtStation* StmtStationInit()
 {
-    Expression* literal = NULL;
-    TokenType type = ParserTokenPeek(parser)->type;
-    switch (type)
-    {
-        case VAR:
-            ParserVarDeclaration(parser);
-            break;
-        default:
-            literal = ParserStatement(parser);
-            break; 
-    }
-    Token* token = ParserTokenPeek(parser);
-    ASSERT_VARIADIC(token->type == SEMICOLON, 
-        "expect a ';' after an expression.");
-    parser->current++;
-
-    return literal;
+    StmtStation* ptr = HeapInsInit(sizeof(*ptr));
+    return ptr;
+}
+void StmtStationDestruct(StmtStation* station)
+{
+    free(station);
 }
 
-Expression* ParserStatement(Parser* parser)
+
+// statement port
+void* StmtPortStmt(PORT_ARG_CONFIG)
 {
-    if (ParserTokenPeek(parser)->type == PRINT)
-        return ParserPrintStmt(parser);
-    return ParserExprStmt(parser);
+    PORT_SAFECHECK; 
+    UNPACK_VARIADIC_ARGS(argc, args);
+    return AS(StmtStation*, station)->port_stmt(station, self, argc, args);
 }
-void ParserVarDeclaration(Parser* parser)
+void* StmtPortExprStmt(PORT_ARG_CONFIG)
 {
-    // var x = expression
-
-    // skip the VAR token
-    parser->current++;
-    
-    // catch the IDENTIFIER
-    Token* identifier = ParserTokenPeek(parser);
-    ASSERT_VARIADIC(identifier->type != IDENTIFIER, 
-        "var not found. (%s)", identifier->lexeme);
-    parser->current++;
-
-    // catch the = (if catched, then fetch the following expression)
-    if (ParserTokenPeek(parser)->type == EQUAL)
-    {
-        parser->current++;
-        
-        // build a tree & evaluate
-        void* args[0];
-        Expression* expr = ParserExpression(parser);
-        ExStationEvaluateBuild(parser->ex_station);
-        Expression* literal = expr->connect(parser->ex_station, expr, 0);
-
-        // free
-        ExStationLoadFree(parser->ex_station);
-        expr->connect(parser->ex_station, expr, 0);
-
-        // 
-    }
-
+    PORT_SAFECHECK; 
+    UNPACK_VARIADIC_ARGS(argc, args);
+    return AS(StmtStation*, station)->port_expr_stmt(station, self, argc, args);
 }
-
-Expression* ParserExprStmt(Parser* parser)
+void* StmtPortPrintStmt(PORT_ARG_CONFIG)
 {
-    // recursive descent parsing
-    Expression* tree = ParserExpression(parser);
-    
-    // evaluate
-    ExStationEvaluateBuild(parser->ex_station);
-    Expression* literal = tree->connect(parser->ex_station, tree, 0);
-    
-    // free
-    ExStationLoadFree(parser->ex_station);
-    tree->connect(parser->ex_station, tree, 0);
-
-    return literal;
+    PORT_SAFECHECK; 
+    UNPACK_VARIADIC_ARGS(argc, args);
+    return AS(StmtStation*, station)->port_print_stmt(station, self, argc, args);
 }
-void* ParserPrintStmt(Parser* parser)
+void* StmtPortDeclareStmt(PORT_ARG_CONFIG)
 {
-    // grammar: PrintStmt -> print Expression
-    parser->current++;
-
-    // recursive descent parsing
-    Expression* tree = ParserExpression(parser);
-
-    // evaluate 
-    ExStationEvaluateBuild(parser->ex_station);
-    Expression* literal = tree->connect(parser->ex_station, tree, 0);
-
-    // print
-    int indent = 0; 
-    void* args[1] = {&indent};
-    ExStationDebugPrintPortLiteral(parser->ex_station, literal, 1, args);
-
-    // free the arithmetic tree
-    void* args1[0] = {};
-    ExStationFreePortLiteral(parser->ex_station, tree, 0, args1);
-
-    return literal;
-    
+    PORT_SAFECHECK; 
+    UNPACK_VARIADIC_ARGS(argc, args);
+    return AS(StmtStation*, station)->port_declare_smth(station, self, argc, args);
 }

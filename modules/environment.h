@@ -27,6 +27,11 @@ void VarMapFree(VarMap** var_map);
 Environment* EnvironmentInit();
 void EnvironmentDestruct(Environment* env);
 
+void EnvironmentDefine(Environment* env, char* name, Literal* literal);
+Literal* EnvironmentFetch(Environment* env,  char* name);
+
+#endif
+
 /*
 note that we allow pre-defined functions
 however, "pre-defined", more like undefined var are unacceptable
@@ -50,7 +55,3 @@ var hello = "too late";
 assert(0) immediately
 
  */
-void EnvironmentDefine(Environment* env, char* name, Literal* literal);
-Literal* EnvironmentFetch(Environment* env,  char* name);
-
-#endif
