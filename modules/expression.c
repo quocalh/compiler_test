@@ -78,6 +78,15 @@ Expression* ExpExpressionInit(void* expression)
     };
     return e;
 }
+Assign* ExAssignInit(void* expr, const char* name)
+{
+    Assign* a = HeapInsInit(sizeof(*a));
+    *a = (Assign){
+        .expr = expr,
+        .name = name
+    };
+    return a;
+}
 Binary* ExBinaryInit(void* left, void* right, TokenType op)
 {
     Binary* b = HeapInsInit(sizeof(*b));

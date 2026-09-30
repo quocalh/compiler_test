@@ -38,7 +38,7 @@
         assert(0); \
     } while(0)
 
-#define ASSERT_VARIADIC(res, debug_stirng, ...) \
+#define ASSERT_VARIADIC(res, debug_string, ...) \
     do{ \
         if (!res) \
         { \

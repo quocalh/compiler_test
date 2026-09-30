@@ -19,6 +19,8 @@
                 "-o",
                 "${workspaceFolder}/.tmp/prog",
 
+                "-lm", 
+
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

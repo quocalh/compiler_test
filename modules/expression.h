@@ -14,6 +14,11 @@ typedef struct{
 } Expression;
 typedef struct{
     VISITORBASE;
+    void* expr;
+    const char* name;
+} Assign;
+typedef struct{
+    VISITORBASE;
     void* left;
     void* right;
     TokenType op;
@@ -30,6 +35,7 @@ typedef struct{
 } Literal;
 
 Expression* ExpExpressionInit(void* expression);
+Assign* ExAssignInit(void* expr, const char* name);
 Binary* ExBinaryInit(void* left, void* right, TokenType op);
 Unary* ExUnaryInit(void* expression, TokenType op);
 Literal* ExLiteralInit(void* literal, TokenType type);
@@ -40,6 +46,7 @@ Literal* ExLiteralInit(void* literal, TokenType type);
  */
 typedef struct{
     void* (*port_expression)(STATION_ARG_CONFIG);
+    void* (*port_assign)(STATION_ARG_CONFIG);
     void* (*port_binary)(STATION_ARG_CONFIG);
     void* (*port_unary)(STATION_ARG_CONFIG);
     void* (*port_literal)(STATION_ARG_CONFIG);
@@ -49,6 +56,7 @@ void ExStationDestruct(ExStation* station);
 
 // create the corresponding key for each struct(connect functions)
 void* ExPortExpression(PORT_ARG_CONFIG);
+void* ExPortAssign(PORT_ARG_CONFIG);
 void* ExPortBinary(PORT_ARG_CONFIG);
 void* ExPortUnary(PORT_ARG_CONFIG);
 void* ExPortLiteral(PORT_ARG_CONFIG);

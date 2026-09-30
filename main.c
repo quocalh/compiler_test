@@ -1,8 +1,9 @@
 #include <stdio.h>
- #include "modules/scanner.h"
+#include "modules/scanner.h"
 #include "modules/parser.h"
 #include "misc/hashmap.h"
 #include "modules/expression.h"
+#include "misc/assert_.h"
 
 /*
 TODO: 
@@ -23,26 +24,40 @@ int main()
     Scanner* scanner = ScannerInit(system);
     Parser* parser = ParserInit(system);
 
+    // scanner phase
     ScannerScan(scanner, system);
+
+    // scanner end phase
 
     // parser phase
     ExStation* station = ExStationInit();
 
+    // test expression
     Expression* res = ParserExpression(parser);
+
+    // debug expression
     int indent = 0;
     ExStationLoadDebugPrint(station);
     res->connect(station, res, 1, &indent);
 
+    // evaluate 
+    ExStationEvaluateBuild(station);
+    Literal* eva = res->connect(station, res, 0);
+
+    printf("%lf\n", (double*)eva->literal);
+
+    // free expression
     ExStationLoadFree(station);
     res->connect(station, res, 0);
 
+
     // parser phase end
+
     ExStationDestruct(station);
 
     ScannerDestruct(scanner);
     ParserDestruct(parser);
     SystemDestruct(system);
-
 
     return 0; 
 }

@@ -1,4 +1,6 @@
 #include "parser.h"
+#include "statement.h"
+#include <math.h>
 #include "../misc/assert_.h"
 #include "../misc/misc.h"
 #define TAB "  "
@@ -22,11 +24,17 @@ Parser* ParserInit(System* system)
 
         .tokens = system->tokens,
         .file_name = system->file_name,
+
+        .statements = HeapInit(sizeof(Expression*)),
+        .station = ExStationInit()
     };
     return ptr;
 }
 void ParserDestruct(Parser* parser)
 {
+    HeapFree(parser->statements);
+    ExStationDestruct(parser->station);
+
     free(parser);
 }
 
@@ -52,13 +60,15 @@ Token* ParserTokenPeek(Parser* parser)
 }
 
 
-// after every layer, the pointer must appear after the done processing layer, 
-// standing at the current's processing token
-void ParserParse(Parser* parser);
+
+
 Expression* ParserExpression(Parser* parser)
 {
-    // for now
     return ParserEquality(parser);
+}
+Expression* ParserAssign(Parser* parser)
+{
+    // return ParserEquality(parser);
 }
 Expression* ParserEquality(Parser* parser)
 {
@@ -188,19 +198,23 @@ Expression* ParserPrimary(Parser* parser)
 
         case LEFT_PAREN:
             parser->current++;
-
-            expr = ParserExpression(parser);
-
-            if (ParserTokenPeek(parser)->type != RIGHT_PAREN) 
-                ERROR("expect a ')'.")
-
-            parser->current++; 
+            expr = ParserGrouping(parser);
             break;
 
         default:
             ERROR("expect an expression.");
     }
 
+    return expr;
+}
+Expression* ParserGrouping(Parser* parser)
+{
+    void* expr = ParserExpression(parser);
+
+    if (ParserTokenPeek(parser)->type != RIGHT_PAREN)
+        ERROR("expect a ')'.");
+    
+    parser->current++;
     return expr;
 }
 
@@ -318,6 +332,181 @@ void ExStationLoadDebugPrint(ExStation* station)
     station->port_binary = ExStationDebugPrintPortBinary;
     station->port_unary = ExStationDebugPrintPortUnary;
     station->port_literal = ExStationDebugPrintPortLiteral;
+}
+
+// evaluating expressions
+bool ExTruthCheck(TokenType type, void* literal)
+{
+    bool res = true;
+    switch (type)
+    {
+        case NIL:
+            res = false;
+
+        case INT:
+            if (VA(int*, literal) == 0) 
+                res = false;
+            break;
+
+        case DOUBLE:
+            if (VA(double*, literal) == 0) 
+                res = false;
+            break;
+
+        case STRING:
+            if (AS(StaticString*, literal)->length == 0)
+                res = false;
+            break;
+
+        default:
+            ERROR_VARIADIC("encounter a weird token (TOKEN ID: %d)", type);
+    }
+    return res;
+}
+void* ExStationEvaluatePortExpression(STATION_ARG_CONFIG)
+{
+    Expression* expr = self;
+    return AS(Expression*, expr->expression)->connect(station, expr->expression, argc);
+}
+int size_of_token_type(TokenType type)
+{
+    size_t size;
+    switch (type)
+    {
+        case INT:
+            size = sizeof(int);
+            break;
+        case DOUBLE:
+            size = sizeof(double);
+            break;
+        case STRING:
+            size = sizeof(void*);
+            ERROR("string have not been built to do these set of arithmetics.");
+            break;
+        case TRUE:
+            size = sizeof(true);
+            break;
+        case FALSE:
+            size = sizeof(false);
+            break;
+        case NIL:
+            size = sizeof(NULL);
+            break;
+        default:
+            ERROR_VARIADIC("why are you here (TokenType: %d)", type);
+            break;
+    }
+    return size;
+}
+#define CONVERT_TYPECAST(type) \
+    do{ \
+        case INT\
+    } while (0) \
+
+void* ExStationEvaluatePortBinary(STATION_ARG_CONFIG)
+{
+    
+    // extract the literal from children
+    Binary* b = self;
+    Literal* lhs = AS(Expression*, b->left)->connect(station, b->left, 0);
+    Literal* rhs = AS(Expression*, b->right)->connect(station, b->right, 0);
+
+    // determine the potential size of the result (uhmm, just get the larger onh)
+    TokenType type = (size_of_token_type(lhs->type) > size_of_token_type(rhs->type))? lhs->type: rhs->type;
+    size_t res_size = size_of_token_type(type);
+    
+    // dynamic typed language (so we have to determine the size beforehand)
+    Literal* literal = ExLiteralInit(HeapInsInit(res_size), type);
+
+    double c, d;
+    if (lhs->type == DOUBLE)
+        c = VA(double*, lhs->literal);
+    else
+        c = VA(int*, lhs->literal);
+
+    if (rhs->type == DOUBLE)
+        d = VA(double*, rhs->literal);
+    else
+        d = VA(int*, rhs->literal);
+
+    TokenType op = AS(Binary*, self)->op;
+    
+    switch (type)
+    {
+        case DOUBLE:
+        {
+            double a = (lhs->type == DOUBLE)
+                ? VA(double*, lhs->literal)
+                : VA(int*, lhs->literal);
+
+            double b = (rhs->type == DOUBLE)
+                ? VA(double*, rhs->literal)
+                : VA(int*, rhs->literal);
+
+            switch (op)
+            {
+                case PLUS:
+                    VA(double*, literal->literal) = a + b;
+                    break;
+                case MINUS:
+                    VA(double*, literal->literal) = a - b;
+                    break;
+                case STAR:
+                    VA(double*, literal->literal) = a * b;
+                    break;
+                case SLASH:
+                    VA(double*, literal->literal) = a / b;
+                    break;
+                case HAT:
+                    VA(double*, literal->literal) = pow(a, b);
+                    break;
+            }
+            break;
+        }
+
+        case INT:
+        {
+            int a = VA(int*, lhs->literal);
+            int b = VA(int*, rhs->literal);
+
+            switch (op)
+            {
+                case PLUS:
+                    VA(int*, literal->literal) = a + b;
+                    break;
+                case MINUS:
+                    VA(int*, literal->literal) = a - b;
+                    break;
+                case STAR:
+                    VA(int*, literal->literal) = a * b;
+                    break;
+                case SLASH:
+                    VA(int*, literal->literal) = a / b;
+                    break;
+                case HAT:
+                    VA(int*, literal->literal) = (int)(pow(a, b) + 0.001);
+                    break;
+            }
+            break;
+        }
+    }        
+
+    return literal;
+}
+void* ExStationEvaluatePortUnary(STATION_ARG_CONFIG)
+{
+
+}
+void* ExStationEvaluatePortLiteral(STATION_ARG_CONFIG)
+{
+    return self;
+}
+void ExStationEvaluateBuild(ExStation* station)
+{
+    station->port_expression = ExStationEvaluatePortExpression;
+    station->port_binary = ExStationEvaluatePortBinary;
+    station->port_unary = ExStationEvaluatePortUnary;
+    station->port_literal = ExStationEvaluatePortLiteral;
 }
 
 // free variables

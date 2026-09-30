@@ -12,11 +12,16 @@ typedef struct{
     // import attribs (System)
     Heap* tokens;
     const char* file_name;
+    
+    // exclusive attribs
+    ExStation* station;
+    Heap* statements;
 
 } Parser;
 
 Parser* ParserInit(System* system);
 void ParserDestruct(Parser* parser);
+Token* ParserTokenPeek(Parser* parser);
 
 // build the AST tree
 void ParserParse(Parser* parser);
@@ -39,12 +44,13 @@ void* ExStationDebugPrintPortBinary(STATION_ARG_CONFIG);
 void* ExStationDebugPrintPortUnary(STATION_ARG_CONFIG);
 void* ExStationDebugPrintPortLiteral(STATION_ARG_CONFIG);
 
-// build an AST tree () thinking of an error catcher in advance
-void ExStationLoadBuild(ExStation* station);
-void* ExStationBuildPortExpression(STATION_ARG_CONFIG);
-void* ExStationBuildPortBinary(STATION_ARG_CONFIG);
-void* ExStationBuildPortUnary(STATION_ARG_CONFIG);
-void* ExStationBuildPortLiteral(STATION_ARG_CONFIG);
+// evaluate an AST tree () thinking of an error catcher in advance
+void ExStationEvaluateBuild(ExStation* station);
+bool ExTruthCheck(TokenType type, void* literal);
+void* ExStationEvaluatePortExpression(STATION_ARG_CONFIG);
+void* ExStationEvaluatePortBinary(STATION_ARG_CONFIG);
+void* ExStationEvaluatePortUnary(STATION_ARG_CONFIG);
+void* ExStationEvaluatePortLiteral(STATION_ARG_CONFIG);
 
 // free expressions
 void ExStationLoadFree(ExStation* station);
