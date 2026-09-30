@@ -28,7 +28,7 @@ int main()
     ScannerScan(scanner, system);
 
     // parser phase
-    ParserParse(parser);
+    // ParserParse(parser);
 
 
     /* OLD TEST

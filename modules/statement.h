@@ -27,7 +27,7 @@ typedef struct
     void* (*port_expr_stmt)(STATION_ARG_CONFIG);
     void* (*port_print_stmt)(STATION_ARG_CONFIG);
     void* (*declare_smth)(STATION_ARG_CONFIG);
-} ExStationStmt;
+} StmtStation;
 
 void ParserParse(Parser* parser);
 Expression* ParserDeclaration(Parser* parser);

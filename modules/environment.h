@@ -14,6 +14,7 @@ typedef struct
 typedef struct
 {
     VarMap* map;
+    void* enclosing;
 } Environment;
 
 VarMap* VarMapInit(Environment* env);

@@ -26,7 +26,7 @@ Parser* ParserInit(System* system)
         .file_name = system->file_name,
 
         .statements = HeapInit(sizeof(Expression*)),
-        .station = ExStationInit(),
+        .ex_station = ExStationInit(),
         .env = EnvironmentInit(),
     };
     return ptr;
@@ -45,12 +45,12 @@ void ParserDestruct(Parser* parser)
         if (current != NULL)
         {
             void* args[0];
-            ExStationFreePortLiteral(parser->station, current->ptr, 0, args);
+            ExStationFreePortLiteral(parser->ex_station, current->ptr, 0, args);
         }
         free(current->ptr);
     }
 
-    ExStationDestruct(parser->station);
+    ExStationDestruct(parser->ex_station);
     free(parser);
 }
 

@@ -61,12 +61,12 @@ void ParserVarDeclaration(Parser* parser)
         // build a tree & evaluate
         void* args[0];
         Expression* expr = ParserExpression(parser);
-        ExStationEvaluateBuild(parser->station);
-        Expression* literal = expr->connect(parser->station, expr, 0);
+        ExStationEvaluateBuild(parser->ex_station);
+        Expression* literal = expr->connect(parser->ex_station, expr, 0);
 
         // free
-        ExStationLoadFree(parser->station);
-        expr->connect(parser->station, expr, 0);
+        ExStationLoadFree(parser->ex_station);
+        expr->connect(parser->ex_station, expr, 0);
 
         // 
     }
@@ -79,12 +79,12 @@ Expression* ParserExprStmt(Parser* parser)
     Expression* tree = ParserExpression(parser);
     
     // evaluate
-    ExStationEvaluateBuild(parser->station);
-    Expression* literal = tree->connect(parser->station, tree, 0);
+    ExStationEvaluateBuild(parser->ex_station);
+    Expression* literal = tree->connect(parser->ex_station, tree, 0);
     
     // free
-    ExStationLoadFree(parser->station);
-    tree->connect(parser->station, tree, 0);
+    ExStationLoadFree(parser->ex_station);
+    tree->connect(parser->ex_station, tree, 0);
 
     return literal;
 }
@@ -97,17 +97,17 @@ void* ParserPrintStmt(Parser* parser)
     Expression* tree = ParserExpression(parser);
 
     // evaluate 
-    ExStationEvaluateBuild(parser->station);
-    Expression* literal = tree->connect(parser->station, tree, 0);
+    ExStationEvaluateBuild(parser->ex_station);
+    Expression* literal = tree->connect(parser->ex_station, tree, 0);
 
     // print
     int indent = 0; 
     void* args[1] = {&indent};
-    ExStationDebugPrintPortLiteral(parser->station, literal, 1, args);
+    ExStationDebugPrintPortLiteral(parser->ex_station, literal, 1, args);
 
     // free the arithmetic tree
     void* args1[0] = {};
-    ExStationFreePortLiteral(parser->station, tree, 0, args1);
+    ExStationFreePortLiteral(parser->ex_station, tree, 0, args1);
 
     return literal;
     

@@ -15,7 +15,7 @@ typedef struct{
     const char* file_name;
     
     // exclusive attribs
-    ExStation* station;
+    ExStation* ex_station;
     Heap* statements;
     Environment* env;
 
