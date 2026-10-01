@@ -1,5 +1,5 @@
 #ifndef ENVIRONMENT_H
-#define ENVIRONTMENT_H
+#define ENVIRONMENT_H
 
 #include "expression.h"
 #include "../misc/hashmap.h"
@@ -18,8 +18,8 @@ typedef struct
 } Environment;
 
 VarMap* VarMapInit(Environment* env);
-void VarMapAdd(VarMap** var_map, const char* key, void* ptr);
 VarMap* VarMapFind(VarMap** var_map, const char* key);
+void VarMapAdd(VarMap** var_map, const char* key, void* ptr);
 void VarMapModify(VarMap** var_map, const char* key, void* new_ptr);
 void VarMapDelete(VarMap** var_map, const char* key);
 void VarMapFree(VarMap** var_map);
@@ -28,7 +28,7 @@ Environment* EnvironmentInit();
 void EnvironmentDestruct(Environment* env);
 
 void EnvironmentDefine(Environment* env, char* name, Literal* literal);
-Literal* EnvironmentFetch(Environment* env,  char* name);
+Literal* EnvironmentGet(Environment* env,  char* name);
 
 #endif
 

@@ -87,5 +87,7 @@ void* ExPortBinary(PORT_ARG_CONFIG);
 void* ExPortUnary(PORT_ARG_CONFIG);
 void* ExPortLiteral(PORT_ARG_CONFIG);
 
+void ExpressionFreeLiteral(void* literal);
+void ExpressionPrintLiteral(void* literal);
 
 #endif

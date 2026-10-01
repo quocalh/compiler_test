@@ -1,5 +1,6 @@
 #include "environment.h"
 #include "expression.h"
+#include "statement.h"
 #include "../misc/heap.h"
 #include "../misc/uthash.h"
 #include "../misc/assert_.h"
@@ -14,7 +15,7 @@ void VarMapAdd(VarMap** var_map, const char* key, void* ptr)
     HASH_FIND_STR(*var_map, key, item);
     if (item == NULL)
     {
-        VarMap* item = (VarMap*)malloc(sizeof(*item));
+        item = (VarMap*)malloc(sizeof(*item));
         ASSERT_VARIADIC(item, "can't allocate slots for varMap (%s)", key); 
         item->name = key;
         HASH_ADD_KEYPTR(hh, *var_map, item->name, strlen(item->name), item);
@@ -54,9 +55,10 @@ void VarMapFree(VarMap** var_map)
 // Environment* EnvironmentInit(Environment* enclosing)
 Environment* EnvironmentInit()
 {
-    Environment* env = malloc(sizeof(*env));
+    Environment* env = HeapInsInit(sizeof(*env));
     *env = (Environment){
         .map = NULL,
+        .enclosing = NULL
     };
     return env;
 }
@@ -66,11 +68,33 @@ void EnvironmentDestruct(Environment* env)
     VarMap* current;
     VarMap* tmp;
 
+    // free env literal
     HASH_ITER(hh, env->map, current, tmp)
     {
         Literal* literal = current->ptr;
         HASH_DEL(env->map, current);
+        ExpressionFreeLiteral(literal);
     }
 
     free(env);
+}
+void EnvironmentDefine(Environment* env, char* name, Literal* literal)
+{
+    VarMap* var_map = VarMapFind(&(env->map), name);
+    if (!var_map)
+        VarMapAdd(&(env->map), name, literal);
+    else
+        var_map->ptr = literal;
+}
+void EnvironmentAssign(Environment* env, char* name, Literal* literal)
+{
+    VarMap* var_map = VarMapFind(&(env->map), name);
+    ASSERT_VARIADIC(var_map, "var name '%s' not yet defined.", name);
+    var_map->ptr = literal;
+}
+Literal* EnvironmentGet(Environment* env,  char* name)
+{
+    VarMap* var_map = VarMapFind(&(env->map), name);
+    ASSERT_VARIADIC(var_map, "var name '%s' not yet defined.", name);
+    return var_map->ptr;
 }

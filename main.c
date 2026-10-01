@@ -5,6 +5,7 @@
 #include "modules/expression.h"
 #include "misc/assert_.h"
 #include "modules/intepreter.h"
+#include "modules/environment.h"
 
 /*
 TODO: 
@@ -33,39 +34,29 @@ int main()
     
     Interpreter* interpreter = InterpreterInit(parser);
     InterpreterInterpret(interpreter);
-     
-
-    /* OLD TEST
-    // parser phase
-    ExStation* station = ExStationInit();
-
-    // test expression
-    Expression* res = ParserExpression(parser);
-
-    // debug expression
-    int indent = 0;
-    ExStationLoadDebugPrint(station);
-    res->connect(station, res, 1, &indent);
-
-    // evaluate 
-    ExStationLoadEvaluate(station);
-    Literal* eva = res->connect(station, res, 0);
-
-    printf("%lf\n", (double*)eva->literal);
-
-    // free expression
-    ExStationLoadFree(station);
-    res->connect(station, res, 0);
-
-
-    // parser phase end
-    ExStationDestruct(station);
-    */
 
     InterpreterDestruct(interpreter);
     ScannerDestruct(scanner);
     ParserDestruct(parser);
     SystemDestruct(system);
+
+    // test environment
+    int* test = malloc(sizeof(int) * 8);
+    test[0] = 0;
+    test[1] = 1;
+    test[2] = 2;
+
+    Environment* e1 = EnvironmentInit();
+    EnvironmentDefine(e1, "quoc", ExLiteralInit(test + 0, INT));
+    Literal* tmp = EnvironmentGet(e1, "quoc");
+    EnvironmentDefine(e1, "quoc", ExLiteralInit(test + 1, INT));
+    tmp = EnvironmentGet(e1, "quoc");
+    EnvironmentDefine(e1, "anh", ExLiteralInit(test + 2, INT));
+    tmp = EnvironmentGet(e1, "anh");
+
+    free(test);
+
+    EnvironmentDestruct(e1);
 
     return 0; 
 }

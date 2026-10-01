@@ -41,12 +41,12 @@
 
 #define ASSERT_VARIADIC(res, debug_string, ...) \
     do{ \
-        if (!res) \
+        if (!(res)) \
         { \
             printf("[%s:%d]: ", __FILE__, __LINE__); \
             printf(debug_string __VA_OPT__(,)__VA_ARGS__); \
             printf("\n"); \
-            assert(res); \
+            assert(0); \
         } \
     } while(0)
 

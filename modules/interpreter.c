@@ -58,48 +58,6 @@ void InterpreterInterpret(Interpreter* inp)
     }
 }
 
-// i know, smelly code, but i can't help
-// plus the station aint free the literals
-void ExpressionFreeLiteral(void* literal)
-{
-    Literal* l = literal;
-    switch (l->type)
-    {
-    case INT:
-    case DOUBLE:
-        free(l->literal);
-        break;
-
-    case STRING:
-        StaticStringFree(l->literal);
-
-    default:
-        ERROR_VARIADIC("who are you ?(%p)", literal);
-        break;
-    }
-}
-void ExpressionPrintLiteral(void* literal)
-{
-    printf("(literal) ");
-    Literal* l = literal;
-
-    switch (l->type)
-    {
-        case INT:
-            printf("%d", *AS(int*, l->literal));
-            break;
-        case DOUBLE:
-            printf("%lf", *((double*)l->literal));
-            break;
-        case STRING:
-            printf("%s", (char*)((StaticString*)l->literal)->str);
-            break;
-        default:
-            break;
-    }
-    printf("\n"); 
-    
-}
 // parser parse 
 void ParserParse(Parser* parser)
 {
