@@ -69,7 +69,13 @@ Expression* ParserExpression(Parser* parser)
 }
 Expression* ParserAssign(Parser* parser)
 {
-    // return ParserEquality(parser);
+    void* expr = ParserEquality(parser);
+    Token* token;
+    if ((token = ParserTokenPeek(parser))->type == EQUAL){
+        parser->current++;
+        // void* literal = 
+    };
+    return expr;
 }
 Expression* ParserEquality(Parser* parser)
 {
@@ -199,7 +205,11 @@ Expression* ParserPrimary(Parser* parser)
 
         case IDENTIFIER:
             parser->current++;
-            expr =  ExVariableInit(token->literal, token->lexeme->str);
+            // note that token lexeme str is being used here, 
+            // (very sad bro)
+            // of which should be good
+            // before system destruct
+            expr = ExVariableInit(token->lexeme->str);
             break;
 
         case LEFT_PAREN:
@@ -248,6 +258,32 @@ void* ExStationDebugPrintPortExpression(STATION_ARG_CONFIG)
     (*indent)--;
 
     return NULL;
+}
+void* ExStationDebugPrintPortAssign(STATION_ARG_CONFIG)
+{
+    // fetch argss
+    int* indent = args[0];
+    Assign* a = self;
+
+    // print assign
+    int i;
+    PRINT_TABS(i, *indent);
+    printf("assign{\n");
+
+    (*indent)++;
+
+    PRINT_TABS(i, *indent);
+    printf("name: %s\n", a->name);
+
+
+    PRINT_TABS(i, *indent);
+    printf("expression: \n");
+
+    AS(Expression*, a->expression)->connect(station, a->expression, 1, *indent);
+
+    (*indent)--;
+
+    printf("}\n");
 }
 // IMPORTANT NOTE: <Expression>->connect is using the PORT_ARG_CONFIG
 // of which is the variadic format
@@ -331,12 +367,24 @@ void* ExStationDebugPrintPortLiteral(STATION_ARG_CONFIG)
 
     return NULL;
 }
+void* ExStationDebugPrintPortVariable(STATION_ARG_CONFIG)
+{
+    int* indent = args[0];
+
+    Variable* v = self;
+
+    int i;
+    PRINT_TABS(i, *indent);
+    printf("var: %s\n", v->name);
+}
 void ExStationLoadDebugPrint(ExStation* station)
 {
     station->port_expression = ExStationDebugPrintPortExpression;
+    station->port_assign = ExStationDebugPrintPortAssign;
     station->port_binary = ExStationDebugPrintPortBinary;
     station->port_unary = ExStationDebugPrintPortUnary;
     station->port_literal = ExStationDebugPrintPortLiteral;
+    station->port_variable = ExStationDebugPrintPortVariable;
 }
 
 // evaluating expressions
@@ -372,6 +420,14 @@ void* ExStationEvaluatePortExpression(STATION_ARG_CONFIG)
 {
     Expression* expr = self;
     return AS(Expression*, expr->expression)->connect(station, expr->expression, argc);
+}
+void* ExStationEvaluatePortAssign(STATION_ARG_CONFIG)
+{
+    Parser* parser = parser;
+    Assign* a = self;
+    Literal* literal = AS(Expression*, a->expression)->connect(station, a->expression, 1, parser);
+    EnvironmentDefine(parser->env, a->name, literal);
+    return literal;
 }
 int size_of_token_type(TokenType type)
 {
@@ -410,11 +466,12 @@ int size_of_token_type(TokenType type)
 
 void* ExStationEvaluatePortBinary(STATION_ARG_CONFIG)
 {
+    Parser* parser = args[0];
     
     // extract the literal from children
     Binary* b = self;
-    Literal* lhs = AS(Expression*, b->left)->connect(station, b->left, 0);
-    Literal* rhs = AS(Expression*, b->right)->connect(station, b->right, 0);
+    Literal* lhs = AS(Expression*, b->left)->connect(station, b->left, 1, parser);
+    Literal* rhs = AS(Expression*, b->right)->connect(station, b->right, 1, parser);
 
     // determine the potential size of the result (uhmm, just get the larger onh)
     TokenType type = (size_of_token_type(lhs->type) > size_of_token_type(rhs->type))? lhs->type: rhs->type;
@@ -534,33 +591,52 @@ void* ExStationEvaluatePortLiteral(STATION_ARG_CONFIG)
             copy->literal = StaticStringInit(((StaticString*)source->literal)->str);
             ASSERT(copy->literal != NULL, "failed to copy string literal");
             break;
+        
+        case IDENTIFIER:
+            ERROR("haven't implement yet");
+            break;
 
         default:
             ERROR_VARIADIC("cannot copy literal (token type %d)", source->type);
     }
-
-return copy;
+    return copy;
+}
+void* ExStationEvaluatePortVariable(STATION_ARG_CONFIG)
+{
+    Parser* parser = args[0];
+    Variable* v = self;
+    return EnvironmentGet(parser->env, v->name);
 }
 void ExStationLoadEvaluate(ExStation* station)
 {
     station->port_expression = ExStationEvaluatePortExpression;
+    station->port_assign = ExStationEvaluatePortAssign;
     station->port_binary = ExStationEvaluatePortBinary;
     station->port_unary = ExStationEvaluatePortUnary;
     station->port_literal = ExStationEvaluatePortLiteral;
+    station->port_variable = ExStationEvaluatePortVariable;
 }
 
 // free variables
 void ExStationLoadFree(ExStation* station)
 {
     station->port_expression = ExStationFreePortExpression;
+    station->port_assign = ExStationFreePortAssign;
     station->port_binary = ExStationFreePortBinary;
     station->port_unary = ExStationFreePortUnary;
     station->port_literal = ExStationFreePortLiteral;
+    station->port_variable = ExStationFreePortVariable;
 }
 void* ExStationFreePortExpression(STATION_ARG_CONFIG)
 {
     Expression* child = ((Expression*)self)->expression;
     child->connect(station, child, 0);
+    free(self);
+}
+void* ExStationFreePortAssign(STATION_ARG_CONFIG)
+{
+    Assign* a = self;
+    AS(Expression*, a->expression)->connect(station, a->expression, 0);
     free(self);
 }
 void* ExStationFreePortBinary(STATION_ARG_CONFIG)
@@ -593,5 +669,9 @@ void* ExStationFreePortLiteral(STATION_ARG_CONFIG)
     //     default:    
     //         ERROR("who are you :sob:??")
     // }
+    free(self);
+}
+void* ExStationFreePortVariable(STATION_ARG_CONFIG)
+{
     free(self);
 }

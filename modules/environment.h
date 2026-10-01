@@ -18,10 +18,10 @@ typedef struct
 } Environment;
 
 VarMap* VarMapInit(Environment* env);
-VarMap* VarMapFind(VarMap** var_map, const char* key);
-void VarMapAdd(VarMap** var_map, const char* key, void* ptr);
-void VarMapModify(VarMap** var_map, const char* key, void* new_ptr);
-void VarMapDelete(VarMap** var_map, const char* key);
+VarMap* VarMapFind(VarMap** var_map, char* key);
+void VarMapAdd(VarMap** var_map, char* key, void* ptr);
+void VarMapModify(VarMap** var_map, char* key, void* new_ptr);
+void VarMapDelete(VarMap** var_map, char* key);
 void VarMapFree(VarMap** var_map);
 
 Environment* EnvironmentInit();

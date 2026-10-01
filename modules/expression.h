@@ -34,7 +34,7 @@ typedef struct{
 } Expression;
 typedef struct{
     VISITORBASE;
-    const char* name;
+    char* name;
     void* expression;
 } Assign;
 typedef struct{
@@ -55,15 +55,16 @@ typedef struct{
 } Literal;
 typedef struct{
     VISITORBASE;
-    void* expr;
-    const char* name;
+    char* name;
+    // TokenType type;
 } Variable;
 
-Expression* ExpExpressionInit(void* expression);
-Variable* ExVariableInit(void* expr, const char* name);
+Expression* ExExpressionInit(void* expression);
+Assign* ExAssignInit(void* expression, char* name);
 Binary* ExBinaryInit(void* left, void* right, TokenType op);
 Unary* ExUnaryInit(void* expression, TokenType op);
 Literal* ExLiteralInit(void* literal, TokenType type);
+Variable* ExVariableInit(char* name);
 
 /* 
  * create a station
@@ -86,6 +87,7 @@ void* ExPortAssign(PORT_ARG_CONFIG);
 void* ExPortBinary(PORT_ARG_CONFIG);
 void* ExPortUnary(PORT_ARG_CONFIG);
 void* ExPortLiteral(PORT_ARG_CONFIG);
+void* ExPortVariable(PORT_ARG_CONFIG);
 
 void ExpressionFreeLiteral(void* literal);
 void ExpressionPrintLiteral(void* literal);

@@ -66,7 +66,7 @@ void* ExPortLiteral(PORT_ARG_CONFIG){
 
 
 // expressions
-Expression* ExpExpressionInit(void* expression)
+Expression* ExExpressionInit(void* expression)
 {
     Expression* e = HeapInsInit(sizeof(*e));
     *e = (Expression){
@@ -75,13 +75,12 @@ Expression* ExpExpressionInit(void* expression)
     };
     return e;
 }
-Variable* ExVariableInit(void* expr, const char* name)
+Assign* ExAssignInit(void* expression, char* name)
 {
-    Variable* a = HeapInsInit(sizeof(*a));
-    *a = (Variable){
-        .expr = expr,
+    Assign* a = HeapInsInit(sizeof(*a));
+    *a = (Assign){
+        .expression = expression,
         .name = name,
-        .connect = ExPortVariable,
     };
     return a;
 }
@@ -115,6 +114,16 @@ Literal* ExLiteralInit(void* literal, TokenType type)
         .connect = ExPortLiteral
     };
     return l;
+}
+Variable* ExVariableInit(char* name)
+{
+    Variable* v = HeapInsInit(sizeof(*v));
+    *v = (Variable){
+        .name = name,
+        // .type = IDENTIFIER, // i feel like sb gonna use it?
+        .connect = ExPortVariable,
+    };
+    return v;
 }
 
 // station

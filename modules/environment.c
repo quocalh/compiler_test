@@ -9,7 +9,7 @@ VarMap* VarMapInit(Environment* env)
 {
     env->map = NULL;
 }
-void VarMapAdd(VarMap** var_map, const char* key, void* ptr)
+void VarMapAdd(VarMap** var_map, char* key, void* ptr)
 {
     VarMap* item = NULL;
     HASH_FIND_STR(*var_map, key, item);
@@ -22,20 +22,20 @@ void VarMapAdd(VarMap** var_map, const char* key, void* ptr)
     }
     item->ptr = ptr; 
 }
-VarMap* VarMapFind(VarMap** var_map, const char* key)
+VarMap* VarMapFind(VarMap** var_map, char* key)
 {
     VarMap* item;
     HASH_FIND_STR(*var_map, key, item);
     return item; 
 }
-void VarMapModify(VarMap** var_map, const char* key, void* new_ptr)
+void VarMapModify(VarMap** var_map, char* key, void* new_ptr)
 {
     VarMap* item;
     HASH_FIND_STR(*var_map, key, item);
     ASSERT_VARIADIC(item, "var_map key not found (%s)", key);
     item->ptr = new_ptr;
 }
-void VarMapDelete(VarMap** var_map, const char* key)
+void VarMapDelete(VarMap** var_map, char* key)
 {
     VarMap* item;
     HASH_FIND_STR(*var_map, key, item);
@@ -88,12 +88,14 @@ void EnvironmentDefine(Environment* env, char* name, Literal* literal)
 }
 void EnvironmentAssign(Environment* env, char* name, Literal* literal)
 {
+    // recursive
     VarMap* var_map = VarMapFind(&(env->map), name);
     ASSERT_VARIADIC(var_map, "var name '%s' not yet defined.", name);
     var_map->ptr = literal;
 }
 Literal* EnvironmentGet(Environment* env,  char* name)
 {
+    // recursive
     VarMap* var_map = VarMapFind(&(env->map), name);
     ASSERT_VARIADIC(var_map, "var name '%s' not yet defined.", name);
     return var_map->ptr;

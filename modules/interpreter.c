@@ -9,7 +9,7 @@
         /* build the arithmetic tree & evaluate the tree */\
         expr = ParserExpression(parser); \
         ExStationLoadEvaluate(parser->ex_station); \
-        literal = expr->connect(parser->ex_station, expr, 0); \
+        literal = expr->connect(parser->ex_station, expr, 1, parser); \
         \
         /* free the expression*/ \
         ExStationLoadFree(parser->ex_station); \
@@ -28,9 +28,11 @@ Interpreter* InterpreterInit(Parser* parser)
 {
     Interpreter* inp = HeapInsInit(sizeof(*inp));
     *inp = (Interpreter){
+        // unique attribs
         .current = 0,
-
-        .env = parser->env,
+        
+        // subscribe attribs
+        .env = parser->env, // not a unique attribs cuz of stmtvardeclaration()
         .ex_station = parser->ex_station,
         .stmt_station = parser->stmt_station,
         .stmts = parser->statements,
@@ -53,7 +55,7 @@ void InterpreterInterpret(Interpreter* inp)
     while (inp->current < inp->stmts->length)
     {
         Stmt* stmt = InterpreterPeekStatement(inp);
-        stmt->connect(inp->stmt_station, stmt, 0);
+        stmt->connect(inp->stmt_station, stmt, 1, inp->env);
         inp->current++;
     }
 }
@@ -165,6 +167,7 @@ void* StmtStationExecutePortExprStmt(STATION_ARG_CONFIG)
 }
 void* StmtStationExecutePortDeclareStmt(STATION_ARG_CONFIG)
 {
+    DeclareStmt* stmt = self;
 
 }
 

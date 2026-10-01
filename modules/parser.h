@@ -32,6 +32,7 @@ void ParserParse(Parser* parser);
 
 // Expression 
 Expression* ParserExpression(Parser* parser);
+Expression* ParserAssign(Parser* parser);
 Expression* ParserEquality(Parser* parser);
 Expression* ParserComparison(Parser* parser);
 Expression* ParserTerm(Parser* parser);
@@ -46,23 +47,29 @@ Expression* ParserPrimary(Parser* parser);
 // print AST debug tree
 void ExStationLoadDebugPrint(ExStation* station);
 void* ExStationDebugPrintPortExpression(STATION_ARG_CONFIG);
+void* ExStationDebugPrintPortAssign(STATION_ARG_CONFIG);
 void* ExStationDebugPrintPortBinary(STATION_ARG_CONFIG);
 void* ExStationDebugPrintPortUnary(STATION_ARG_CONFIG);
 void* ExStationDebugPrintPortLiteral(STATION_ARG_CONFIG);
+void* ExStationDebugPrintPortVariable(STATION_ARG_CONFIG);
 
 // evaluate an AST tree () thinking of an error catcher in advance
 void ExStationLoadEvaluate(ExStation* station);
 bool ExTruthCheck(TokenType type, void* literal);
 void* ExStationEvaluatePortExpression(STATION_ARG_CONFIG);
+void* ExStationEvaluatePortAssign(STATION_ARG_CONFIG);
 void* ExStationEvaluatePortBinary(STATION_ARG_CONFIG);
 void* ExStationEvaluatePortUnary(STATION_ARG_CONFIG);
 void* ExStationEvaluatePortLiteral(STATION_ARG_CONFIG);
+void* ExStationEvaluatePortVariable(STATION_ARG_CONFIG);
 
 // free expressions
 void ExStationLoadFree(ExStation* station);
 void* ExStationFreePortExpression(STATION_ARG_CONFIG);
+void* ExStationFreePortAssign(STATION_ARG_CONFIG);
 void* ExStationFreePortBinary(STATION_ARG_CONFIG);
 void* ExStationFreePortUnary(STATION_ARG_CONFIG);
 void* ExStationFreePortLiteral(STATION_ARG_CONFIG);
+void* ExStationFreePortVariable(STATION_ARG_CONFIG);
 
 #endif
