@@ -18,7 +18,8 @@ void* ExPortExpression(PORT_ARG_CONFIG){
     void* ptr = station_->port_expression(station, self, argc, args);
     return ptr;
 }
-void* ExPortVariable(PORT_ARG_CONFIG){
+void* ExPortAssign(PORT_ARG_CONFIG)
+{
     PORT_SAFECHECK;
     ExStation* station_ = station;
 
@@ -26,9 +27,8 @@ void* ExPortVariable(PORT_ARG_CONFIG){
     UNPACK_VARIADIC_ARGS(argc, args);
 
     // passing down
-    void* ptr = station_->port_variable(station, self, argc, args);
+    void* ptr = station_->port_assign(station, self, argc, args);
     return ptr;
-
 }
 void* ExPortBinary(PORT_ARG_CONFIG){
     PORT_SAFECHECK;
@@ -63,7 +63,18 @@ void* ExPortLiteral(PORT_ARG_CONFIG){
     void* ptr = station_->port_literal(station, self, argc, args);
     return ptr;
 }
+void* ExPortVariable(PORT_ARG_CONFIG){
+    PORT_SAFECHECK;
+    ExStation* station_ = station;
 
+    // get the stream of args
+    UNPACK_VARIADIC_ARGS(argc, args);
+
+    // passing down
+    void* ptr = station_->port_variable(station, self, argc, args);
+    return ptr;
+
+}
 
 // expressions
 Expression* ExExpressionInit(void* expression)
@@ -81,6 +92,7 @@ Assign* ExAssignInit(void* expression, char* name)
     *a = (Assign){
         .expression = expression,
         .name = name,
+        .connect = ExPortAssign
     };
     return a;
 }
@@ -153,7 +165,6 @@ void ExpressionFreeLiteral(void* literal)
         StaticStringFree(l->literal);
 
     default:
-        ERROR_VARIADIC("who are you ?(%p)", literal);
         break;
     }
 }
@@ -164,6 +175,16 @@ void ExpressionPrintLiteral(void* literal)
 
     switch (l->type)
     {
+        case TRUE:
+            printf("true");
+            break;
+        case FALSE:
+            printf("false");
+            break;
+        case NIL:
+            printf("nil");
+            break;
+
         case INT:
             printf("%d", *AS(int*, l->literal));
             break;

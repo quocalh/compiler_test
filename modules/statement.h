@@ -20,7 +20,12 @@ typedef struct{
     VISITORBASE;
     char* name;
     Expression* expr;  
-} DeclareStmt;
+} DeclareStmt; // var x = 5;
+typedef struct{
+    VISITORBASE;
+    char* name;
+    Expression* expr;  
+} AssignStmt; // x = 5;
 
 // init statement
 Stmt* StmtStmtInit(Expression* expr);

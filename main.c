@@ -27,32 +27,6 @@ int main()
     Parser* parser = ParserInit(system);
     Interpreter* interpreter = InterpreterInit(parser);
 
-
-    ExStation* st = ExStationInit();
-    int* t1 = malloc(sizeof(*t1)); *t1 = 2;
-    int* t2 = malloc(sizeof(*t2)); *t2 = 7;
-
-    Expression* expr = ExExpressionInit(
-        ExBinaryInit(
-            ExVariableInit("my_var"),
-            ExLiteralInit(t2, INT),
-            PLUS
-        )
-    );
-
-    ExStationLoadDebugPrint(st);
-    int* indent = 0;
-    expr->connect(st, expr, 1, &indent);
-
-    ExStationLoadFree(st);
-    expr->connect(st, expr, 0);
-
-    free(t1);
-    free(t2);
-
-    ExStationDestruct(st);
-
-    /*
     // scanner phase
     ScannerScan(scanner, system);
 
@@ -61,12 +35,9 @@ int main()
     ParserParse(parser);
     
     // interpreter phase (execute statement)
-    InterpreterInterpret(interpreter);
+    InterpreterInterpret(interpreter, parser);
 
     InterpreterDestruct(interpreter);
-    */
-
-
 
     ScannerDestruct(scanner);
     ParserDestruct(parser);

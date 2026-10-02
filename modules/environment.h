@@ -28,6 +28,7 @@ Environment* EnvironmentInit();
 void EnvironmentDestruct(Environment* env);
 
 void EnvironmentDefine(Environment* env, char* name, Literal* literal);
+void EnvironmentAssign(Environment* env, char* name, Literal* literal);
 Literal* EnvironmentGet(Environment* env,  char* name);
 
 #endif

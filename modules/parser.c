@@ -28,7 +28,7 @@ Parser* ParserInit(System* system)
         .statements = HeapInit(sizeof(void*)),
         .ex_station = ExStationInit(),
         .stmt_station = StmtStationInit(),
-        .env = EnvironmentInit(),
+        .env = NULL,
     };
     return ptr;
 }
@@ -37,7 +37,6 @@ void ParserDestruct(Parser* parser)
     StmtStationDestruct(parser->stmt_station);
     ExStationDestruct(parser->ex_station);
     HeapFree(parser->statements);
-    EnvironmentDestruct(parser->env);
 
     free(parser);
 }
@@ -196,6 +195,13 @@ Expression* ParserPrimary(Parser* parser)
     
     switch (token->type)
     {
+        case TRUE:
+        case FALSE:
+        case NIL:
+            parser->current++;
+            expr = ExLiteralInit(NULL, token->type);
+            break;
+
         case INT:
         case DOUBLE: 
         case STRING:
@@ -237,7 +243,7 @@ Expression* ParserGrouping(Parser* parser)
 #define PRINT_TABS(cache, count)\
     do{ \
         cache = 0; \
-        while (cache++ < *indent) printf("\t"); \
+        while (cache++ < count) printf("\t"); \
     }while(0)
 
 // void* station, void* self, va_list ap
@@ -270,20 +276,22 @@ void* ExStationDebugPrintPortAssign(STATION_ARG_CONFIG)
     PRINT_TABS(i, *indent);
     printf("assign{\n");
 
+    PRINT_TABS(i, *indent);
+    printf("name: \n");
+
+    PRINT_TABS(i, (*indent) + 1);
+    printf("%s\n", a->name);
+
+    PRINT_TABS(i, *indent);
+    printf("value: \n");
+
     (*indent)++;
-
-    PRINT_TABS(i, *indent);
-    printf("name: %s\n", a->name);
-
-
-    PRINT_TABS(i, *indent);
-    printf("expression: \n");
-
-    AS(Expression*, a->expression)->connect(station, a->expression, 1, *indent);
-
+    AS(Expression*, a->expression)->connect(station, a->expression, argc, indent);
     (*indent)--;
 
+    PRINT_TABS(i, *indent);
     printf("}\n");
+
 }
 // IMPORTANT NOTE: <Expression>->connect is using the PORT_ARG_CONFIG
 // of which is the variadic format
@@ -298,22 +306,24 @@ void* ExStationDebugPrintPortBinary(STATION_ARG_CONFIG)
     Expression* right = ((Binary*)self)->right;
 
     int i; 
-    PRINT_TABS(i, *indent - 1);
+    PRINT_TABS(i, *indent);
     printf("binary{\n");
 
-    PRINT_TABS(i, *indent - 1);
+    PRINT_TABS(i, *indent);
     printf("left: \n");
+
     (*indent)++;
     left->connect(station, left, argc, indent); 
     (*indent)--;
 
-    PRINT_TABS(i, *indent - 1);
+    PRINT_TABS(i, *indent);
     printf("right: \n");
+
     (*indent)++;
     right->connect(station, right, argc, indent); 
     (*indent)--;
 
-    PRINT_TABS(i, *indent - 1);
+    PRINT_TABS(i, *indent);
     printf("}\n");
 
     return NULL;
@@ -350,7 +360,17 @@ void* ExStationDebugPrintPortLiteral(STATION_ARG_CONFIG)
     printf("(literal): ");
     
     switch (literal->type)
-    {
+    {        
+        case TRUE:
+            printf("true");
+            break;
+        case FALSE:
+            printf("false");
+            break;
+        case NIL:
+            printf("nil");
+            break;
+
         case INT:
             printf("%d", *AS(int*, literal->literal));
             break;
@@ -393,6 +413,10 @@ bool ExTruthCheck(TokenType type, void* literal)
     bool res = true;
     switch (type)
     {
+        case TRUE:
+            res = true;
+        case FALSE:
+            res = false;
         case NIL:
             res = false;
 

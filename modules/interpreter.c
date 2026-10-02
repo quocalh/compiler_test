@@ -4,10 +4,13 @@
 #include "../misc/assert_.h"
 #include "../misc/misc.h"
 
+// #define BUILD_AN_EXPRESSION(parser, expr)\
+//     do{ \
+//         expr = ParserExpression(parser); \
+//     } while(0);
 #define EVALUATE_AN_EXPRESSION(parser, expr, literal) \
     do{ \
-        /* build the arithmetic tree & evaluate the tree */\
-        expr = ParserExpression(parser); \
+        /* evaluate the tree */\
         ExStationLoadEvaluate(parser->ex_station); \
         literal = expr->connect(parser->ex_station, expr, 1, parser); \
         \
@@ -30,9 +33,9 @@ Interpreter* InterpreterInit(Parser* parser)
     *inp = (Interpreter){
         // unique attribs
         .current = 0,
+        .env = NULL,
         
         // subscribe attribs
-        .env = parser->env, // not a unique attribs cuz of stmtvardeclaration()
         .ex_station = parser->ex_station,
         .stmt_station = parser->stmt_station,
         .stmts = parser->statements,
@@ -49,15 +52,23 @@ void* InterpreterPeekStatement(Interpreter* inp)
     void** stmt = inp->stmts->ptr;
     return stmt[inp->current];
 }
-void InterpreterInterpret(Interpreter* inp)
+void InterpreterInterpret(Interpreter* inp, Parser* parser) 
 {
+    // create the root environment 
+    inp->env = EnvironmentInit();
+    parser->env = inp->env;
+
+    // execute
     StmtStationLoadExecute(inp->stmt_station);
     while (inp->current < inp->stmts->length)
     {
         Stmt* stmt = InterpreterPeekStatement(inp);
-        stmt->connect(inp->stmt_station, stmt, 1, inp->env);
+        stmt->connect(inp->stmt_station, stmt, 1, parser);
         inp->current++;
     }
+
+    // delete the env after done using
+    free(inp->env);
 }
 
 // parser parse 
@@ -85,25 +96,30 @@ void* ParserVarDeclaration(Parser* parser)
     Token* token;
     char* name;
     
-    // pass the VAR token
+    // skip the VAR token
     parser->current++;
 
-    ASSERT_VARIADIC((token = ParserTokenPeek(parser))->type == IDENTIFIER, 
-        "expect an identifier (line %d)", token->line);
-    name = HeapInsInit(sizeof(char) * (token->lexeme->length + 1));
-    strcpy(name, token->lexeme->str);
+    // deal witht the l-value
+    ASSERT_VARIADIC((token = ParserTokenPeek(parser))->type == IDENTIFIER, "expect an identifier (line %d)", token->line);
+    name = token->lexeme->str;
     parser->current++;
+    // ONLY IF INTEPRETER IS DESTRUCTED BEFORE SYSTEM (WHICH IS ALWAYS THE CASE (PREASSUMPTION)
+    // name = HeapInsInit(sizeof(char) * (token->lexeme->length + 1));
+    // strcpy(name, token->lexeme->str);
+
     
+    // skip the equal(=)
     ASSERT_VARIADIC((token = ParserTokenPeek(parser))->type == EQUAL, 
         "expect an '=' (line%d)", token->line);
     parser->current++;
 
-    Expression* expr, *literal; 
-    EVALUATE_AN_EXPRESSION(parser, expr, literal);
+    // evaluate the expression (r-value)
+    Expression* expr = ParserExpression(parser);
 
+    // skip the ;
     SEMICOLON_CONSUME(parser, token);
 
-    return StmtDeclareStmtInit(name, literal);
+    return StmtDeclareStmtInit(name, expr);
 }
 void* ParserStatement(Parser* parser)
 {
@@ -116,13 +132,12 @@ void* ParserStatement(Parser* parser)
 }
 void* ParserExprStmt(Parser* parser)
 {
-    Expression* expr, *literal;
-    EVALUATE_AN_EXPRESSION(parser, expr, literal);
+    Expression* expr = ParserExpression(parser);
 
     Token* token;
     SEMICOLON_CONSUME(parser, token);
 
-    return StmtExprStmtInit(literal);
+    return StmtExprStmtInit(expr);
 }
 void* ParserPrintStmt(Parser* parser)
 {
@@ -131,13 +146,12 @@ void* ParserPrintStmt(Parser* parser)
     // skip the PRINT token
     parser->current++;
 
-    Expression* expr, *literal; 
-    EVALUATE_AN_EXPRESSION(parser, expr, literal);
+    Expression* expr = ParserExpression(parser); 
     
     Token* token;
     SEMICOLON_CONSUME(parser, token);
 
-    return StmtPrintStmtInit(literal);
+    return StmtPrintStmtInit(expr);
 }
 
 void StmtStationLoadExecute(StmtStation* station)
@@ -145,30 +159,45 @@ void StmtStationLoadExecute(StmtStation* station)
     station->port_stmt = StmtStationExecutePortStmt;
     station->port_print_stmt = StmtStationExecutePortPrintStmt;
     station->port_expr_stmt = StmtStationExecutePortExprStmt;
-    station->port_declare_smth = StmtStationExecutePortDeclareStmt;
+    station->port_declare_smth = StmtStationExecutePortVarDeclareStmt;
 }
 void* StmtStationExecutePortStmt(STATION_ARG_CONFIG)
 {
     printf("hi :D\n");
+    Parser* parser = args[0];
     Stmt* stmt = self;
-    return stmt->expr; 
+    Literal* literal;
+    EVALUATE_AN_EXPRESSION(parser, stmt->expr, literal);
+
+    return literal; 
 }
 void* StmtStationExecutePortPrintStmt(STATION_ARG_CONFIG)
 {
+    Parser* parser = args[0];
     PrintStmt* stmt = self;
-    ExpressionPrintLiteral(stmt->expr);
+    Literal* literal;
+    EVALUATE_AN_EXPRESSION(parser, stmt->expr, literal);
+    ExpressionPrintLiteral(literal);
     return NULL;
 }
 void* StmtStationExecutePortExprStmt(STATION_ARG_CONFIG)
 {
     printf("hiexpr :D\n");
+    Parser* parser = args[0];
     ExprStmt* stmt = self;
+    Literal* literal;
+    EVALUATE_AN_EXPRESSION(parser, stmt->expr, literal);
     return stmt->expr; 
 }
-void* StmtStationExecutePortDeclareStmt(STATION_ARG_CONFIG)
+void* StmtStationExecutePortVarDeclareStmt(STATION_ARG_CONFIG)
 {
     DeclareStmt* stmt = self;
-
+    Parser* parser = args[0];
+    Literal* literal;
+    EVALUATE_AN_EXPRESSION(parser, stmt->expr, literal);
+    
+    EnvironmentDefine(parser->env, stmt->name, literal);
+    // VarMap* hello = VarMapFind(&(env->map), "a");
 }
 
 void StmtStationLoadFree(StmtStation* station)

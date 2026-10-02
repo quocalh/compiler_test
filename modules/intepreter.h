@@ -18,7 +18,7 @@ typedef struct{
 
 Interpreter* InterpreterInit(Parser* parser);
 void* InterpreterDestruct(Interpreter* inp);
-void InterpreterInterpret(Interpreter* inp);
+void InterpreterInterpret(Interpreter* inp, Parser* parser);
 
 // parser parse
 void* ParserDeclaration(Parser* parser);
@@ -31,8 +31,9 @@ void* ParserPrintStmt(Parser* parser);
 void* StmtStationExecutePortStmt(STATION_ARG_CONFIG);
 void* StmtStationExecutePortPrintStmt(STATION_ARG_CONFIG);
 void* StmtStationExecutePortExprStmt(STATION_ARG_CONFIG);
-void* StmtStationExecutePortDeclareStmt(STATION_ARG_CONFIG);
+void* StmtStationExecutePortVarDeclareStmt(STATION_ARG_CONFIG);
 void StmtStationLoadExecute(StmtStation* station);
+
 
 void* StmtStationFreePortStmt(STATION_ARG_CONFIG);
 void* StmtStationFreePortPrintStmt(STATION_ARG_CONFIG);

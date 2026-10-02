@@ -4,6 +4,9 @@
 print(1 + 2 + 3 + 4 + 5.12 ^ 2);
 print("nagger");
 print(1.5 + 1);
+var a = 67.67;
+var b = 67.67;
+print a + b * 2;
 
 
 // 1 + 4 ^ 2.1
