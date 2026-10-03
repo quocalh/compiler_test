@@ -32,31 +32,15 @@ int main()
 
 
     // parser phase (statement parser)
-    ParserParse(parser);
+    // ParserParse(parser, interpreter);
     
     // interpreter phase (execute statement)
     InterpreterInterpret(interpreter, parser);
 
     InterpreterDestruct(interpreter);
-
-    ScannerDestruct(scanner);
     ParserDestruct(parser);
+    ScannerDestruct(scanner);
     SystemDestruct(system);
-
-    // test environment
-    int* test0 = malloc(sizeof(int));
-    int* test1 = malloc(sizeof(int));
-    int* test2 = malloc(sizeof(int));
-
-    Environment* e1 = EnvironmentInit();
-    EnvironmentDefine(e1, "quoc", ExLiteralInit(test0, INT));
-    Literal* tmp = EnvironmentGet(e1, "quoc");
-    EnvironmentDefine(e1, "quoc", ExLiteralInit(test1, INT));
-    tmp = EnvironmentGet(e1, "quoc");
-    EnvironmentDefine(e1, "anh", ExLiteralInit(test2, INT));
-    tmp = EnvironmentGet(e1, "anh");
-
-    EnvironmentDestruct(e1);
 
     return 0; 
 }

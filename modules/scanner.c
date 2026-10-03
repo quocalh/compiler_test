@@ -153,16 +153,19 @@ void ScannerScanString(Scanner* scanner)
     // A temp buffer to store the string
     Heap* str_vector = HeapInit(sizeof(char));
     char c;
+
     (scanner->current)++;
+    char null_ptr = '\0';
+    HeapAdd(str_vector, &null_ptr);
     while ((c = ScannerStreamPeek(scanner)) != '"')
     {
-        HeapAdd(str_vector, &c);
+        HeapAdd(str_vector, &null_ptr);
+        ((char*)str_vector->ptr)[str_vector->length - 2] = c;
         (scanner->current)++;
     }
     
     // StaticString string retrieval O(N) + Tokenize the string
     StaticString* ss = StaticStringInit(str_vector->ptr);
-    // StaticString* ss = StaticStringSubstring(scanner->stream, scanner->start, scanner->current);
     ScannerAddToken(scanner, STRING, ss);
     free(str_vector);
 }
@@ -196,6 +199,7 @@ void ScannerScanNumber(Scanner* scanner)
         *(int*)cache = (int) atoi(lexeme->str);
     }
 
+    StaticStringFree(lexeme);
     ScannerAddToken(scanner, type, cache);
 }
 void ScannerScanKeyWordsAndVars(Scanner* scanner) 
@@ -206,18 +210,17 @@ void ScannerScanKeyWordsAndVars(Scanner* scanner)
     char null = '\0';
     
     HeapAdd(array, &null);
-    char* str = array->ptr;
     while(isalnum(c = ScannerStreamPeek(scanner)) || c == '_')
     {
         HeapAdd(array, &null);
-        str[array->length -1 -1] = c;
+        ((char*)array->ptr)[array->length -1 -1] = c;
         scanner->current++;
     }
     scanner->current--;
     
     // get token type: either var or [keywords]
     TokenType type;
-    HashStrToInt *res = HashStrToIntFind(&scanner->hashmap, str);
+    HashStrToInt *res = HashStrToIntFind(&scanner->hashmap, array->ptr);
     if (!res) type = IDENTIFIER;
     else type = res->bucket;
    
@@ -276,12 +279,13 @@ void ScannerScan(Scanner* scanner, System* system)
     int* current = &scanner->current;
     int* line = &scanner->line;
     Heap* tokens = scanner->tokens;
-    while ((*start) < scanner->stream->length)
+    *start = *current;
+    while ((*current) < scanner->stream->length)
     {
         *start = *current;
+        char c = ((char*)scanner->stream->str)[*start];
 
-        char c = stream[scanner->start];
-
+        // char c = ScannerStreamPeek(scanner);
         
         switch (c)
         {

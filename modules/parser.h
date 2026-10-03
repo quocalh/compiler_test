@@ -18,7 +18,7 @@ typedef struct{
     // exclusive attribs
     ExStation* ex_station;
     StmtStation* stmt_station;
-    Heap* statements;
+    Heap* stmts;
     Environment* env;
 
 } Parser;
@@ -27,8 +27,6 @@ Parser* ParserInit(System* system);
 void ParserDestruct(Parser* parser);
 Token* ParserTokenPeek(Parser* parser);
 
-// build the AST tree
-void ParserParse(Parser* parser);
 
 // Expression 
 Expression* ParserExpression(Parser* parser);

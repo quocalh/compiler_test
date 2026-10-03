@@ -7,14 +7,18 @@
 #include "../misc/heap.h"
 
 typedef struct{
+    // unique attribs
     int current;
+    Heap* stmts;
+    Environment* env;
 
     // parser subscribe attribs
     ExStation* ex_station; 
     StmtStation* stmt_station;
-    Heap* stmts;
-    Environment* env;
 } Interpreter;
+
+// build the AST tree
+void ParserParse(Parser* parser, Interpreter* interpreter);
 
 Interpreter* InterpreterInit(Parser* parser);
 void* InterpreterDestruct(Interpreter* inp);

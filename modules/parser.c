@@ -25,9 +25,9 @@ Parser* ParserInit(System* system)
         .tokens = system->tokens,
         .file_name = system->file_name,
 
-        .statements = HeapInit(sizeof(void*)),
         .ex_station = ExStationInit(),
         .stmt_station = StmtStationInit(),
+        .stmts = NULL,
         .env = NULL,
     };
     return ptr;
@@ -36,8 +36,6 @@ void ParserDestruct(Parser* parser)
 {
     StmtStationDestruct(parser->stmt_station);
     ExStationDestruct(parser->ex_station);
-    HeapFree(parser->statements);
-
     free(parser);
 }
 
@@ -64,15 +62,30 @@ Token* ParserTokenPeek(Parser* parser)
 
 Expression* ParserExpression(Parser* parser)
 {
-    return ParserEquality(parser);
+    return ParserAssign(parser);
 }
 Expression* ParserAssign(Parser* parser)
 {
     void* expr = ParserEquality(parser);
+
     Token* token;
     if ((token = ParserTokenPeek(parser))->type == EQUAL){
         parser->current++;
-        // void* literal = 
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        expr = ExAssignInit(ParserEquality(parser), AS(Variable*, expr)->name);
     };
     return expr;
 }
@@ -204,6 +217,9 @@ Expression* ParserPrimary(Parser* parser)
 
         case INT:
         case DOUBLE: 
+            parser->current++;
+            expr = ExLiteralInit(token->literal, token->type);
+            break;
         case STRING:
             parser->current++;
             expr = ExLiteralInit(token->literal, token->type);
@@ -447,42 +463,13 @@ void* ExStationEvaluatePortExpression(STATION_ARG_CONFIG)
 }
 void* ExStationEvaluatePortAssign(STATION_ARG_CONFIG)
 {
-    Parser* parser = parser;
+    Parser* parser = args[0];
     Assign* a = self;
     Literal* literal = AS(Expression*, a->expression)->connect(station, a->expression, 1, parser);
-    EnvironmentDefine(parser->env, a->name, literal);
+    EnvironmentAssign(AS(Parser*, parser)->env, a->name, literal);
     return literal;
 }
-int size_of_token_type(TokenType type)
-{
-    size_t size;
-    switch (type)
-    {
-        case INT:
-            size = sizeof(int);
-            break;
-        case DOUBLE:
-            size = sizeof(double);
-            break;
-        case STRING:
-            size = sizeof(void*);
-            ERROR("string have not been built to do these set of arithmetics.");
-            break;
-        case TRUE:
-            size = sizeof(true);
-            break;
-        case FALSE:
-            size = sizeof(false);
-            break;
-        case NIL:
-            size = sizeof(NULL);
-            break;
-        default:
-            ERROR_VARIADIC("why are you here (TokenType: %d)", type);
-            break;
-    }
-    return size;
-}
+
 #define CONVERT_TYPECAST(type) \
     do{ \
         case INT\
@@ -502,7 +489,9 @@ void* ExStationEvaluatePortBinary(STATION_ARG_CONFIG)
     size_t res_size = size_of_token_type(type);
     
     // dynamic typed language (so we have to determine the size beforehand)
-    Literal* literal = ExLiteralInit(HeapInsInit(res_size), type);
+    Literal* literal = HeapInsInit(sizeof(*literal));
+    literal->literal = HeapInsInit(res_size);
+    literal->type = type;
 
     double c, d;
     if (lhs->type == DOUBLE)
@@ -629,7 +618,8 @@ void* ExStationEvaluatePortVariable(STATION_ARG_CONFIG)
 {
     Parser* parser = args[0];
     Variable* v = self;
-    return EnvironmentGet(parser->env, v->name);
+    Literal* literal =  EnvironmentGet(parser->env, v->name);
+    return ExLiteralInit(literal->literal, literal->type);
 }
 void ExStationLoadEvaluate(ExStation* station)
 {
@@ -680,19 +670,23 @@ void* ExStationFreePortUnary(STATION_ARG_CONFIG)
 void* ExStationFreePortLiteral(STATION_ARG_CONFIG)
 {
     Literal* literal = self;
-    // DO NOTE THAT TOKENS ARE FREED BY THE SYSTEM AT THE END, THIS IS NOT OUR JOB
-    // switch (literal->type)
-    // {
-    //     case INT:
-    //     case DOUBLE:
-    //         free(literal->literal);
-    //         break;
-    //     case STRING:
-    //         StaticStringFree(literal->literal);
-    //         break;
-    //     default:    
-    //         ERROR("who are you :sob:??")
-    // }
+    switch (literal->type)
+    {
+        case TRUE:
+        case FALSE:
+        case NIL:
+            break;
+        case INT:
+        case DOUBLE:
+            free(literal->literal);
+            break;
+        case STRING:
+            StaticStringFree(literal->literal);
+            break;
+        default:    
+            ERROR("who are you :sob:??");
+            break;
+    }
     free(self);
 }
 void* ExStationFreePortVariable(STATION_ARG_CONFIG)

@@ -25,11 +25,11 @@ System* SystemInit(const char* file_name)
 
 void* SystemDestruct(System* system)
 {
-    // free the heap pointers, and all the lexeme (StaticString) in token
     for (int i = 0; i < system->tokens->length; i++)
     {
         Token* token = system->tokens->ptr + i * sizeof(Token);
         
+        printf("free: %s\n", token->lexeme->str);
         StaticStringFree(token->lexeme);
         
         switch (token->type)

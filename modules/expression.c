@@ -120,11 +120,21 @@ Unary* ExUnaryInit(void* expression, TokenType op)
 Literal* ExLiteralInit(void* literal, TokenType type)
 {
     Literal* l = HeapInsInit(sizeof(*l));
-    *l = (Literal){
-        .literal = literal,
-        .type = type,
-        .connect = ExPortLiteral
-    };
+    if (type == STRING)
+    {
+        l->literal = StaticStringInit(((StaticString*)literal)->str);
+    }
+    else
+    {
+        size_t size = size_of_token_type(type);
+        Literal* copy = HeapInsInit(size);
+        memcpy(copy, literal, size);
+
+        l->literal = copy;
+    }
+    l->type = type;
+    l->connect = ExPortLiteral;
+
     return l;
 }
 Variable* ExVariableInit(char* name)
@@ -167,6 +177,7 @@ void ExpressionFreeLiteral(void* literal)
     default:
         break;
     }
+    free(l);
 }
 void ExpressionPrintLiteral(void* literal)
 {

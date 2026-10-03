@@ -72,8 +72,9 @@ void EnvironmentDestruct(Environment* env)
     HASH_ITER(hh, env->map, current, tmp)
     {
         Literal* literal = current->ptr;
-        HASH_DEL(env->map, current);
         ExpressionFreeLiteral(literal);
+        HASH_DEL(env->map, current);
+        free(current);
     }
 
     free(env);
@@ -84,7 +85,8 @@ void EnvironmentDefine(Environment* env, char* name, Literal* literal)
     if (!var_map)
         VarMapAdd(&(env->map), name, literal);
     else
-        var_map->ptr = literal;
+        // var_map->ptr = literal;
+        ERROR_VARIADIC("you didn't define the var yet (%s)", name);
 }
 void EnvironmentAssign(Environment* env, char* name, Literal* literal)
 {

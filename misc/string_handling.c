@@ -10,6 +10,7 @@ StaticString* StaticStringInit(const char* buffer)
   int l = strlen(buffer) + 1;
   char* str = (char*)malloc(l);
   if (!str) return NULL;
+
   memcpy(str, buffer, l);
   
   // create static string in heap
@@ -32,14 +33,16 @@ StaticString* StaticStringSubstring(StaticString* str, int start, int end)
   int l = end - start + 1;
   char* heap = (char*)malloc((l + 1) * sizeof(char));
   if (!heap) return NULL;
-
-  // add the \0 at the end
   memcpy(heap, str->str + start, l);
   heap[l] = '\0';
   
   // create the static string in heap
   StaticString* ptr = malloc(sizeof(*ptr));
-  if (!ptr) return NULL;
+  if (!ptr) {
+    free(heap);
+    return NULL;
+  }
+
   *ptr = (StaticString){
     .str = heap,
     .length = l

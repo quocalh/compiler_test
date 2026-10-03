@@ -48,3 +48,5 @@ typedef struct{
     void* literal;
     int line;
 } Token;
+
+int size_of_token_type(TokenType type);
