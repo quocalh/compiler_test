@@ -11,6 +11,18 @@
                 "-g",
                 "main.c",
 
+                "./misc/*.c",
+                // "./lexer/*.c",
+                "./scanner/*.c",
+                "./parser/*.c",
+                "./interpreter/*.c",
+
+                "-I ./misc",
+                "-I ./lexer",
+                "-I ./scanner",
+                "-I ./parser",
+                "-I ./interpreter",
+
                 "-o",
                 "${workspaceFolder}/.tmp/prog",
 
