@@ -3,6 +3,12 @@ echo "unit testing"
 DIR_NAME="./tests/"
 DIR="./tests"
 
+# input $1: file_name
+run_test_file()
+{
+    
+}
+
 run_test() 
 {
     echo "hello world"
