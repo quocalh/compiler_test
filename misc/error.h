@@ -9,7 +9,23 @@
         status_set(status, code, \
             __LINE__, __FILE__, \
             message __VA_OPT__(, __VA_ARGS__)); \
-    }while(0);
+    } while(0);
+
+// i don't know how to name this one
+#define CHECK_PROPAGATE(status, dest) \
+    do{ \
+        if (!STATUS_OK(status)) \
+        { \
+            status_reporting(status); \
+            goto dest; \
+        } \
+    } while(0);
+
+#define BACK_PROPAGATE(status, code, return_value, message, ...) \
+    do{ \
+        SET_STATUS(status, code, message __VA_OPT__(, __VA_ARGS__)); \
+        return return_value; \
+    } while(0);
 
 typedef enum{
     
@@ -17,6 +33,7 @@ typedef enum{
     MALLOC_FAILED,
     NO_ERROR,
     NULL_RETURN,
+    NULL_INVALID_VALUE,
 
     // misc/vector.h
     VECTOR_ALLOCATE_FAILED, 
@@ -25,7 +42,13 @@ typedef enum{
     VECTOR_CAPACITY_OVERFLOW,
     VECTOR_NULL_INVALID,
     
-    // 
+    // misc/hash string to int
+    HASH_STR_INT_ERROR, 
+    HASH_KEY_DUPLICATION_FOUND,
+
+    // scanner
+    NULL_SCANNER,
+
 } ErrorCode;
 
 /* this struct strictly stay in heap*/

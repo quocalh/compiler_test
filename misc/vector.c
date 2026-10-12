@@ -54,25 +54,29 @@ void vector_add(Status* status, Vector* vector, void* item)
     if (vector == NULL)
     {
         SET_STATUS(status, NULL_RETURN, "null return."); 
+        // status will be catched by the parent scope and propagate back to designated layer (can perform a report, retry)
         return;
     }
     if (vector->ptr == NULL)
     {
         SET_STATUS(status, NULL_RETURN, "null vector->ptr return."); 
+        // status will be catched by the parent scope and propagate back to designated layer (can perform a report, retry)
         return;
     }
     if (!item)
     {
         SET_STATUS(status, VECTOR_NULL_INVALID, "item ptr can't be null."); 
+        // status will be catched by the parent scope and propagate back to designated layer (can perform a report, retry)
         return;
     }
-
 
     if (vector->length >= vector->allocated_length)
     {
         // double allocate
         vector_double_allocate(status, vector);
+        // if status is != NO_ERROR clean up some in the scope, return the error status
         if (!STATUS_OK(status))
+        // free thing here
             return;
     }
     
@@ -87,6 +91,7 @@ void vector_destruct(Status* status, Vector* vector)
 {
     if (!vector)
         return;
+
     free(vector->ptr);
     free(vector);
 }
