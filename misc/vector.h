@@ -7,6 +7,10 @@
 
 #define VECTOR_SIZE_MAX SIZE_MAX
 
+/*
+    technically this need to account for the byte address aligning problem, 
+    but sizeof() already handle it perfectly
+*/
 typedef struct{
     void* ptr;    
     size_t item_size;

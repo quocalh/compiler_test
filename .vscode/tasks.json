@@ -16,12 +16,14 @@
                 "./scanner/*.c",
                 "./parser/*.c",
                 "./interpreter/*.c",
+                "./profiling/*.c",
 
                 "-I ./misc",
                 "-I ./lexer",
                 "-I ./scanner",
                 "-I ./parser",
                 "-I ./interpreter",
+                "-I ./profiling",
 
                 "-o",
                 "${workspaceFolder}/.tmp/prog",

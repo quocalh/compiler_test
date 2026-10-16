@@ -1,12 +1,16 @@
 #include "stop_watch.h"
 
+
+// for loop (init; condition; update)
+
 void stop_watch_start(StopWatch* watch)
 {
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &watch->start);
+    clock_gettime(CLOCK_MONOTONIC, &watch->start);
+    // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &watch->start);
 }
 void stop_watch_stop(StopWatch* watch)
 {
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &watch->start);
+    clock_gettime(CLOCK_MONOTONIC, &watch->stop);
 }
 
 timespec time_diff(StopWatch* watch)
