@@ -29,6 +29,38 @@ static inline size_t get_page_size(Status* status)
 #endif
 } 
 
+// i love the idea here
+/*
+
+struct Arena{
+    char* ptr;
+    size_t reserved_size;
+    size_t commited_size;
+    size_t current_offset;
+
+    struct Arena* next;
+};
+typedef struct Arena Arena;
+
+
+for scoped arena, the idea is even crazier 
+    (a fragmented scope walker)
+    through linked list, it can hop between memory holes (idk)
++ given the first child, he can walk you through the entire list, hopping through holes
+- absoluate malloc (we avoid this ig)
+- we can't free it the easy way, the only way is to reset the arena
+
+struct ScopedArena{
+    Arena* parent;
+    size_t ptr; 
+
+    size_t capacity;  
+    struct ScopedArena next*;     
+};
+typedef struct ScopedArena ScopedArena
+
+*/
+
 /*
  * reference:
  *  https://andreleite.com/posts/2025/nstl/virtual-memory-arena-allocator/
@@ -62,10 +94,22 @@ void arena_destruct(Status* status, Arena* arena);
 void arena_reset(Status* status, Arena* arena);
 
 void* arena_allocate(Status* status, Arena* arena, size_t patch_size);
-void* arena_append_item(Status* status, Arena* arena, size_t item_size, const void* item);
+void* arena_append_item(Status* status, Arena* arena, size_t item_size, const void* source_item);
 
 typedef struct{
     char* ptr; 
-    Arena* arena;
+    Arena* parent;
+
+    size_t original_offset;
 } ScopedArena;
 #endif
+
+ScopedArena* scope_arena_init(Status* status, Arena* parent);
+void* scope_arena_allocate(Status* status, ScopedArena* arena, size_t patch_size);
+void* scope_arena_append_item(Status* status, ScopedArena* arena, size_t item_size, const void* item);
+void scope_arena_deallocate(Status* status, ScopedArena* arena);
+
+inline size_t scope_arena_get_current_offset(Status* status, ScopedArena* arena)
+{
+    return (size_t)arena->parent->ptr + arena->parent->current_offset - (size_t)arena->ptr;
+}

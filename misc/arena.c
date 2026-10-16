@@ -25,7 +25,7 @@ naive approach:
     would failed if reserved  = k pages (K ∈ Z)
 correct approach:
     ((reserve + page - 1) / page) * page
-note about this are documented in the scrap notes on interpreter
+notes about this are documented in the scrap notes on interpreter
 */
 
 Arena* arena_init(Status* status, size_t raw_reserved_size)
@@ -166,4 +166,54 @@ void arena_destruct(Status* status, Arena* arena)
 #endif
 
     free(arena);
+}
+
+ScopedArena* scope_arena_init(Status* status, Arena* parent)
+{
+    if (!parent)
+        BACK_PROPAGATE(status, NULL_ARENA, NULL, "null arena.");
+
+    ScopedArena* arena = malloc(sizeof(*arena));
+    if (!arena)
+        BACK_PROPAGATE(status, MALLOC_FAILED, NULL, "malloc failed.");
+
+    arena->ptr = parent->ptr + parent->current_offset;
+    arena->parent = parent;
+    arena->original_offset = arena->parent->current_offset;
+
+    return arena;
+}
+
+void* scope_arena_allocate(Status* status, ScopedArena* arena, size_t patch_size)
+{
+    if (!arena)
+        BACK_PROPAGATE(status, NULL_SCOPED_ARENA, NULL, "null arena.");
+
+    void* ptr = arena_allocate(status, arena->parent, patch_size);
+    if (!STATUS_OK(status))
+        return NULL;
+
+    return ptr;
+}
+
+void* scope_arena_append_item(Status* status, ScopedArena* arena, size_t item_size, const void* item)
+{
+    if (!arena)
+        BACK_PROPAGATE(status, NULL_SCOPED_ARENA, NULL, "null arena.");
+
+    void* ptr = arena_append_item(status, arena->parent, item_size, item);
+    if (!STATUS_OK(status))
+        return NULL;
+
+    return ptr;
+}
+
+void scope_arena_deallocate(Status* status, ScopedArena* arena)
+{
+    if (!arena)
+        BACK_PROPAGATE(status, NULL_SCOPED_ARENA, , "null arena.");
+    if (!arena->parent)
+        BACK_PROPAGATE(status, NULL_ARENA, , "null arena.");
+
+    arena->parent->current_offset = arena->original_offset; 
 }

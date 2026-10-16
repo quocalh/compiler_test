@@ -56,6 +56,9 @@ typedef enum{
     ARENA_VIRTUAL_MEM_FREE_FAILED,
     PAGE_SIZE_QUERY_FAILED,
     NULL_ITEM,
+    // scoped arena
+    NULL_SCOPED_ARENA, 
+
 
     // scanner
     NULL_SCANNER,
