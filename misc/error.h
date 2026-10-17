@@ -31,7 +31,10 @@ typedef enum{
     
     // general
     MALLOC_FAILED,
+    REALLOC_FAILED,
+    NULL_FILE_PTR,
     NO_ERROR,
+    INDEX_ERROR,
     NULL_RETURN,
     NULL_INVALID_VALUE,
 
@@ -62,6 +65,9 @@ typedef enum{
 
     // scanner
     NULL_SCANNER,
+    SCANNER_CANT_OPEN_FILE,
+    SCANNER_FILEREAD_GET_LENGTH_ERROR,
+    SCANNER_FILEREAD_ERROR,
 
 } ErrorCode;
 

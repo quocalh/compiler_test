@@ -10,6 +10,8 @@ typedef enum
     PLUS, SIGN, STAR, SLASH, 
 
     SEMICOLON,
+    COMA,
+    DOT,
 
     // value type (we need a value evaluator tree before dealing with evaluating values)
     INT, DOUBLE,
@@ -29,6 +31,7 @@ typedef enum
     VAR,
     FOR, WHILE, 
     IF, ELSE, 
+    END_OF_FILE,
 } TokenType; 
 
 typedef struct
