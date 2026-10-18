@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "scanner.h"
 #include <assert.h>
@@ -18,17 +19,15 @@ Scanner* scanner_init(Status* status, const char* file_name)
     if (!STATUS_OK(status))
         goto FREE_TOKENS;
 
-    Vector* stream = vector_init(status, sizeof(char));
-    if (!STATUS_OK(status))
-        goto FREE_STREAM;
-
     *scanner = (Scanner){
         .file_name = file_name,
         .current = 0,
         .current_line = 1,
 
-        .tokens = NULL,
+        .stream_length = 0,
         .stream = NULL,
+
+        .tokens = tokens,
     };
     if (!STATUS_OK(status))
         goto FREE_SCANNER;
@@ -37,9 +36,6 @@ Scanner* scanner_init(Status* status, const char* file_name)
 
     FREE_SCANNER: 
     free(scanner);
-
-    FREE_STREAM:
-    free(stream);
 
     FREE_TOKENS:
     free(tokens);
@@ -56,7 +52,7 @@ void scanner_destruct(Status* status, Scanner* scanner)
         return;
     }
     
-    vector_destruct(status, scanner->stream);
+    free(scanner->stream);
     vector_destruct(status, scanner->tokens);
 
     free(scanner);
@@ -65,14 +61,15 @@ void scanner_destruct(Status* status, Scanner* scanner)
 
 void scanner_scan(Status* status, Scanner* scanner)
 {
-    // read file into an array
-    FILE* file = fopen(scanner->file_name, "r");
-
-    // switch case turn into tokens 
-
-    // (may consider jmp here)
-    CLOSE_FILE:
-    fclose(file);
+    // turn the file into a char stream, stored in char* stream
+    scanner_file_reading(status, scanner);
+    if (!STATUS_OK(status))
+        return;
+    
+    // turn char* stream into tokens
+    scanner_token_extracting(status, scanner);
+    if (!STATUS_OK(status))
+        return;
 }
 
 static size_t scanner_get_file_length(Status* status, FILE* file, const char* file_name)
@@ -112,7 +109,6 @@ static size_t scanner_get_file_length(Status* status, FILE* file, const char* fi
     return length;
 }
 
-// can be more modular
 void scanner_file_reading(Status* status, Scanner* scanner)
 {
     if (!scanner)
@@ -186,9 +182,9 @@ void scanner_file_reading(Status* status, Scanner* scanner)
 // these helpers functions doesn't need to check scanner
 static char peek(Status* status, Scanner* scanner, size_t index)
 {
-    if (index >= scanner->stream_length)
+    if (index >= scanner->stream_length + 1)
         BACK_PROPAGATE(status, INDEX_ERROR, '\0', 
-            "index error (index of %zu with length of %zu)",
+            "index error (index of %zu, exceed the allocated length of %zu + 1)",
             index, scanner->stream_length
         );
     return scanner->stream[index];
@@ -196,7 +192,8 @@ static char peek(Status* status, Scanner* scanner, size_t index)
 
 static bool match(Status* status, Scanner* scanner, size_t index, const char expect)
 {
-
+    char c = peek(status, scanner, index);
+    return (c == expect);
 }
 
 static void consume(Status* status, Scanner* scanner, size_t index, const char expect)
@@ -257,19 +254,107 @@ static void add_token(Status* status, Scanner* scanner, TokenType type)
     // do not free lexeme here
 }
 
+static void scanner_scan_number(Status* status, Scanner* scanner)
+{
+    // 5..123 -> INVALID
+    // .5. -> INVALID
+
+    // .5 -> VALID
+    // 67.435 -> VALID
+    // 67 -> VALID
+
+    char c = peek(status, scanner, scanner->current);
+    if (c != '.' && !isdigit(c))
+        return;
+
+    bool dot = false;
+    bool number_seen = false;
+    while (true)
+    {
+        c = peek(status, scanner, scanner->current); 
+        
+        if (c != '.' && !isdigit(c))
+            break;
+
+        // may contain at most one decimal point 
+        if (c == '.')
+        {
+            if (dot)
+            {
+                SET_STATUS(status, SCANNER_SCANNUMBER_NUMBER_ERROR,
+                    "uhmm, multiple decimal points is invalid you know "
+                    "(e.g. 5...5. is not a valid number)."
+                );
+                return;
+            }
+            dot = true;
+        }
+        else
+        {
+            number_seen = true;
+        }
+
+        // stoping at the first non-matching character
+        scanner->current++; 
+    }
+    TokenType type = dot ? DOUBLE : INT;
+
+    // edge case '.' as a number
+    if (!number_seen)
+    {
+        // if that so, then pretend nothing happens
+        scanner->current = scanner->start;
+        return;
+    }
+    
+
+    // convert into inclusive end index
+    // since get lexeme go for the [a, b] instead of the conventional [a, b)
+    scanner->current--;
+    add_token(status, scanner, type);
+
+    // number get the current pointer to be at the start of the next non-matching character
+    scanner->current++;
+}
+
+static void scanner_scan_string(Status* status, Scanner* scanner)
+{
+
+}
+
+static void scanner_scan_key_word(Status* status, Scanner* scanner)
+{
+
+}
 void scanner_token_extracting(Status* status, Scanner* scanner)
 {
-    scanner->current_line = 0;
+    scanner->current_line = 1;
     scanner->current = 0;
     char c;
 
+    /*
+    in this loop, the current pointer
+        should stop right before steping into the next token
+    avoid any status check in the switch case bracket
+        (avoid unecessary jumps, as status is checked after every switch case)
+    for situation, where it is justified to create a var
+        then put it in the scope (or it will break, as there is no scope to hold its value)
+    */
     while (true)
     {
-        c = peek(status, scanner, scanner->current);
+        // break if reach the end of char* stream
+        if (scanner->current >= scanner->stream_length) 
+            break;
+
         scanner->start = scanner->current;
-        
-        // in this loop, the current pointer
-        // should stop right before steping into the next token
+        scanner_scan_number(status, scanner);
+        if (!STATUS_OK(status))
+        {
+            goto RETURN;
+        }
+
+        scanner->start = scanner->current;
+        c = peek(status, scanner, scanner->current);
         switch(c)
         {
             case '(':
@@ -279,10 +364,10 @@ void scanner_token_extracting(Status* status, Scanner* scanner)
                 add_token(status, scanner, RIGHT_PAREN);
                 break;
             case '{':
-                add_token(status, scanner, LEFT_PAREN);
+                add_token(status, scanner, LEFT_BRACE);
                 break;
             case '}':
-                add_token(status, scanner, RIGHT_PAREN);
+                add_token(status, scanner, RIGHT_BRACE);
                 break;
             case '+':
                 add_token(status, scanner, PLUS);
@@ -290,16 +375,116 @@ void scanner_token_extracting(Status* status, Scanner* scanner)
             case '-':
                 add_token(status, scanner, SIGN);
                 break;
+            case '*':
+                add_token(status, scanner, STAR);
+                break;
+            case '/':
+            {
+                char c;
+                // comment, proceed to skip all char til the line break
+                if (peek(status, scanner, scanner->current + 1) == '/')
+                {
+                    do {
+                        c = peek(status, scanner, (++scanner->current) + 1);
+                    // if c = \n or \0 then break
+                    } while(c != '\n' && c != '\0');
 
+                    goto SLASH_BREAK;
+                }
+                // just an ordinary slash
+                add_token(status, scanner, SLASH);
+
+                SLASH_BREAK:
+                break;
+            }
+            
+            case '\n':
+                scanner->current_line++;
+            case '\t':
+            case '\r':
+            case ' ':
+                break;
+
+            case '=':
+            {
+                // ==
+                if (match(status, scanner, scanner->current + 1, '='))
+                {
+                    scanner->current++;
+                    add_token(status, scanner, EQUAL_EQUAL);
+                    goto EQUAL_BREAK;
+                }
+
+                // =
+                add_token(status, scanner, EQUAL);
+
+                EQUAL_BREAK:
+                break;
+            }
+
+            case '<':
+            {
+                // <=
+                if (match(status, scanner, scanner->current + 1, '='))
+                {
+                    scanner->current++;
+                    add_token(status, scanner, LESS_EQUAL);
+                    goto LESS_BREAK;
+                }
+
+                // <
+                add_token(status, scanner, LESS);
+
+                LESS_BREAK:
+                break;
+            }
+
+            case '>':
+            {
+                // >=
+                if (match(status, scanner, scanner->current + 1, '='))
+                {
+                    scanner->current++;
+                    add_token(status, scanner, GREATER_EQUAL);
+                    goto GREATER_BREAK;
+                }
+
+                // >
+                add_token(status, scanner, GREATER);
+
+                GREATER_BREAK:
+                break;
+
+            }
+            
+            
+            case ';':
+                add_token(status, scanner, SEMICOLON);
+                break;
+            case ',':
+                add_token(status, scanner, COMA);
+                break;
+            case '.':
+                add_token(status, scanner, DOT);
+                break;
+            
+            default:
+            { 
+                SET_STATUS(status, SCANNER_UNKNOWN_STRING_TOKEN, 
+                    "unknown string token (unknown char: '%c')", c
+                );
+                break;
+            }
         }
         
         if (!STATUS_OK(status))
-        {
-            printf("im so tired bro, ima sleep.\n");
-            assert(0);
-        }
+            goto RETURN;
 
         scanner->current++; 
     }
+    // check advancement
+
+    RETURN:
+    return;
 }
 

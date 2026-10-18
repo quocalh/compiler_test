@@ -6,45 +6,45 @@
 #include "misc/misc.h"
 #include "misc/uthash.h"
 #include "misc/hash_str_to_int.h"
+#include "misc/arena.h"
+#include "scanner/scanner.h"
+
+#include "profiling/stop_watch.h"
+#include <unistd.h>
 
 /*
     TEST CHECK_PROPAGATE
     APPLY GOTO CYCLE CLEANUP
     DEMONSTRATE THE USE OF HASHSTRINGTOINT INTERFACE
 */
+
+#define KILO 1024
+#define MEGA 1024 * KILO
+#define GIGA  1024 * GIGA
+
 int main()
 {
-
-    printf("That was so demoralizing. But here I am.\n");
-    printf("Hello world!\n");
-
-    Status status;
-    status_setup(&status);
-
-    HashStringToInt* hash = hash_str_to_int_init(&status);
-    CHECK_PROPAGATE(&status, CLEANUP);
-
-    // check basic adding key and buckets
-    hash_str_to_int_add_key(&status, &hash, "ninja", 67);
-    hash_str_to_int_add_key(&status, &hash, "lamp", 333);
-    hash_str_to_int_add_key(&status, &hash, "head", 666);
-    CHECK_PROPAGATE(&status, CLEANUP);
+    Status _status;
+    status_setup(&_status);
+    Status* status = &_status;
     
-    // check each key
-    HashStringToInt* slot;
-    slot = hash_str_to_int_find(&status, &hash, "lamp");
-    slot = hash_str_to_int_find(&status, &hash, "head");
+    // init scanner
+    Scanner* scanner = scanner_init(status, "test_codes/code.txt");
+    if (!STATUS_OK(status))
+    {
+        status_reporting(status);
+        goto CLEAN_SCANNER;
+    }
 
-    // check duplication guard
-    hash_str_to_int_add_key(&status, &hash, "ninja", 56);
-    CHECK_PROPAGATE(&status, CLEANUP);
+    // handling file
+    scanner_scan(status, scanner);
+    if (!STATUS_OK(status))
+    {
+        status_reporting(status);
+        goto CLEAN_SCANNER;
+    }
 
-    // check each key (no, to check if they skip)
-    slot = hash_str_to_int_find(&status, &hash, "lamp");
-    slot = hash_str_to_int_find(&status, &hash, "head");
-    
-    CLEANUP: 
-    hash_str_to_int_destruct(&status, &hash);
-    CHECK_PROPAGATE(&status, END);
-    END:
+
+    CLEAN_SCANNER:
+    scanner_destruct(status, scanner);
 }

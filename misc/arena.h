@@ -102,7 +102,6 @@ typedef struct{
 
     size_t original_offset;
 } ScopedArena;
-#endif
 
 ScopedArena* scope_arena_init(Status* status, Arena* parent);
 void* scope_arena_allocate(Status* status, ScopedArena* arena, size_t patch_size);
@@ -113,3 +112,5 @@ inline size_t scope_arena_get_current_offset(Status* status, ScopedArena* arena)
 {
     return (size_t)arena->parent->ptr + arena->parent->current_offset - (size_t)arena->ptr;
 }
+
+#endif

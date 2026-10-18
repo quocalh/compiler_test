@@ -29,8 +29,10 @@ typedef struct{
         tokens has to be vector as tokens will be borrowed by another modules
     */ 
 
+    // stream length doesnt count the '\0'
+    // if counted, it would have been stream_allocated_length;
     char* stream;
-    size_t stream_length;
+    size_t stream_length; 
 
     Vector* tokens;
 
@@ -43,5 +45,6 @@ void scanner_scan(Status* status, Scanner* scanner);
 // these are no interfaces; but rather internals
 // solely being here for testing, benchmark purposes
 void scanner_file_reading(Status* status, Scanner* scanner);
+void scanner_token_extracting(Status* status, Scanner* scanner);
 
 #endif
