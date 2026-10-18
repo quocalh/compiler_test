@@ -6,6 +6,7 @@
 #include "../misc/error.h"
 #include "../misc/arena.h"
 #include "../misc/misc.h"
+#include "../misc/hash_str_to_int.h"
 
 #define SCANNER_ARENA_SIZE 2 * MB
 
@@ -35,6 +36,8 @@ typedef struct{
     size_t stream_length; 
 
     Vector* tokens;
+
+    HashStringToInt* keywords_map;
 
 } Scanner;
 

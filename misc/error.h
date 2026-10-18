@@ -11,6 +11,14 @@
             message __VA_OPT__(, __VA_ARGS__)); \
     } while(0);
 
+#define CLEAR_STATUS_MSG_BUFFER(status) \
+    do { \
+        for (size_t i = 0; i < ERROR_MESSAGE_LENGTH; i++) \
+        { \
+            (status)->message[i] = '\0'; \
+        } \
+    } while(0);
+
 // i don't know how to name this one
 #define CHECK_PROPAGATE(status, dest) \
     do{ \
@@ -70,6 +78,7 @@ typedef enum{
     SCANNER_FILEREAD_ERROR,
     SCANNER_UNKNOWN_STRING_TOKEN,
     SCANNER_SCANNUMBER_NUMBER_ERROR,
+    SCANNER_CONSUME_EXPECT_DIFFERENT_CHAR,
 
 } ErrorCode;
 

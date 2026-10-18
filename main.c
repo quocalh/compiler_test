@@ -44,6 +44,8 @@ int main()
         goto CLEAN_SCANNER;
     }
 
+    // test the leak sanitizer
+    // int* map = malloc(1 * sizeof(*map));
 
     CLEAN_SCANNER:
     scanner_destruct(status, scanner);

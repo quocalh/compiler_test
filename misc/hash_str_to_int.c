@@ -21,6 +21,12 @@ void hash_str_to_int_destruct(Status* status, HashStringToInt** hash)
         SET_STATUS(status, NULL_INVALID_VALUE, "hash can not be null.");
         return;
     }
+
+    // the table is NULL, do nothing
+    if (!*hash)
+    {
+        return;
+    }
     
     // free the malloc pair
     HashStringToInt* slot, *tmp;

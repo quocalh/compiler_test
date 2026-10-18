@@ -6,6 +6,45 @@
 #include "../misc/error.h"
 #include "../lexer/token.h"
 
+static HashStringToInt* scanner_set_keywords(Status* status)
+{
+    typedef struct{
+        const char* key;
+        TokenType type;
+    } KeyWord;
+
+    static const KeyWord keywords[] = {
+        {"function", FUNCTION},
+        {"var",      VAR},
+        {"for",      FOR},
+        {"while",    WHILE},
+        {"if",       IF},
+        {"else",     ELSE},
+        {"true",     TRUE},
+        {"false",    FALSE},
+        {"nil",      NIL},
+        {"EOF",      END_OF_FILE},
+    };
+
+    // wil return a null upon a success init
+    HashStringToInt* hash = hash_str_to_int_init(status); 
+    if (!STATUS_OK(status))
+        return NULL;
+
+    for (unsigned int i = 0; i < sizeof(keywords) / sizeof(*keywords); i++)
+    {
+        hash_str_to_int_add_key(status, &hash, 
+            keywords[i].key, keywords[i].type);
+        if (!STATUS_OK(status))
+            goto FAILED;
+    }
+    return hash;
+
+    FAILED:
+    hash_str_to_int_destruct(status, &hash);
+    return NULL;
+}
+
 Scanner* scanner_init(Status* status, const char* file_name)
 {
     Scanner* scanner = malloc(sizeof(*scanner));
@@ -18,6 +57,14 @@ Scanner* scanner_init(Status* status, const char* file_name)
     Vector* tokens = vector_init(status, sizeof(Token));
     if (!STATUS_OK(status))
         goto FREE_TOKENS;
+    
+    HashStringToInt* keywords = scanner_set_keywords(status);
+    if (!STATUS_OK(status))
+    {
+        // the set_keywords function handle its own cleanup on failure
+        goto FREE_TOKENS;
+    }
+    
 
     *scanner = (Scanner){
         .file_name = file_name,
@@ -28,6 +75,7 @@ Scanner* scanner_init(Status* status, const char* file_name)
         .stream = NULL,
 
         .tokens = tokens,
+        .keywords_map = keywords,
     };
     if (!STATUS_OK(status))
         goto FREE_SCANNER;
@@ -53,7 +101,17 @@ void scanner_destruct(Status* status, Scanner* scanner)
     }
     
     free(scanner->stream);
+
+    // free lexeme
+    for (int i = 0; i < scanner->tokens->length; i++)
+    {
+        Token* token = (Token*)(scanner->tokens->ptr) + i;
+        free(token->lexeme);
+    }
+    
     vector_destruct(status, scanner->tokens);
+
+    hash_str_to_int_destruct(status, &scanner->keywords_map);
 
     free(scanner);
 }
@@ -198,7 +256,6 @@ static bool match(Status* status, Scanner* scanner, size_t index, const char exp
 
 static void consume(Status* status, Scanner* scanner, size_t index, const char expect)
 {
-
 }
 
 static char* get_lexeme(Status* status, Scanner* scanner, size_t start, size_t end)
@@ -306,7 +363,6 @@ static void scanner_scan_number(Status* status, Scanner* scanner)
         scanner->current = scanner->start;
         return;
     }
-    
 
     // convert into inclusive end index
     // since get lexeme go for the [a, b] instead of the conventional [a, b)
@@ -319,12 +375,37 @@ static void scanner_scan_number(Status* status, Scanner* scanner)
 
 static void scanner_scan_string(Status* status, Scanner* scanner)
 {
+    char c = peek(status, scanner, scanner->current);
+    if (c != '"')
+    {
+        SET_STATUS(status, SCANNER_CONSUME_EXPECT_DIFFERENT_CHAR,
+            "expect a '\"', got a '%c' instead.", c);
+        return;
+    }
 
+    // advance til hit the closing double quotation mark
+    do
+    {
+        // current must stop at the last '"'
+        c = peek(status, scanner, ++scanner->current);
+
+        // handling reaching the end of the input before finding the closing quote
+        if (status->code == INDEX_ERROR)
+        {
+            CLEAR_STATUS_MSG_BUFFER(status);
+            SET_STATUS(status, SCANNER_CONSUME_EXPECT_DIFFERENT_CHAR,
+            "can't find the closing double quotation of the string.");
+            return;
+        }
+    } while (c != '"');
+
+    add_token(status, scanner, STRING);
+    // stop right before the next non-matching characters
 }
 
-static void scanner_scan_key_word(Status* status, Scanner* scanner)
+static void scanner_scan_keyword_and_identifier(Status* status, Scanner* scanner)
 {
-
+    char c;
 }
 void scanner_token_extracting(Status* status, Scanner* scanner)
 {
@@ -468,8 +549,18 @@ void scanner_token_extracting(Status* status, Scanner* scanner)
                 add_token(status, scanner, DOT);
                 break;
             
+            case '"':
+                scanner_scan_string(status, scanner);
+                break;
+            
             default:
             { 
+                if (isalnum(c) || c == '_')
+                {
+                    scanner_scan_keyword_and_identifier(status, scanner);
+                    break;
+                }
+
                 SET_STATUS(status, SCANNER_UNKNOWN_STRING_TOKEN, 
                     "unknown string token (unknown char: '%c')", c
                 );

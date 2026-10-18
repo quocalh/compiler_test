@@ -26,7 +26,7 @@ typedef enum
     EQUAL, EQUAL_EQUAL,
     BANG, BANG_EQUAL,
 
-    // key words
+    // keywords
     FUNCTION,
     VAR,
     FOR, WHILE, 
@@ -37,7 +37,7 @@ typedef enum
 typedef struct
 {
     TokenType type;
-    const char* lexeme;
+    char* lexeme;
     int line;
 } Token;
 // designing phase
