@@ -22,7 +22,7 @@
         "environment": [
             {
                 "name": "ASAN_OPTIONS",
-                "value": "detect_leaks=0"
+                "value": "detect_leaks=1"
             }
         ],
         "externalConsole": false,
