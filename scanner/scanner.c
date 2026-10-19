@@ -267,7 +267,7 @@ static char* get_lexeme(Status* status, Scanner* scanner, size_t start, size_t e
     if (!lexeme)
     {
         SET_STATUS(status, MALLOC_FAILED, "malloc_failed.");
-        goto RETURN;
+        goto EXIT;
     }
 
     for (size_t i = 0; i < length; i++)
@@ -283,7 +283,7 @@ static char* get_lexeme(Status* status, Scanner* scanner, size_t start, size_t e
     FREE_LEXEME:
     free(lexeme);
     
-    RETURN: 
+    EXIT: 
     return NULL;
 }
 
@@ -406,7 +406,49 @@ static void scanner_scan_string(Status* status, Scanner* scanner)
 static void scanner_scan_keyword_and_identifier(Status* status, Scanner* scanner)
 {
     char c;
+    char null_ = '\0';
+
+    while (true)
+    {
+        c = peek(status, scanner, scanner->current);
+        if (!STATUS_OK(status))
+            return;
+
+        if (!isalnum(c) && c != '_')
+            break;
+
+        scanner->current++;
+    }
+    // atp, we have the scanner->current at the first non-matching char  
+    scanner->current--;
+
+    size_t length = scanner->current - scanner->start + 1;
+
+    char* word = malloc(sizeof(char) * (length + 1));
+    if (!word)
+    {
+        SET_STATUS(status, MALLOC_FAILED, "malloc failed.");
+        return;
+    }
+    
+    // put the lexeme into a tmp malloc
+    memcpy(word, (char*)scanner->stream + scanner->start, length);
+    word[length] = '\0';
+    
+    HashStringToInt* pair = hash_str_to_int_find(status, &scanner->keywords_map, word);
+    if (!STATUS_OK(status))
+        goto FREE_WORD;
+    
+    if (!pair)
+        add_token(status, scanner, IDENTIFIER);
+    else
+        add_token(status, scanner, pair->number);
+    // this is the end, no need to check status here
+
+    FREE_WORD:
+    free(word);
 }
+
 void scanner_token_extracting(Status* status, Scanner* scanner)
 {
     scanner->current_line = 1;
@@ -431,7 +473,7 @@ void scanner_token_extracting(Status* status, Scanner* scanner)
         scanner_scan_number(status, scanner);
         if (!STATUS_OK(status))
         {
-            goto RETURN;
+            goto EXIT;
         }
 
         scanner->start = scanner->current;
@@ -569,13 +611,13 @@ void scanner_token_extracting(Status* status, Scanner* scanner)
         }
         
         if (!STATUS_OK(status))
-            goto RETURN;
+            goto EXIT;
 
         scanner->current++; 
     }
     // check advancement
 
-    RETURN:
+    EXIT:
     return;
 }
 

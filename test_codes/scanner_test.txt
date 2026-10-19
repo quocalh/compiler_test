@@ -1,3 +1,6 @@
+abc;
+function;
+while;
 "gangnam style";
 >= = > / // reggan
 "like a dream come true"; // dui dui dui

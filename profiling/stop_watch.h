@@ -32,10 +32,10 @@ static inline void __stop_watch_wrapper_time_diff(StopWatch* watch, struct times
 }
 typedef struct{
     StopWatch watch; struct timespec diff; int run;
-} __macro_watch_para;
+} _macro_watch_para_;
 #define STOPWATCH \
     for ( \
-        __macro_watch_para _sw = {.run = 1}; \
+        _macro_watch_para_ _sw = {.run = 1}; \
         _sw.run ? (stop_watch_start(&_sw.watch), 1): 0; \
         stop_watch_stop(&_sw.watch), \
         __stop_watch_wrapper_time_diff(&_sw.watch, &_sw.diff), \
