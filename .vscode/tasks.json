@@ -13,6 +13,7 @@
 
                 "./misc/*.c",
                 // "./lexer/*.c",
+                "./ast/*.c",
                 "./scanner/*.c",
                 "./parser/*.c",
                 "./interpreter/*.c",
@@ -20,6 +21,7 @@
 
                 "-I ./misc",
                 "-I ./lexer",
+                "-I ./ast",
                 "-I ./scanner",
                 "-I ./parser",
                 "-I ./interpreter",

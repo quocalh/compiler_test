@@ -10,6 +10,7 @@
 #include "scanner/scanner.h"
 
 #include "profiling/stop_watch.h"
+#include "ast/expr.h"
 #include <unistd.h>
 
 /*
@@ -29,7 +30,7 @@ int main()
     Status* status = &_status;
     
     // init scanner
-    Scanner* scanner = scanner_init(status, "test_codes/code.txt");
+    Scanner* scanner = scanner_init(status, "test_codes/scanner_test.txt");
     if (!STATUS_OK(status))
     {
         status_reporting(status);
@@ -44,9 +45,41 @@ int main()
         goto CLEAN_SCANNER;
     }
 
-    // test the leak sanitizer
-    // int* map = malloc(1 * sizeof(*map));
-
     CLEAN_SCANNER:
     scanner_destruct(status, scanner);
+
+    LiteralStorage v1 = (LiteralStorage){._lexeme = "4"};
+    LiteralStorage v2 = (LiteralStorage){._lexeme = "5.67"};
+    LiteralStorage v3 = (LiteralStorage){._lexeme = "5.67"};
+
+    printf("hello world\n");
+
+    Expr* expression = expr_expr_init(status, 
+        (Expr*)expr_binary_init(
+            status,
+            (Expr*)expr_literal_init(status, &v1, INT),
+            (Expr*)expr_binary_init(
+                status,
+                (Expr*)expr_literal_init(status, &v2, DOUBLE),
+                (Expr*)expr_unary_init(
+                    status,
+                    (Expr*)expr_literal_init(status, &v3, DOUBLE),
+                    SIGN
+                ),
+                PLUS
+            ),
+            PLUS
+        )
+    );
+
+    // debug print
+    expr_debug_dispatch(status, expression, 0);
+    if (!STATUS_OK(status))
+    {
+        status_reporting(status);
+    }
+
+    // free it 
+    expr_destruct_dispatch(status, expression);
+
 }

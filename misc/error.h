@@ -4,6 +4,15 @@
 #include <stdarg.h>
 #define ERROR_MESSAGE_LENGTH 256
 
+/*
+cache the error message, and send back
+in the future the status could have been dynamic + queue + interface
+     to report multiple layers, to report multiple errors 
+     (arrays of errors) along the tranverse fallback flow
+     error report (midly tolerate to be slower)
+     no, i think binary tree helps that time
+*/
+
 #define SET_STATUS(status, code, message, ...) \
     do{ \
         status_set(status, code, \
@@ -70,7 +79,6 @@ typedef enum{
     // scoped arena
     NULL_SCOPED_ARENA, 
 
-
     // scanner
     NULL_SCANNER,
     SCANNER_CANT_OPEN_FILE,
@@ -80,6 +88,12 @@ typedef enum{
     SCANNER_SCANNUMBER_NUMBER_ERROR,
     SCANNER_CONSUME_EXPECT_DIFFERENT_CHAR,
 
+    // expr
+    AST_EXPR_UNKNOWN_EXPR_TYPE,
+    AST_LITERAL_UNKNOWN_DTYPE,
+
+    // parser
+    NULL_PARSER, 
 } ErrorCode;
 
 /* this struct strictly stay in heap*/
