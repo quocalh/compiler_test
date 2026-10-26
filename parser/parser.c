@@ -18,9 +18,12 @@ Parser* parser_init(Status* status, Vector* _tokens)
         goto FREE_STATEMENT;
     
     (*parser) = (Parser){
-        .statements = statements,
-        .expression_arena = arena,
         ._tokens = _tokens,
+        .statements = statements,
+
+        .expression_arena = arena,
+
+        .current = 0
     };
 
     return parser;
@@ -35,6 +38,9 @@ Parser* parser_init(Status* status, Vector* _tokens)
     return NULL;
 }
 
+
+// destruct functions, status check and sudden return 
+// (control flow break) is strictly prohibited here
 void parser_destruct(Status* status, Parser* parser)
 {
     if (!parser)
@@ -43,8 +49,6 @@ void parser_destruct(Status* status, Parser* parser)
         return;
     }
 
-    // destruct functions, status check and sudden return (control flow break) 
-    // is prohibited here
     arena_destruct(status, parser->expression_arena);
     vector_destruct(status, parser->statements);
 }
@@ -56,7 +60,6 @@ static Stmt* stmt_peek(Status status, Parser* parser, size_t current)
     return stmt[current];
 }
 
-void parser_parser(Status* status, Parser* parser)
+void parser_parse(Status* status, Parser* parser)
 {
-
 }

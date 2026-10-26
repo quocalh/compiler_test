@@ -65,7 +65,24 @@ Unary* expr_unary_init(Status* status, Expr* expr, TokenType op)
     return unary;
 }
 
-Literal* expr_literal_init(Status* status, const LiteralStorage* _literal, TokenType dtype)
+Grouping* expr_grouping_init(Status* status, Expr* expr)
+{
+    Grouping* grouping = malloc(sizeof(*grouping));
+    if (!grouping)
+    {
+        SET_STATUS(status, MALLOC_FAILED, "malloc failed.");
+        return NULL;
+    }
+
+    (*grouping) = (Grouping){
+        .expr = expr,
+        .type = GROUPING
+    };
+
+    return grouping;
+}
+
+Literal* expr_literal_init(Status* status, const char* _lexeme, TokenType dtype)
 {
     Literal* literal = malloc(sizeof(*literal));
     if (!literal)
@@ -76,7 +93,7 @@ Literal* expr_literal_init(Status* status, const LiteralStorage* _literal, Token
     
     (*literal) = (Literal){
         .dtype = dtype,
-        .literal = *_literal,
+        ._lexeme = _lexeme,
         .type = LITERAL
     };
 
@@ -107,6 +124,10 @@ void expr_destruct_dispatch(Status* status, void* expr)
         case UNARY:
             expr_unary_destruct(status, expr);
             break;
+        
+        case GROUPING:
+            expr_grouping_destruct(status, expr);
+            break;
 
         case LITERAL:
             expr_literal_destruct(status, expr);
@@ -136,13 +157,13 @@ void expr_unary_destruct(Status* status, Unary* unary)
     expr_destruct_dispatch(status, unary->expr);
     free(unary);
 }
-
+void expr_grouping_destruct(Status* status, Grouping* grouping)
+{
+    expr_destruct_dispatch(status, grouping->expr);
+    free(grouping);
+}
 void expr_literal_destruct(Status* status, Literal* literal)
 {
-    if (literal->dtype == EXPRESSION)
-    {
-        expr_destruct_dispatch(status, literal->literal.expr);
-    }
     free(literal);
 }
 
@@ -165,6 +186,10 @@ void expr_debug_dispatch(Status* status, Expr* expr, int indent)
 
         case UNARY:
             expr_debug_unary(status, (Unary*)expr, indent);
+            break;
+        
+        case GROUPING:
+            expr_debug_grouping(status, (Grouping*)expr, indent);
             break;
 
         case LITERAL:
@@ -214,32 +239,34 @@ void expr_debug_unary(Status* status, Unary* unary, int indent)
     indent--;
 }
 
+void expr_debug_grouping(Status* status, Grouping* grouping, int indent)
+{
+    PRINT_TABS(indent);
+    printf("grouping: \n");
+
+    indent++;
+    expr_debug_dispatch(status, grouping->expr, indent);
+    indent--;
+}
+
 void expr_debug_literal(Status* status, Literal* literal, int indent)
 {
     switch(literal->dtype)
     {
         case INT:
             PRINT_TABS(indent);
-            printf("(int): %s\n", literal->literal._lexeme);
+            printf("(int): %s\n", literal->_lexeme);
             break;
 
         case DOUBLE:
             PRINT_TABS(indent);
-            printf("(double): %s\n", literal->literal._lexeme);
+            printf("(double): %s\n", literal->_lexeme);
             break;
 
         case STRING:
             PRINT_TABS(indent);
-            printf("(str): %s\n", literal->literal._lexeme);
+            printf("(str): %s\n", literal->_lexeme);
             break;
-
-        case EXPRESSION:
-        {
-            indent++;
-            expr_debug_expr(status, literal->literal.expr, indent);
-            indent--;
-            break;
-        }
 
         default:
         {

@@ -1,5 +1,5 @@
-#ifndef EXPR
-#define EXPR
+#ifndef EXPRESSION_H
+#define EXPRESSION_H
 
 #include "../misc/error.h"
 #include "../lexer/token.h"
@@ -8,7 +8,7 @@ typedef enum{
     EXPRESSION,
     BINARY,
     UNARY,    
-    // GROUPING,
+    GROUPING,
     LITERAL,
     VARIABLE,
     ASSIGN,
@@ -39,33 +39,31 @@ typedef struct{
     TokenType op;
 } Unary;
 
-typedef union{
-    Expr* expr;
-    const char* _lexeme;
-} LiteralStorage;
+typedef struct{
+    ExpressionType type;
+    void* expr;
+} Grouping;
 
 typedef struct{
     ExpressionType type;
 
     TokenType dtype;
-
-    // either another expression
-    // or _lexeme char borrowed from scanner
-    // check dtype (dtype = EXPRESSION or otherwise)
-    LiteralStorage literal;
+    const char* _lexeme;
 } Literal;
 
 // creation
 Expr* expr_expr_init(Status* status, Expr* expr);
 Binary* expr_binary_init(Status* status, Expr* left, Expr* right, TokenType op);
 Unary* expr_unary_init(Status* status, Expr* expr, TokenType op);
-Literal* expr_literal_init(Status* status, const LiteralStorage* _literal, TokenType dtype);
+Grouping* expr_grouping_init(Status* status, Expr* expr);
+Literal* expr_literal_init(Status* status, const char* _lexeme, TokenType dtype);
 
 // destruction
 void expr_destruct_dispatch(Status* status, void* expr);
 void expr_expr_destruct(Status* status, Expr* expr);
 void expr_binary_destruct(Status* status, Binary* binary);
 void expr_unary_destruct(Status* status, Unary* unary);
+void expr_grouping_destruct(Status* status, Grouping* grouping);
 void expr_literal_destruct(Status* status, Literal* literal);
 
 // debug print
@@ -73,6 +71,7 @@ void expr_debug_dispatch(Status* status, Expr* expr, int indent);
 void expr_debug_expr(Status* status, Expr* expr, int indent);
 void expr_debug_binary(Status* status, Binary* binary, int indent);
 void expr_debug_unary(Status* status, Unary* unary, int indent);
+void expr_debug_grouping(Status* status, Grouping* grouping, int indent);
 void expr_debug_literal(Status* status, Literal* literal, int indent);
 
 // testing features

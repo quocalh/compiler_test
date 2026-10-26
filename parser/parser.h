@@ -9,18 +9,18 @@
 #include "../ast/expr.h"
 
 #define EXPRESSION_ARENA_SIZE 100 * KB
+#define STATEMENT_ARENA_SIZE 100 * KB
 
 typedef struct
 {
     // _underscore denotes a borrow object here
-    Vector* _tokens;
-
     // store the statement ptr
+    Vector* _tokens;
     Vector* statements;
-    Arena* statment_arena;
 
     // expressions will be stored here
     // consider where to create expression in the arena
+    Arena* statement_arena;
     Arena* expression_arena;
 
     size_t current;
@@ -28,6 +28,6 @@ typedef struct
 
 Parser* parser_init(Status* status, Vector* _tokens);
 void parser_destruct(Status* status, Parser* parser);
-void parser_parser(Status* status, Parser* parser);
+void parser_parse(Status* status, Parser* parser);
 
 #endif

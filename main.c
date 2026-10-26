@@ -47,30 +47,34 @@ int main()
 
     CLEAN_SCANNER:
     scanner_destruct(status, scanner);
-
-    LiteralStorage v1 = (LiteralStorage){._lexeme = "4"};
-    LiteralStorage v2 = (LiteralStorage){._lexeme = "5.67"};
-    LiteralStorage v3 = (LiteralStorage){._lexeme = "5.67"};
+    
+    char* v1 = "4";
+    char* v2 = "5.67";
+    char* v3 = "5.76";
 
     printf("hello world\n");
 
     Expr* expression = expr_expr_init(status, 
         (Expr*)expr_binary_init(
             status,
-            (Expr*)expr_literal_init(status, &v1, INT),
-            (Expr*)expr_binary_init(
+            (Expr*)expr_literal_init(status, v1, INT),
+            (Expr*)expr_grouping_init(
                 status,
-                (Expr*)expr_literal_init(status, &v2, DOUBLE),
-                (Expr*)expr_unary_init(
+                (Expr*)expr_binary_init(
                     status,
-                    (Expr*)expr_literal_init(status, &v3, DOUBLE),
-                    SIGN
-                ),
-                PLUS
+                    (Expr*)expr_literal_init(status, v2, DOUBLE),
+                    (Expr*)expr_unary_init(
+                        status,
+                        (Expr*)expr_literal_init(status, v3, DOUBLE),
+                        SIGN
+                    ),
+                    PLUS
+                )
             ),
             PLUS
         )
     );
+
 
     // debug print
     expr_debug_dispatch(status, expression, 0);

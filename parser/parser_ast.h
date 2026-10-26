@@ -6,18 +6,22 @@
 
 // arena_init expr
 // thinking
-void parser_arena_expr_allocate_expression(Status* status);
-void parser_arena_expr_allocate_binary(Status* status);
-void parser_arena_expr_allocate_unary(Status* status);
-void parser_arena_expr_allocate_literal(Status* status);
+Expr* parser_arena_expr_allocate_expression(Status* status, Parser* parser, Expr* expr);
+Binary* parser_arena_expr_allocate_binary(Status* status, Parser* parser, 
+    Expr* left, Expr* right, TokenType op);
+Unary* parser_arena_expr_allocate_unary(Status* status, Parser* parser,
+    Expr* expr, TokenType op);
+Literal* parser_arena_expr_allocate_literal(Status* status, Parser* parser, 
+    const char* _lexeme, TokenType dtype);
 
-// build ast tree
-void parser_expression(Status* status);
-void parser_equality();
-void parser_comparision();
-void parser_term();
-void parser_factor();
-void parser_unary();
-void parser_primary();
+// build the ast tree
+Expr* parser_expression(Status* status, Parser* parser);
+Expr* parser_equality(Status* status, Parser* parser);
+Expr* parser_comparision(Status* status, Parser* parser);
+Expr* parser_term(Status* status, Parser* parser);
+Expr* parser_factor(Status* status, Parser* parser);
+Expr* parser_unary(Status* status, Parser* parser);
+Expr* parser_grouping(Status* status, Parser* parser);
+Expr* parser_primary(Status* status, Parser* parser);
 
 #endif

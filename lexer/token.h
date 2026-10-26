@@ -19,6 +19,8 @@ typedef enum
     TRUE, FALSE, 
     NIL,
     IDENTIFIER, 
+    // for grouping
+    // TOKEN_EXPRESSION,
     
     // multi-char
     GREATER, GREATER_EQUAL,

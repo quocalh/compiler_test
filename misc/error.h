@@ -28,6 +28,12 @@ in the future the status could have been dynamic + queue + interface
         } \
     } while(0);
 
+#define CLEAR_STATUS(status) \
+    do { \
+        CLEAR_STATUS_MSG_BUFFER(status); \
+        (status)->code = NO_ERROR; \
+    } while(0);
+
 // i don't know how to name this one
 #define CHECK_PROPAGATE(status, dest) \
     do{ \
@@ -94,6 +100,8 @@ typedef enum{
 
     // parser
     NULL_PARSER, 
+    PARSER_BUILD_AST_UNKNOWN_LITERAL_TYPE,
+
 } ErrorCode;
 
 /* this struct strictly stay in heap*/
