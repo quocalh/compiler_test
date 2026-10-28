@@ -11,6 +11,8 @@ Binary* parser_arena_expr_allocate_binary(Status* status, Parser* parser,
     Expr* left, Expr* right, TokenType op);
 Unary* parser_arena_expr_allocate_unary(Status* status, Parser* parser,
     Expr* expr, TokenType op);
+Grouping* parser_arena_expr_allocate_grouping(Status* status, Parser* parser,
+    Expr* expr);
 Literal* parser_arena_expr_allocate_literal(Status* status, Parser* parser, 
     const char* _lexeme, TokenType dtype);
 

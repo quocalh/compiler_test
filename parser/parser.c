@@ -51,6 +51,8 @@ void parser_destruct(Status* status, Parser* parser)
 
     arena_destruct(status, parser->expression_arena);
     vector_destruct(status, parser->statements);
+
+    free(parser);
 }
 
 static Stmt* stmt_peek(Status status, Parser* parser, size_t current)

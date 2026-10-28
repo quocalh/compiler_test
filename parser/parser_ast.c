@@ -1,4 +1,5 @@
 #include "parser_ast.h"
+#include "../misc/error.h"
 
 Expr* parser_arena_expr_allocate_expression(Status* status, Parser* parser, Expr* expr)
 {
@@ -44,6 +45,20 @@ Unary* parser_arena_expr_allocate_unary(Status* status, Parser* parser,
     return una;
 }
 
+Grouping* parser_arena_expr_allocate_grouping(Status* status, Parser* parser,
+    Expr* expr)
+{
+    Grouping* group = arena_allocate(status, parser->expression_arena, sizeof(Grouping));
+    if (!STATUS_OK(status))
+        return NULL;
+    
+    *group = (Grouping){
+        .type = GROUPING,
+        .expr = expr,
+    };
+    return group;
+}
+
 Literal* parser_arena_expr_allocate_literal(Status* status, Parser* parser, 
     const char* _lexeme, TokenType dtype)
 {
@@ -70,7 +85,7 @@ static Token* parser_peek(Status* status, Parser* parser, size_t index)
         return NULL;
     }
 
-    return parser->_tokens->ptr + index;
+    return (Token*)parser->_tokens->ptr + index;
 }
 
 // build ast tree
@@ -79,22 +94,24 @@ static Token* parser_peek(Status* status, Parser* parser, size_t index)
 // for next parser unit to process
 Expr* parser_expression(Status* status, Parser* parser)
 {
-    parser_equality(status, parser);
+    return parser_equality(status, parser);
 }
 
+// return NULL is justified as the release routine is 
+// handled by the parser's expresison_arena
 Expr* parser_equality(Status* status, Parser* parser)
 {
     Expr* left = parser_comparision(status, parser);
-    if (!STATUS_OK(status))
-        return NULL;
+    if (!STATUS_OK(status)) return NULL;
 
-    while (true)
+    while (parser->current < parser->_tokens->length)
     {
-        TokenType op = parser_peek(status, parser, parser->current)->type;
-        if (!STATUS_OK(status))
-            return NULL;
+        Token* token = parser_peek(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+        TokenType op = token->type;
 
-        if (op == EQUAL_EQUAL)
+        if (op == EQUAL_EQUAL ||
+            op == BANG_EQUAL)
             parser->current++;
         else
             break;
@@ -108,8 +125,7 @@ Expr* parser_equality(Status* status, Parser* parser)
             right,
             op
         );
-        if (!STATUS_OK(status))
-            return NULL;
+        if (!STATUS_OK(status)) return NULL;
 
         left = (Expr*)binary;
     }
@@ -120,14 +136,13 @@ Expr* parser_equality(Status* status, Parser* parser)
 Expr* parser_comparision(Status* status, Parser* parser)
 {
     Expr* left = parser_term(status, parser);
-    if (!STATUS_OK(status))
-        return NULL;
+    if (!STATUS_OK(status)) return NULL;
     
-    while (true)
+    while (parser->current < parser->_tokens->length)
     {
-        TokenType op = parser_peek(status, parser, parser->current)->type;
-        if (!STATUS_OK(status))
-            return NULL;
+        Token* token = parser_peek(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+        TokenType op = token->type;
         
         if (op == GREATER_EQUAL ||
             op == LESS_EQUAL ||
@@ -137,19 +152,15 @@ Expr* parser_comparision(Status* status, Parser* parser)
         else
             break;
         
-        Expr* right = parser_primary(status, parser);
-        if (STATUS_OK(status))
-            return NULL;
+        Expr* right = parser_term(status, parser);
+        if (!STATUS_OK(status)) return NULL;
 
-        Binary* binary = parser_arena_expr_allocate_binary(status, parser, 
+        left = (Expr*)parser_arena_expr_allocate_binary(status, parser, 
             left, 
             right,
             op
         );
-        if (!STATUS_OK(status))
-            return NULL;
-        
-        left = (Expr*)binary;
+        if (!STATUS_OK(status)) return NULL;
     }
 
     return left;
@@ -157,19 +168,129 @@ Expr* parser_comparision(Status* status, Parser* parser)
 
 Expr* parser_term(Status* status, Parser* parser)
 {
+    Expr* left = parser_factor(status, parser);
+    if (!STATUS_OK(status)) return NULL;
+    
+    while (parser->current < parser->_tokens->length)
+    {
+        Token* token = parser_peek(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+        TokenType op = token->type;
+
+        if (op == PLUS ||
+            op == SIGN)
+            parser->current++;
+        else
+            break;
+        
+        Expr* right = parser_factor(status, parser);
+        if (!STATUS_OK(status)) return NULL;
+        
+        left = (Expr*)parser_arena_expr_allocate_binary(status, parser, 
+            left,
+            right,
+            op
+        );
+        if (!STATUS_OK(status)) return NULL;
+
+    }
+    return left;
 }
 
 Expr* parser_factor(Status* status, Parser* parser)
 {
+    Expr* left = parser_unary(status, parser);
+    if (!STATUS_OK(status)) return NULL;
+    
+    while (parser->current < parser->_tokens->length)
+    {
+        Token* token = parser_peek(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+        TokenType op = token->type;
+        
+        if (op == STAR || 
+            op == SLASH) 
+            parser->current++;
+        else 
+            break;
+        
+        Expr* right = parser_unary(status, parser);
+        if (!STATUS_OK(status)) return NULL;
+
+        left = (Expr*)parser_arena_expr_allocate_binary(status, parser,
+            left, 
+            right,
+            op
+        );
+        if (!STATUS_OK(status)) return NULL;
+    }
+
+    return left;
 }
 
+// until now the unary type is always SIGN (e.g. -5)
 Expr* parser_unary(Status* status, Parser* parser)
 {
+    Expr* unary;
+
+    Token* token = parser_peek(status, parser, parser->current);
+    if (!STATUS_OK(status)) return NULL;
+    TokenType type = token->type;
+
+    if (type == SIGN ||
+        type == BANG) 
+    {
+        // consume the sign
+        parser->current++;
+        
+        // comsume the next expression
+        Expr* expr = parser_unary(status, parser);
+        if (!STATUS_OK(status)) return NULL;
+
+        // to handle --5 (unary in unary)
+        unary = (Expr*)parser_arena_expr_allocate_unary(status, parser, 
+            expr, type);
+        if (!STATUS_OK(status)) return NULL;
+    }
+    else
+    {
+        unary = (Expr*)parser_grouping(status, parser);
+    }
+    return unary;
 }
 
 Expr* parser_grouping(Status* status, Parser* parser)
 {
+    Token* token = parser_peek(status, parser, parser->current);
+    if (!STATUS_OK(status)) return NULL;
+    TokenType type = token->type;
+    if (!STATUS_OK(status)) return NULL;
+
+    if (type != LEFT_PAREN)
+        return parser_primary(status, parser);
+
+    // consume the left paren
+    parser->current++;
+
+    // consume an expression
+    Expr* group;
+    group = parser_expression(status, parser);
+    if (!STATUS_OK(status)) return NULL;
     
+    // consume a right paren and current++ afterward
+    token = parser_peek(status, parser, parser->current);
+    if (!STATUS_OK(status)) return NULL;
+    type = token->type;
+    if (!STATUS_OK(status)) return NULL;
+
+    if (type != RIGHT_PAREN)
+    {
+        SET_STATUS(status, PARSER_BUILD_AST_EXPECT_A_RIGHT_PAREN,
+            "expect a right paren."); return NULL;
+    }
+    parser->current++;
+
+    return group;
 }
 
 Expr* parser_primary(Status* status, Parser* parser)
@@ -178,7 +299,6 @@ Expr* parser_primary(Status* status, Parser* parser)
     if (!STATUS_OK(status))
         return NULL;
 
-    parser->current++;
     char* _lexeme;
 
     switch (token->type)
@@ -192,6 +312,7 @@ Expr* parser_primary(Status* status, Parser* parser)
         {
             // borrowing
             _lexeme = token->lexeme;
+            break;
         }
 
         default:
@@ -202,10 +323,11 @@ Expr* parser_primary(Status* status, Parser* parser)
         }
     }
 
+    parser->current++;
+
     Literal* literal = parser_arena_expr_allocate_literal(status, parser, 
         _lexeme, token->type);
-    if (!STATUS_OK(status))
-        return NULL;
+    if (!STATUS_OK(status)) return NULL;
 
     return (Expr*)literal;
 }

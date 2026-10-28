@@ -8,10 +8,11 @@
 #include "misc/hash_str_to_int.h"
 #include "misc/arena.h"
 #include "scanner/scanner.h"
-
+#include "parser/parser.h"
+#include "parser/parser_ast.h"
 #include "profiling/stop_watch.h"
 #include "ast/expr.h"
-#include <unistd.h>
+
 
 /*
     TEST CHECK_PROPAGATE
@@ -30,14 +31,14 @@ int main()
     Status* status = &_status;
     
     // init scanner
-    Scanner* scanner = scanner_init(status, "test_codes/scanner_test.txt");
+    Scanner* scanner = scanner_init(status, "test_codes/ast_expr_test.txt");
     if (!STATUS_OK(status))
     {
         status_reporting(status);
         goto CLEAN_SCANNER;
     }
 
-    // handling file
+    // extracting tokens
     scanner_scan(status, scanner);
     if (!STATUS_OK(status))
     {
@@ -45,45 +46,71 @@ int main()
         goto CLEAN_SCANNER;
     }
 
-    CLEAN_SCANNER:
-    scanner_destruct(status, scanner);
-    
-    char* v1 = "4";
-    char* v2 = "5.67";
-    char* v3 = "5.76";
+    Parser* parser = parser_init(status, scanner->tokens);
+    if (!STATUS_OK(status)) 
+    {
+        status_reporting(status);
+        goto CLEAN_PARSER;
+    }
 
-    printf("hello world\n");
+    // testing 
+    Expr* output = parser_expression(status, parser);
 
-    Expr* expression = expr_expr_init(status, 
-        (Expr*)expr_binary_init(
-            status,
-            (Expr*)expr_literal_init(status, v1, INT),
-            (Expr*)expr_grouping_init(
-                status,
-                (Expr*)expr_binary_init(
-                    status,
-                    (Expr*)expr_literal_init(status, v2, DOUBLE),
-                    (Expr*)expr_unary_init(
-                        status,
-                        (Expr*)expr_literal_init(status, v3, DOUBLE),
-                        SIGN
-                    ),
-                    PLUS
-                )
-            ),
-            PLUS
-        )
-    );
-
-
-    // debug print
-    expr_debug_dispatch(status, expression, 0);
+    expr_debug_dispatch(status, output, 0);
     if (!STATUS_OK(status))
     {
         status_reporting(status);
+        goto CLEAN_PARSER;
     }
 
-    // free it 
-    expr_destruct_dispatch(status, expression);
+    CLEAN_PARSER:
+    parser_destruct(status, parser);
 
+    CLEAN_SCANNER:
+    scanner_destruct(status, scanner);
+
+    if (!STATUS_OK(status))
+        status_reporting(status);
 }
+/*
+test case: 
+    3 * 5 * 6 + (1 + 2 + (3 * 5) * 5 + "nagger")
+
+result:
+
+binary: 
+left:
+        binary: 
+        left:
+                binary: 
+                left:
+                        (int): 3
+                right:
+                        (int): 5
+        right:
+                (int): 6
+right:
+        grouping: 
+                binary: 
+                left:
+                        binary: 
+                        left:
+                                binary: 
+                                left:
+                                        (int): 1
+                                right:
+                                        (int): 2
+                        right:
+                                binary: 
+                                left:
+                                        grouping: 
+                                                binary: 
+                                                left:
+                                                        (int): 3
+                                                right:
+                                                        (int): 5
+                                right:
+                                        (int): 5
+                right:
+                        (str): "nagger"
+*/

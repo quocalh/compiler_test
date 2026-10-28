@@ -476,6 +476,9 @@ void scanner_token_extracting(Status* status, Scanner* scanner)
             goto EXIT;
         }
 
+        if (scanner->current >= scanner->stream_length) 
+            break;
+
         scanner->start = scanner->current;
         c = peek(status, scanner, scanner->current);
         switch(c)
@@ -500,6 +503,9 @@ void scanner_token_extracting(Status* status, Scanner* scanner)
                 break;
             case '*':
                 add_token(status, scanner, STAR);
+                break;
+            case '!':
+                add_token(status, scanner, BANG);
                 break;
             case '/':
             {

@@ -50,6 +50,13 @@ in the future the status could have been dynamic + queue + interface
         return return_value; \
     } while(0);
 
+/*
+new interface: 
+EXPR_PROPAGATE(statement, goto label)
+{
+    // cleanup
+}
+*/
 typedef enum{
     
     // general
@@ -101,6 +108,7 @@ typedef enum{
     // parser
     NULL_PARSER, 
     PARSER_BUILD_AST_UNKNOWN_LITERAL_TYPE,
+    PARSER_BUILD_AST_EXPECT_A_RIGHT_PAREN
 
 } ErrorCode;
 
