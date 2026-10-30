@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "parser_stmt.h"
 
 Parser* parser_init(Status* status, Vector* _tokens)
 {
@@ -9,9 +10,13 @@ Parser* parser_init(Status* status, Vector* _tokens)
         goto EXIT;
     }
 
-    Arena* arena = arena_init(status, EXPRESSION_ARENA_SIZE);
+    Arena* expr_arena = arena_init(status, EXPRESSION_ARENA_SIZE);
     if (!STATUS_OK(status))
-        goto FREE_ARENA;
+        goto FREE_STMT_ARENA;
+
+    Arena* stmt_arena = arena_init(status, STATEMENT_ARENA_SIZE);
+    if (!STATUS_OK(status))
+        goto FREE_EXPR_ARENA;
 
     Vector* statements = vector_init(status, sizeof(Stmt*));
     if (!STATUS_OK(status))
@@ -21,7 +26,8 @@ Parser* parser_init(Status* status, Vector* _tokens)
         ._tokens = _tokens,
         .statements = statements,
 
-        .expression_arena = arena,
+        .expression_arena = expr_arena,
+        .statement_arena = stmt_arena,
 
         .current = 0
     };
@@ -31,8 +37,11 @@ Parser* parser_init(Status* status, Vector* _tokens)
     FREE_STATEMENT:
     free(statements);
 
-    FREE_ARENA:
-    free(arena);
+    FREE_EXPR_ARENA:
+    free(expr_arena);
+
+    FREE_STMT_ARENA:
+    free(stmt_arena);
     
     EXIT:
     return NULL;
@@ -50,6 +59,7 @@ void parser_destruct(Status* status, Parser* parser)
     }
 
     arena_destruct(status, parser->expression_arena);
+    arena_destruct(status, parser->statement_arena);
     vector_destruct(status, parser->statements);
 
     free(parser);
@@ -64,4 +74,46 @@ static Stmt* stmt_peek(Status status, Parser* parser, size_t current)
 
 void parser_parse(Status* status, Parser* parser)
 {
+    parser->current = 0;
+
+    while (parser->current < parser->_tokens->length)
+    {
+        Stmt* stmt = parser_parse_statement(status, parser);
+        if (!STATUS_OK(status)) goto EXIT;
+
+        vector_add(status, parser->statements, &stmt);
+        if (!STATUS_OK(status)) goto EXIT;
+    }
+
+    EXIT:
+    return;
+}
+
+// helper functions
+Token* parser_peek_token(Status* status, Parser* parser, size_t index)
+{
+    if (index >= parser->_tokens->length)
+    {
+        SET_STATUS(status, INDEX_ERROR, 
+        "index error (index of %zu, exceeding the allocated of %zu + 1)", 
+        index, parser->_tokens->length);
+        return NULL;
+    }
+
+    return (Token*)parser->_tokens->ptr + index;
+}
+
+Stmt* parser_peek_stmt(Status* status, Parser* parser, size_t index)
+{
+    if (index >= parser->statements->length)
+    {
+        SET_STATUS(status, INDEX_ERROR, 
+        "index error (index of %zu, exceeding the allocated of %zu + 1)", 
+        index, parser->_tokens->length);
+        return NULL;
+    }
+
+    // (Stmt*)* array of stmt pointers
+    Stmt** stmts = (Stmt**)parser->statements->ptr;
+    return stmts[index];
 }

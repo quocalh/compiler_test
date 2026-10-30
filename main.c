@@ -9,7 +9,7 @@
 #include "misc/arena.h"
 #include "scanner/scanner.h"
 #include "parser/parser.h"
-#include "parser/parser_ast.h"
+#include "parser/parser_expr.h"
 #include "profiling/stop_watch.h"
 #include "ast/expr.h"
 
@@ -31,36 +31,27 @@ int main()
     Status* status = &_status;
     
     // init scanner
-    Scanner* scanner = scanner_init(status, "test_codes/ast_expr_test.txt");
-    if (!STATUS_OK(status))
-    {
-        status_reporting(status);
-        goto CLEAN_SCANNER;
-    }
+    // Scanner* scanner = scanner_init(status, "test_codes/ast_expr_test.txt");
+    Scanner* scanner = scanner_init(status, "test_codes/ast_stmt_test.txt");
+    if (!STATUS_OK(status)) goto CLEAN_SCANNER;
 
     // extracting tokens
     scanner_scan(status, scanner);
-    if (!STATUS_OK(status))
-    {
-        status_reporting(status);
-        goto CLEAN_SCANNER;
-    }
+    if (!STATUS_OK(status)) goto CLEAN_SCANNER;
 
     Parser* parser = parser_init(status, scanner->tokens);
-    if (!STATUS_OK(status)) 
-    {
-        status_reporting(status);
-        goto CLEAN_PARSER;
-    }
+    if (!STATUS_OK(status)) goto CLEAN_PARSER;
 
-    // testing 
-    Expr* output = parser_expression(status, parser);
+    parser_parse(status, parser);
+    if (!STATUS_OK(status)) goto CLEAN_PARSER;
 
-    expr_debug_dispatch(status, output, 0);
-    if (!STATUS_OK(status))
+    for (int i = 0; i < parser->statements->length; i++) 
     {
-        status_reporting(status);
-        goto CLEAN_PARSER;
+        Stmt* stmt = parser_peek_stmt(status, parser, i);
+        if (!STATUS_OK(status)) goto CLEAN_PARSER;
+
+        stmt_debug_dispatch(status, stmt, 0);
+        if (!STATUS_OK(status)) goto CLEAN_PARSER;
     }
 
     CLEAN_PARSER:
@@ -69,48 +60,5 @@ int main()
     CLEAN_SCANNER:
     scanner_destruct(status, scanner);
 
-    if (!STATUS_OK(status))
-        status_reporting(status);
+    status_reporting(status);
 }
-/*
-test case: 
-    3 * 5 * 6 + (1 + 2 + (3 * 5) * 5 + "nagger")
-
-result:
-
-binary: 
-left:
-        binary: 
-        left:
-                binary: 
-                left:
-                        (int): 3
-                right:
-                        (int): 5
-        right:
-                (int): 6
-right:
-        grouping: 
-                binary: 
-                left:
-                        binary: 
-                        left:
-                                binary: 
-                                left:
-                                        (int): 1
-                                right:
-                                        (int): 2
-                        right:
-                                binary: 
-                                left:
-                                        grouping: 
-                                                binary: 
-                                                left:
-                                                        (int): 3
-                                                right:
-                                                        (int): 5
-                                right:
-                                        (int): 5
-                right:
-                        (str): "nagger"
-*/

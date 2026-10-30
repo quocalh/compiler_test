@@ -1,4 +1,5 @@
-#include "parser_ast.h"
+#include "parser_expr.h"
+#include "parser.h"
 #include "../misc/error.h"
 
 Expr* parser_arena_expr_allocate_expression(Status* status, Parser* parser, Expr* expr)
@@ -74,19 +75,7 @@ Literal* parser_arena_expr_allocate_literal(Status* status, Parser* parser,
     return lit;
 }
 
-// helper functions
-static Token* parser_peek(Status* status, Parser* parser, size_t index)
-{
-    if (index >= parser->_tokens->length)
-    {
-        SET_STATUS(status, INDEX_ERROR, 
-        "index error (index of %zu, exceeding the allocated of %zu + 1)", 
-        index, parser->_tokens->length);
-        return NULL;
-    }
 
-    return (Token*)parser->_tokens->ptr + index;
-}
 
 // build ast tree
 // assumes the current token is the first token to process
@@ -106,7 +95,7 @@ Expr* parser_equality(Status* status, Parser* parser)
 
     while (parser->current < parser->_tokens->length)
     {
-        Token* token = parser_peek(status, parser, parser->current);
+        Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
         TokenType op = token->type;
 
@@ -140,7 +129,7 @@ Expr* parser_comparision(Status* status, Parser* parser)
     
     while (parser->current < parser->_tokens->length)
     {
-        Token* token = parser_peek(status, parser, parser->current);
+        Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
         TokenType op = token->type;
         
@@ -173,7 +162,7 @@ Expr* parser_term(Status* status, Parser* parser)
     
     while (parser->current < parser->_tokens->length)
     {
-        Token* token = parser_peek(status, parser, parser->current);
+        Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
         TokenType op = token->type;
 
@@ -204,7 +193,7 @@ Expr* parser_factor(Status* status, Parser* parser)
     
     while (parser->current < parser->_tokens->length)
     {
-        Token* token = parser_peek(status, parser, parser->current);
+        Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
         TokenType op = token->type;
         
@@ -233,7 +222,7 @@ Expr* parser_unary(Status* status, Parser* parser)
 {
     Expr* unary;
 
-    Token* token = parser_peek(status, parser, parser->current);
+    Token* token = parser_peek_token(status, parser, parser->current);
     if (!STATUS_OK(status)) return NULL;
     TokenType type = token->type;
 
@@ -261,7 +250,7 @@ Expr* parser_unary(Status* status, Parser* parser)
 
 Expr* parser_grouping(Status* status, Parser* parser)
 {
-    Token* token = parser_peek(status, parser, parser->current);
+    Token* token = parser_peek_token(status, parser, parser->current);
     if (!STATUS_OK(status)) return NULL;
     TokenType type = token->type;
     if (!STATUS_OK(status)) return NULL;
@@ -278,7 +267,7 @@ Expr* parser_grouping(Status* status, Parser* parser)
     if (!STATUS_OK(status)) return NULL;
     
     // consume a right paren and current++ afterward
-    token = parser_peek(status, parser, parser->current);
+    token = parser_peek_token(status, parser, parser->current);
     if (!STATUS_OK(status)) return NULL;
     type = token->type;
     if (!STATUS_OK(status)) return NULL;
@@ -295,7 +284,7 @@ Expr* parser_grouping(Status* status, Parser* parser)
 
 Expr* parser_primary(Status* status, Parser* parser)
 {
-    Token* token = parser_peek(status, parser, parser->current);
+    Token* token = parser_peek_token(status, parser, parser->current);
     if (!STATUS_OK(status))
         return NULL;
 

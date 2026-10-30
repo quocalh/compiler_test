@@ -51,6 +51,12 @@ typedef struct{
     const char* _lexeme;
 } Literal;
 
+typedef struct{
+    // ownership? borrow it or manually free it?
+    // -> borrow from lexeme, since scanner not gonna be destructed mid prog
+    const char* _name;
+} Variable;
+
 // creation
 Expr* expr_expr_init(Status* status, Expr* expr);
 Binary* expr_binary_init(Status* status, Expr* left, Expr* right, TokenType op);

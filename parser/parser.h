@@ -49,4 +49,8 @@ Parser* parser_init(Status* status, Vector* _tokens);
 void parser_destruct(Status* status, Parser* parser);
 void parser_parse(Status* status, Parser* parser);
 
+// helper function
+Token* parser_peek_token(Status* status, Parser* parser, size_t index);
+Stmt* parser_peek_stmt(Status* status, Parser* parser, size_t index);
+
 #endif

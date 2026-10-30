@@ -34,6 +34,9 @@ typedef enum
     FOR, WHILE, 
     IF, ELSE, 
     END_OF_FILE,
+
+    // mnemonics
+    PRINT,
 } TokenType; 
 
 typedef struct

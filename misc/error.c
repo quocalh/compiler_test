@@ -38,8 +38,13 @@ bool STATUS_OK(Status* status)
 
 void status_reporting(Status* status)
 {
-    printf("ERROR: [%s:%d]: ", status->file_name, status->line);
-    printf("%s\n", status->message);
+    if (status->code == NO_ERROR) 
+        printf("no error found.\n");
+    else
+    {
+        printf("ERROR: [%s:%d]: ", status->file_name, status->line);
+        printf("%s\n", status->message);
+    }
 }
 
 

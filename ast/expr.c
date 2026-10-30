@@ -167,10 +167,6 @@ void expr_literal_destruct(Status* status, Literal* literal)
     free(literal);
 }
 
-// debug print
-#define PRINT_TABS(indent) \
-    for (int i = 0; i < indent; i++) \
-        printf("\t"); 
 
 void expr_debug_dispatch(Status* status, Expr* expr, int indent)
 {

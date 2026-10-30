@@ -16,6 +16,7 @@
                 "./ast/*.c",
                 "./scanner/*.c",
                 "./parser/*.c",
+                "./environment/*.c",
                 "./interpreter/*.c",
                 "./profiling/*.c",
 
@@ -24,8 +25,10 @@
                 "-I ./ast",
                 "-I ./scanner",
                 "-I ./parser",
+                "-I ./environment",
                 "-I ./interpreter",
                 "-I ./profiling",
+
 
                 "-o",
                 "${workspaceFolder}/.tmp/prog",

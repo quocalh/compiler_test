@@ -24,6 +24,7 @@ static HashStringToInt* scanner_set_keywords(Status* status)
         {"false",    FALSE},
         {"nil",      NIL},
         {"EOF",      END_OF_FILE},
+        {"PRINT",    PRINT},
     };
 
     // wil return a null upon a success init
