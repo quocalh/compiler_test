@@ -1,2 +1,11 @@
 PRINT(1 + 1);
-1 + 2 * 5;
+
+var masshiro;
+var masshiro1 = 2;
+
+masshiro1 = bombaclat = 67;
+
+1 + 1 + 2 * 5;
+PRINT 1 + 2 * 5;
+PRINT (1 + 2) * 5;
+PRINT 10 - 5 - 2;

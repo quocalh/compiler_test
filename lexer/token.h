@@ -1,6 +1,8 @@
 #ifndef TOKEN
 #define TOKEN
 
+#define TOKEN_STRINGIFY(type) #type
+
 typedef enum
 {
     // single-char
@@ -37,6 +39,7 @@ typedef enum
 
     // mnemonics
     PRINT,
+    TOKEN_TYPE_COUNT,
 } TokenType; 
 
 typedef struct

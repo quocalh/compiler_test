@@ -78,7 +78,7 @@ void parser_parse(Status* status, Parser* parser)
 
     while (parser->current < parser->_tokens->length)
     {
-        Stmt* stmt = parser_parse_statement(status, parser);
+        Stmt* stmt = parser_parse_declaration(status, parser);
         if (!STATUS_OK(status)) goto EXIT;
 
         vector_add(status, parser->statements, &stmt);
@@ -88,6 +88,31 @@ void parser_parse(Status* status, Parser* parser)
     EXIT:
     return;
 }
+
+Stmt* parser_parse_declaration(Status* status, Parser* parser)
+{
+    Token* token = parser_peek_token(status, parser, parser->current);
+    if (!STATUS_OK(status)) return NULL;
+
+    if (token->type == VAR)
+    {
+        return (Stmt*)parser_vardecl_stmt(status, parser);
+    }
+
+    return parser_parse_statement(status, parser);
+}
+
+Stmt* parser_parse_statement(Status* status, Parser* parser)
+{
+    Token* token = parser_peek_token(status, parser, parser->current);
+    if (!STATUS_OK(status)) return NULL;
+
+    if (token->type == PRINT)
+        return (Stmt*)parser_print_stmt(status, parser);
+
+    return parser_stmt(status, parser);
+}
+
 
 // helper functions
 Token* parser_peek_token(Status* status, Parser* parser, size_t index)

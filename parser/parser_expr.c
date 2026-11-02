@@ -2,7 +2,8 @@
 #include "parser.h"
 #include "../misc/error.h"
 
-Expr* parser_arena_expr_allocate_expression(Status* status, Parser* parser, Expr* expr)
+Expr* parser_arena_expr_allocate_expression(Status* status, Parser* parser, 
+    Expr* expr)
 {
     Expr* expression = arena_allocate(status, parser->expression_arena, sizeof(Expr));
     if (!STATUS_OK(status))
@@ -13,6 +14,21 @@ Expr* parser_arena_expr_allocate_expression(Status* status, Parser* parser, Expr
         .type = EXPRESSION
     };
     return expression;
+}
+
+Assign* parser_arena_expr_allocate_assign(Status* status, Parser* parser, 
+    ExpressionType lvalue_type, const char* _name, Expr* rvalue)
+{
+    Assign* ass = arena_allocate(status, parser->expression_arena, sizeof(*ass));
+    if (!STATUS_OK(status)) return NULL;
+
+    *ass = (Assign){
+        .lvalue_type = lvalue_type,
+        ._name = _name,
+        .rvalue = rvalue,
+        .type = ASSIGN,
+    };
+    return ass;
 }
 
 Binary* parser_arena_expr_allocate_binary(Status* status, Parser* parser, 
@@ -75,6 +91,19 @@ Literal* parser_arena_expr_allocate_literal(Status* status, Parser* parser,
     return lit;
 }
 
+Variable* parser_arena_expr_allocate_variable(Status* status, Parser* parser,
+    const char* _name)
+{
+    Variable* variable = arena_allocate(status, parser->expression_arena, sizeof(*variable));
+    if (!STATUS_OK(status)) return NULL;
+
+    *variable = (Variable){
+        ._name = _name,
+        .type = VARIABLE,
+    };
+    return variable;
+}
+
 
 
 // build ast tree
@@ -83,7 +112,42 @@ Literal* parser_arena_expr_allocate_literal(Status* status, Parser* parser,
 // for next parser unit to process
 Expr* parser_expression(Status* status, Parser* parser)
 {
-    return parser_equality(status, parser);
+    // return parser_equality(status, parser);
+    return parser_assignment(status, parser);
+}
+
+Expr* parser_assignment(Status* status, Parser* parser)
+{
+    // get the lvalue
+    Expr* lvalue = parser_equality(status, parser);
+    if (!STATUS_OK(status)) return NULL;
+
+    Token* token = parser_peek_token(status, parser, parser->current);
+    if (!STATUS_OK(status)) return NULL;
+
+    // consume the equal
+    if (token->type == EQUAL)
+    {
+        parser->current++;
+
+        // allow the a = b = c = 5; syntax
+        Expr* rvalue = parser_assignment(status, parser); 
+        if (!STATUS_OK(status)) return NULL;
+
+        if (lvalue->type == VARIABLE) 
+        {
+            const char* name = AS(Variable*, lvalue)->_name;
+            ExpressionType lvalue_type = AS(Variable*, lvalue)->type;
+            return (Expr*)parser_arena_expr_allocate_assign(status, parser, lvalue_type, name, rvalue);
+        }
+
+        SET_STATUS(status, AST_ASSIGN_INVALID_ASSIGNMENT_TARGET,
+            "invalid assignment target (invalid lvalue).");
+
+        return NULL;
+    }
+
+    return lvalue;
 }
 
 // return NULL is justified as the release routine is 
@@ -299,9 +363,18 @@ Expr* parser_primary(Status* status, Parser* parser)
         case FALSE:
         case NIL:
         {
+            parser->current++;
             // borrowing
             _lexeme = token->lexeme;
             break;
+        }
+
+        case IDENTIFIER:
+        {
+            parser->current++;
+            Variable* variable = parser_arena_expr_allocate_variable(
+                status, parser, token->lexeme);
+            return (Expr*) variable;
         }
 
         default:
@@ -312,7 +385,6 @@ Expr* parser_primary(Status* status, Parser* parser)
         }
     }
 
-    parser->current++;
 
     Literal* literal = parser_arena_expr_allocate_literal(status, parser, 
         _lexeme, token->type);

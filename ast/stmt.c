@@ -53,5 +53,17 @@ void stmt_debug_print_stmt(Status* status, PrintStmt* print_stmt,
 void stmt_debug_var_declare_stmt(Status* status, VarDeclareStmt* var_declare_stmt, 
     int indent)
 {
-    printf("hello world:D\n");
+    PRINT_TABS(indent); printf("init var: %s\n", var_declare_stmt->name);
+
+    indent++;
+    PRINT_TABS(indent); printf("init expr: \n");
+
+    Expr* initializer = var_declare_stmt->initializer;
+    if (!initializer)
+    {
+        PRINT_TABS(indent + 1);printf("NULL:D\n");
+    }
+    else
+        expr_debug_dispatch(status, initializer, indent + 1);
+    indent--;
 }

@@ -23,8 +23,8 @@ typedef struct{
 
 typedef struct{
     StmtType type; 
-    // identifier name here ig ? 
-    Expr* expression; 
+    const char* name;
+    Expr* initializer; 
 } VarDeclareStmt;
 
 // init (arena created struct set -> skipped)
@@ -37,8 +37,8 @@ void stmt_debug_stmt(Status* status, Stmt* stmt,
     int indent);
 void stmt_debug_print_stmt(Status* status, PrintStmt* print_stmt, 
     int indent);
-void stmt_debug_var_declare_stmt(Status* status, VarDeclareStmt* var_declare_stmt, 
-    int indent);
+void stmt_debug_var_declare_stmt(Status* status, VarDeclareStmt* 
+    var_declare_stmt, int indent);
 
 // destruct (arena created struct set -> skipped)
 

@@ -76,7 +76,10 @@ typedef enum{
     VECTOR_NULL_INVALID,
     
     // misc/hash string to int
+    // misc/hash string to ins
     HASH_STR_INT_ERROR, 
+    HASH_STR_INS_ERROR, 
+    HASH_KEY_NOT_FOUND,
     HASH_KEY_DUPLICATION_FOUND,
 
     // arena
@@ -89,6 +92,7 @@ typedef enum{
     ARENA_VIRTUAL_MEM_FREE_FAILED,
     PAGE_SIZE_QUERY_FAILED,
     NULL_ITEM,
+
     // scoped arena
     NULL_SCOPED_ARENA, 
 
@@ -104,15 +108,23 @@ typedef enum{
     // expr
     AST_EXPR_UNKNOWN_EXPR_TYPE,
     AST_LITERAL_UNKNOWN_DTYPE,
+    AST_ASSIGN_INVALID_ASSIGNMENT_TARGET,
 
     // parser
     NULL_PARSER, 
     PARSER_BUILD_AST_UNKNOWN_LITERAL_TYPE,
     PARSER_BUILD_AST_EXPECT_A_RIGHT_PAREN,
     PARSER_PARSE_EXPECT_A_SEMICOLON,
+    PARSER_PARSE_EXPECT_CHARACTER,
 
     // stmt
     AST_STMT_UNKNOWN_STMT_TYPE, 
+
+    // env
+    ENV_VARIABLE_NOT_FOUND,
+
+    // value
+    VALUE_ERROR_TYPE,
 
 } ErrorCode;
 

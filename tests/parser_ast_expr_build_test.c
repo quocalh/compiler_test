@@ -9,7 +9,7 @@
 #include "misc/arena.h"
 #include "scanner/scanner.h"
 #include "parser/parser.h"
-#include "parser/parser_ast.h"
+#include "parser/parser_expr.h"
 #include "profiling/stop_watch.h"
 #include "ast/expr.h"
 
