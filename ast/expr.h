@@ -14,7 +14,11 @@ typedef enum{
     ASSIGN,
 
     // propose an existence of an array, vector
-    INDEX,
+    POSTFIX,
+    // creation of list
+    LIST_LITERAL,
+    
+    
     // propose an existence of a hash map (valuetype, value -> buffer)
     GET,
 } ExpressionType;
@@ -53,14 +57,25 @@ typedef struct{
 
 typedef struct{
     ExpressionType type;
+    Expr* array;
+    Expr* index;
+} PostFix;
 
+typedef struct{
+    ExpressionType type;
     TokenType dtype;
     const char* _lexeme;
 } Literal;
 
+// for list creation
 typedef struct{
     ExpressionType type;
+    Expr* previous;
+    Expr* current;
+} ListLiteral; 
 
+typedef struct{
+    ExpressionType type;
     // ownership? borrow it or manually free it?
     // -> borrow from lexeme, since scanner not gonna be destructed mid prog
     const char* _name;
@@ -75,7 +90,9 @@ void expr_debug_assign(Status* status, Assign* assign, int indent);
 void expr_debug_binary(Status* status, Binary* binary, int indent);
 void expr_debug_unary(Status* status, Unary* unary, int indent);
 void expr_debug_grouping(Status* status, Grouping* grouping, int indent);
+void expr_debug_postfix(Status* status, PostFix* postfix, int indent);
 void expr_debug_literal(Status* status, Literal* literal, int indent);
+void expr_debug_list_literal(Status* status, ListLiteral* lists_literal, int indent);
 void expr_debug_variable(Status* status, Variable* variable, int indent);
 
 #endif

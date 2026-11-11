@@ -76,6 +76,20 @@ Grouping* parser_arena_expr_allocate_grouping(Status* status, Parser* parser,
     return group;
 }
 
+PostFix* parser_arena_expr_allocate_postfix(Status* status, Parser* parser, 
+    Expr* array, Expr* index)
+{
+    PostFix* postfix = arena_allocate(status, parser->expression_arena, sizeof(PostFix));
+    if (!STATUS_OK(status)) return NULL;
+    
+    *postfix = (PostFix){
+        .type = POSTFIX, 
+        .array = array,
+        .index = index,
+    };
+    return postfix;
+}
+
 Literal* parser_arena_expr_allocate_literal(Status* status, Parser* parser, 
     const char* _lexeme, TokenType dtype)
 {
@@ -89,6 +103,20 @@ Literal* parser_arena_expr_allocate_literal(Status* status, Parser* parser,
         .type = LITERAL
     };
     return lit;
+}
+
+ListLiteral* parser_arena_expr_allocate_list_literal(Status* status, Parser* parser, 
+    Expr* previous, Expr* current)
+{
+    ListLiteral* list = arena_allocate(status, parser->expression_arena, sizeof(ListLiteral));
+    if (!STATUS_OK(status)) return NULL;
+
+    *list = (ListLiteral){
+        .type = LIST_LITERAL,
+        .previous = previous,
+        .current = current
+    };    
+    return list;
 }
 
 Variable* parser_arena_expr_allocate_variable(Status* status, Parser* parser,
@@ -157,7 +185,7 @@ Expr* parser_equality(Status* status, Parser* parser)
     Expr* left = parser_comparision(status, parser);
     if (!STATUS_OK(status)) return NULL;
 
-    while (parser->current < parser->_tokens->length)
+    while (parser->current < parser->_tokens->index)
     {
         Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
@@ -191,7 +219,7 @@ Expr* parser_comparision(Status* status, Parser* parser)
     Expr* left = parser_term(status, parser);
     if (!STATUS_OK(status)) return NULL;
     
-    while (parser->current < parser->_tokens->length)
+    while (parser->current < parser->_tokens->index)
     {
         Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
@@ -224,7 +252,7 @@ Expr* parser_term(Status* status, Parser* parser)
     Expr* left = parser_factor(status, parser);
     if (!STATUS_OK(status)) return NULL;
     
-    while (parser->current < parser->_tokens->length)
+    while (parser->current < parser->_tokens->index)
     {
         Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
@@ -255,7 +283,7 @@ Expr* parser_factor(Status* status, Parser* parser)
     Expr* left = parser_unary(status, parser);
     if (!STATUS_OK(status)) return NULL;
     
-    while (parser->current < parser->_tokens->length)
+    while (parser->current < parser->_tokens->index)
     {
         Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
@@ -320,7 +348,7 @@ Expr* parser_grouping(Status* status, Parser* parser)
     if (!STATUS_OK(status)) return NULL;
 
     if (type != LEFT_PAREN)
-        return parser_primary(status, parser);
+        return parser_postfix(status, parser);
 
     // consume the left paren
     parser->current++;
@@ -344,6 +372,49 @@ Expr* parser_grouping(Status* status, Parser* parser)
     parser->current++;
 
     return group;
+}
+
+Expr* parser_postfix(Status* status, Parser* parser)
+{
+    // arr[5][6]
+    Expr* post_fix = parser_primary(status, parser);
+    if (!STATUS_OK(status)) return NULL;
+
+    while (parser->current < parser->_tokens->index)
+    {
+        Token* token = parser_peek_token(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+        
+        // consume a left bracket
+        if (token->type == LEFT_BRACKET)
+        {
+            parser->current++;
+        }
+        else break;
+
+        // consume an another [expression]
+        Expr* index = parser_expression(status, parser);
+        if (!STATUS_OK(status)) return NULL;
+
+        post_fix = (Expr*)parser_arena_expr_allocate_postfix(status, parser, 
+            post_fix, index
+        );
+        if (!STATUS_OK(status)) return NULL;
+        
+
+        // consume a right bracket
+        token = parser_peek_token(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+
+        if (token->type == RIGHT_BRACKET)
+            parser->current++; // next unprocessed character
+        else {
+            SET_STATUS(status, PARSER_PARSE_EXPECT_CHARACTER, 
+                "expect a right bracket ']'.");
+            return NULL;
+        }
+    }
+    return post_fix;
 }
 
 Expr* parser_primary(Status* status, Parser* parser)
@@ -377,6 +448,10 @@ Expr* parser_primary(Status* status, Parser* parser)
             return (Expr*) variable;
         }
 
+        case LEFT_BRACKET:
+            Expr* list = parser_list_creation(status, parser);
+            return list;
+
         default:
         {
             SET_STATUS(status, PARSER_BUILD_AST_UNKNOWN_LITERAL_TYPE, 
@@ -391,4 +466,80 @@ Expr* parser_primary(Status* status, Parser* parser)
     if (!STATUS_OK(status)) return NULL;
 
     return (Expr*)literal;
+}
+
+Expr* parser_list_creation(Status* status, Parser* parser)
+{
+    // [1, 2, 3, 4]
+    // [1, 2, 3, 4, ]
+    // [, ] is not a valid syntax
+    // result
+    // (((1, 2), 3), 4)
+    
+
+    Token* token;
+    // consume a [ 
+    token = parser_peek_token(status, parser, parser->current);
+    if (!STATUS_OK(status)) return NULL;
+    if (token->type != LEFT_BRACKET) // 100% but just to safecheck here
+    {
+        SET_STATUS(status, PARSER_PARSE_EXPECT_CHARACTER,
+            "(i don't even know you reach here), expect a left bracket '['.");
+        return NULL;
+    } 
+    else
+        parser->current++;
+    
+    // if a right bracket -> return an empty list
+    token = parser_peek_token(status, parser, parser->current);
+    if (token->type == RIGHT_BRACKET)
+    {
+        parser->current++; // consume the right bracket
+        return (Expr*)parser_arena_expr_allocate_list_literal(status, parser, 
+            NULL, NULL
+        );
+    }
+
+    // get the first element
+    Expr* list = parser_expression(status, parser);
+    if (!STATUS_OK(status)) return NULL;
+
+    while (parser->current < parser->_tokens->index)
+    {
+
+        // consume a coma
+        token = parser_peek_token(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+        if (token->type == COMA) parser->current++;
+        else break;
+
+        // feature [1, 2, 3, ]
+        // if spot a trailing bracket, break also
+        token = parser_peek_token(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+        if (token->type == RIGHT_BRACKET) break;
+
+        Expr* element = parser_expression(status, parser);
+        if (!STATUS_OK(status)) return NULL;
+
+        list = (Expr*)parser_arena_expr_allocate_list_literal(status, 
+            parser, 
+            list, // previous
+            element // current
+        );
+        if (!STATUS_OK(status)) return NULL;
+    }
+
+    // consume a ]
+    token = parser_peek_token(status, parser, parser->current);
+    if (!STATUS_OK(status)) return NULL;
+    if (token->type != RIGHT_BRACKET)
+    {
+        SET_STATUS(status, PARSER_PARSE_EXPECT_CHARACTER,
+            "expect a right bracket ']'.");
+        return NULL;
+    } 
+    else parser->current++;
+
+    return list;
 }

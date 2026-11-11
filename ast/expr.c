@@ -28,6 +28,10 @@ void expr_debug_dispatch(Status* status, Expr* expr, int indent)
         case GROUPING:
             expr_debug_grouping(status, (Grouping*)expr, indent);
             break;
+        
+        case POSTFIX:
+            expr_debug_postfix(status, (PostFix*)expr, indent);
+            break;
 
         case LITERAL:
             expr_debug_literal(status, (Literal*)expr, indent);
@@ -35,6 +39,10 @@ void expr_debug_dispatch(Status* status, Expr* expr, int indent)
         
         case VARIABLE:
             expr_debug_variable(status, (Variable*)expr, indent);
+            break;
+        
+        case LIST_LITERAL:
+            expr_debug_list_literal(status, (ListLiteral*)expr, indent);
             break;
 
         default:
@@ -109,6 +117,19 @@ void expr_debug_grouping(Status* status, Grouping* grouping, int indent)
     indent--;
 }
 
+void expr_debug_postfix(Status* status, PostFix* postfix, int indent)
+{
+    PRINT_TABS(indent); printf("array: \n");
+    indent++;
+    expr_debug_dispatch(status, postfix->array, indent);
+    indent--;
+
+    PRINT_TABS(indent); printf("index: \n");
+    indent++;
+    expr_debug_dispatch(status, postfix->index, indent);
+    indent--;
+}
+
 void expr_debug_literal(Status* status, Literal* literal, int indent)
 {
     switch(literal->dtype)
@@ -127,6 +148,12 @@ void expr_debug_literal(Status* status, Literal* literal, int indent)
             PRINT_TABS(indent);
             printf("(str): %s\n", literal->_lexeme);
             break;
+        
+        case TRUE:
+        case FALSE:
+            PRINT_TABS(indent);
+            printf("(bool): %s\n", literal->_lexeme);
+            break;
 
         default:
         {
@@ -135,6 +162,21 @@ void expr_debug_literal(Status* status, Literal* literal, int indent)
             break;
         }
     }
+}
+
+void expr_debug_list_literal(Status* status, ListLiteral* list_literal, int indent)
+{
+    PRINT_TABS(indent); printf("list: \n");
+
+    PRINT_TABS(indent); printf("previous: \n");
+    indent++;
+    expr_debug_dispatch(status, list_literal->previous, indent);
+    indent--;
+
+    PRINT_TABS(indent); printf("current: \n");
+    indent++;
+    expr_debug_dispatch(status, list_literal->current, indent);
+    indent--;
 }
 
 void expr_debug_variable(Status* status, Variable* variable, int indent)

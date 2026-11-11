@@ -6,14 +6,19 @@
 #include "../misc/error.h"
 
 enum DataType{
+
     DATA_TRUE,
     DATA_FALSE,
 
     DATA_INT, 
     DATA_DOUBLE, 
 
-    DATA_LIST,
+    // primitive boundary
+    DATA_PRIMITIVE,
+
     DATA_STRING,
+
+    DATA_LIST,
     DATA_ARRAY,
 
     DATA_OBJECT,
@@ -39,7 +44,7 @@ typedef enum DataType DataType;
             a = nil;
             // not being referenced anymore
         // should be fine too :D
-        // garbage collecing problem
+        // garbage collecing problem (we don't do ref count no?)
 
         destruct note:
         var a = 6;
@@ -62,43 +67,123 @@ typedef enum DataType DataType;
         the ownership
 */
 
+/*
+    lifetime rule:
+        primitives (register simulated): the lifetime is in the scope (the current environment)
+            the env lifetime ends the whole things end too
+            primitive consists of double, int, true, false, nil, 
+            (and some of the extensive variable, that i not interested implementing them into the system)
+        composites
+            these are composite dtype, only eligible for shallow-copy, 
+            instead of complete ownership transfer
+            
+            these dtype are governed by the runtime environment:
+                til the iteference of garbage collector, these dtype stay till the end of the program
+
+            countables
+                consists of str, array, and list
+            instances
+                is the one of its own world
+            hashes
+                specialist, won't be implemented anytime soon
+                (i want to do fourier :sob:)
+*/
+
 // closures fuck up the lifetime policy of these data type
 typedef struct{
-    Environment* env;
     Vector vector;
 } List;
+
+typedef struct{
+    const Value* array; 
+} Array;
 
 typedef struct{
     Environment* env; 
 } Function;
 
 typedef struct{
-    // it survives the object lifetime, will be released at the end
-    Environment* env;
-} String;
+    const char* _name;
+    // idk man
+} Instance;
 
+typedef struct{
+    const char* name;
+    bool is_borrowed;
+} String; 
+/*
 
-typedef struct Value{
+string in register should be borrowed entities, 
+while the the one in the env, own that string and generate 
+when do value string destruct, consider these cases:
+    string borrowed from the token (borrow)
+    string borrowed from the environment (borrow)
+    string generated with complete ownership (owner, shit...)
+            string + string;
+            string * int
+        idea: 
+            runtime don't adopt this, only env adopt these
+            runtime only adopt 
+    
+    what should we do when
+    outer_str = inner_str; // this is a reference 
+    outer_str = inner_str; // this can only be solved 
+                              with a tracing garbage collector
+    inner_str = outer_str;
+
+we can't answer this as we can't revive the inner_str 
+reference for the outer_str 
+    => don't allow string concatenate  
+
+will array suffer from the same problem too?
+    inner_array + outer_array
+technically no, once the create
+
+even if the garbage tracing is here
+    im not interested in if (arr1 == arr2) thingy
+=>  we don't implement dynamic arithmetic for composite just yet
+
+duh, move on to interprete execute binary and literal testing now
+
+*/
+
+typedef union DataPayLoad{
+    int integer;
+    double real;
+
+    // just in case, i wont do it for now
+    long long* extensive_int;
+    long double* extensive_real;
+
+    // we will create file to deal with these, one by one
+    const char* string;
+    List* list;
+    Array* array;
+    void* instance; // i don't know you
+    Function* function;
+
+    bool boolean;
+} DataPayLoad;
+
+struct Value{
     DataType type;
+    DataPayLoad payload;
+};
+typedef struct Value Value;
 
-    union DataPayLoad{
-        int integer;
-        double real;
+Value* value_allocate(Status* status);
+void value_destruct(Status* status, Value* value);
 
-        // just in case, i wont do it for now
-        long long* extensive_int;
-        long double* extensive_real;
+void print_value(Status* status, Value* value);
 
-        // we will create file to deal with these, one by one
-        String* string;
-        List* list;
-        void* instance; // i don't know you
-        Function* function;
+void value_primitive_conversion(Status* status, 
+    Value* value, DataType desired_type);
 
-        bool boolean;
-    } payload;
+DataType value_primitive_common_type(Status* status, 
+    DataType type1, DataType type2);
 
-} Value;
-
+bool value_is_primitive(DataType type);
+bool value_is_composite(DataType type);
+bool value_is_countable(DataType type);
 
 #endif

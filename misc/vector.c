@@ -23,7 +23,7 @@ Vector* vector_init(Status* status, size_t size)
 
     vector->ptr = ptr;
     vector->allocated_length = 1;
-    vector->length = 0;
+    vector->index = 0;
     vector->item_size = size;
     return vector;
 }
@@ -47,36 +47,43 @@ void vector_double_allocate(Status* status, Vector* vector)
     vector->ptr = ptr;
 }
 
-
-void vector_add(Status* status, Vector* vector, void* item)
+void* vector_allocate(Status* status, Vector* vector)
 {
     if (vector == NULL)
     {
-        SET_STATUS(status, NULL_RETURN, "null return."); 
-        return;
+        SET_STATUS(status, NULL_RETURN, "null return.");
+        return NULL;
     }
     if (vector->ptr == NULL)
     {
-        SET_STATUS(status, NULL_RETURN, "null vector->ptr return."); 
-        return;
+        SET_STATUS(status, NULL_RETURN, "null vector->ptr.")
+        return NULL;
     }
+
+    if (vector->index >= vector->allocated_length)
+    {
+        vector_double_allocate(status, vector);
+        if (!STATUS_OK(status)) return NULL;
+    }
+
+    void* dest = (char*)vector->ptr + vector->item_size * vector->index;
+    vector->index++;
+     
+    return dest;
+}
+
+
+void vector_add(Status* status, Vector* vector, void* item)
+{    
     if (!item)
     {
         SET_STATUS(status, VECTOR_NULL_INVALID, "item ptr can't be null."); 
         return;
     }
+    char* dest = vector_allocate(status, vector);
+    if (!STATUS_OK(status)) return;
 
-    if (vector->length >= vector->allocated_length)
-    {
-        vector_double_allocate(status, vector);
-        if (!STATUS_OK(status))
-            return;
-    }
-    
-    // sufficient space to play with
-    char* dest = (char*)vector->ptr + vector->item_size * vector->length;
     memcpy(dest, item, vector->item_size);
-    vector->length ++;
 }
 
 

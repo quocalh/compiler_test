@@ -104,7 +104,7 @@ void scanner_destruct(Status* status, Scanner* scanner)
     free(scanner->stream);
 
     // free lexeme
-    for (int i = 0; i < scanner->tokens->length; i++)
+    for (int i = 0; i < scanner->tokens->index; i++)
     {
         Token* token = (Token*)(scanner->tokens->ptr) + i;
         free(token->lexeme);
@@ -495,6 +495,12 @@ void scanner_token_extracting(Status* status, Scanner* scanner)
                 break;
             case '}':
                 add_token(status, scanner, RIGHT_BRACE);
+                break;
+            case '[':
+                add_token(status, scanner, LEFT_BRACKET);
+                break;
+            case ']':
+                add_token(status, scanner, RIGHT_BRACKET);
                 break;
             case '+':
                 add_token(status, scanner, PLUS);

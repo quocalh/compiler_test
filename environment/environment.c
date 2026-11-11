@@ -55,7 +55,8 @@ Value* environment_find(Status* status, Environment* env,
     if (env->enclosing)
         return environment_find( status, env->enclosing, name);
     
-    SET_STATUS(status, ENV_VARIABLE_NOT_FOUND, 
-        "environment variable not found (%s)", name);
+    // SET_STATUS(status, ENV_VARIABLE_NOT_FOUND, 
+    //     "environment variable not found (%s)", name);
+
     return NULL;
 }

@@ -31,12 +31,12 @@ int main()
     {
         vector_add(status, vector, n + i);
 
-        for (int j = 0; j < vector->length; j++)
+        for (int j = 0; j < vector->index; j++)
         {
             printf("item %d: %d\n", j + 1, AS(int*, vector->ptr)[j]);
         }
 
-        printf("_length_: %d\n", vector->length);
+        printf("_length_: %d\n", vector->index);
         printf("allocated_space: %d\n", vector->allocated_length);
         printf("\n");
     }

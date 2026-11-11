@@ -3,6 +3,8 @@
 
 #include "../misc/hash_str_to_ins.h"
 #include "../misc/error.h"
+#include "../misc/vector.h"
+// include value.h
 
 typedef struct Value Value;
 
@@ -21,5 +23,6 @@ void environment_define(Status* status, Environment* env,
 
 Value* environment_find(Status* status, Environment* env, 
     const char* name);
+
 
 #endif

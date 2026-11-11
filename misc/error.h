@@ -60,13 +60,14 @@ EXPR_PROPAGATE(statement, goto label)
 typedef enum{
     
     // general
+    NO_ERROR,
     MALLOC_FAILED,
     REALLOC_FAILED,
     NULL_FILE_PTR,
-    NO_ERROR,
     INDEX_ERROR,
     NULL_RETURN,
     NULL_INVALID_VALUE,
+    NOT_YET_IMPLEMENTED,
 
     // misc/vector.h
     VECTOR_ALLOCATE_FAILED, 
@@ -125,6 +126,18 @@ typedef enum{
 
     // value
     VALUE_ERROR_TYPE,
+    VALUE_UNKNOWN_TYPE,
+    VALUE_ERROR_PRIMITIVE_PROMOTING,
+
+    // evaluate
+    EVALUATE_EXPR_UNKNOWN_EXPR_TYPE,
+    EVALUATE_EXPR_UNKNOWN_DATA_TYPE,
+    EVALUATE_TRUTH_ERROR_TYPE_UNKNOWN,
+    EVALUATE_UNKNOWN_OP,
+    EVALUATE_INVALID_ARITHMETIC,
+
+    // execute
+    EXECUTE_STMT_UNKNOWN_STMT_TYPE,
 
 } ErrorCode;
 

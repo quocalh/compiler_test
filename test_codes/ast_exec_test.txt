@@ -1,0 +1,10 @@
+// PRINT -1 + 1;
+PRINT -1 + 1;
+
+PRINT 2 + 1 * 5 * 5 * 5 / 6.0;
+PRINT false * 3500; // promoting system
+PRINT true + 1;
+PRINT "the emperor protects";
+
+// for now the system only interact with normal primitive values, 
+// as compositive value requires garbage collecting, of which will be implemented soon after class

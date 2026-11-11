@@ -13,6 +13,7 @@
 #include "parser/parser_expr.h"
 #include "profiling/stop_watch.h"
 #include "ast/expr.h"
+#include "interpreter/interpreter.h"
 
 
 /*
@@ -33,7 +34,7 @@ int main()
     
     // init scanner
     // Scanner* scanner = scanner_init(status, "test_codes/ast_expr_test.txt");
-    Scanner* scanner = scanner_init(status, "test_codes/ast_stmt_test.txt");
+    Scanner* scanner = scanner_init(status, "test_codes/ast_exec_test.txt");
     if (!STATUS_OK(status)) goto CLEAN_SCANNER;
 
     // extracting tokens
@@ -46,7 +47,7 @@ int main()
     parser_parse(status, parser);
     if (!STATUS_OK(status)) goto CLEAN_PARSER;
 
-    for (int i = 0; i < parser->statements->length; i++) 
+    for (int i = 0; i < parser->statements->index; i++) 
     {
         Stmt* stmt = parser_peek_stmt(status, parser, i);
         if (!STATUS_OK(status)) goto CLEAN_PARSER;
@@ -54,6 +55,12 @@ int main()
         stmt_debug_dispatch(status, stmt, 0);
         if (!STATUS_OK(status)) goto CLEAN_PARSER;
     }
+
+    Interpreter* interpreter = interpreter_init(status, parser->statements);
+    interpreter_interpret(status, interpreter);
+
+    CLEAN_INTERPRETER:
+    interpreter_destruct(status, interpreter);
 
     CLEAN_PARSER:
     parser_destruct(status, parser);

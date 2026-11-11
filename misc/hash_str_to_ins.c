@@ -56,6 +56,7 @@ HashStringToIns* hash_str_to_ins_add_key(Status* status, HashStringToIns** hash,
     return slot;
 }
 
+// return null if can't find
 HashStringToIns* hash_str_to_ins_find(Status* status, HashStringToIns** hash,
     const char* name)
 {

@@ -76,7 +76,7 @@ void parser_parse(Status* status, Parser* parser)
 {
     parser->current = 0;
 
-    while (parser->current < parser->_tokens->length)
+    while (parser->current < parser->_tokens->index)
     {
         Stmt* stmt = parser_parse_declaration(status, parser);
         if (!STATUS_OK(status)) goto EXIT;
@@ -117,11 +117,11 @@ Stmt* parser_parse_statement(Status* status, Parser* parser)
 // helper functions
 Token* parser_peek_token(Status* status, Parser* parser, size_t index)
 {
-    if (index >= parser->_tokens->length)
+    if (index >= parser->_tokens->index)
     {
         SET_STATUS(status, INDEX_ERROR, 
         "index error (index of %zu, exceeding the allocated of %zu + 1)", 
-        index, parser->_tokens->length);
+        index, parser->_tokens->index);
         return NULL;
     }
 
@@ -130,11 +130,11 @@ Token* parser_peek_token(Status* status, Parser* parser, size_t index)
 
 Stmt* parser_peek_stmt(Status* status, Parser* parser, size_t index)
 {
-    if (index >= parser->statements->length)
+    if (index >= parser->statements->index)
     {
         SET_STATUS(status, INDEX_ERROR, 
         "index error (index of %zu, exceeding the allocated of %zu + 1)", 
-        index, parser->_tokens->length);
+        index, parser->_tokens->index);
         return NULL;
     }
 
