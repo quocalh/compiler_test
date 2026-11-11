@@ -139,6 +139,9 @@ typedef enum{
     // execute
     EXECUTE_STMT_UNKNOWN_STMT_TYPE,
 
+    // interpreter
+    INTERPRETER_INVALID_ROOT_ENV,
+
 } ErrorCode;
 
 /* this struct strictly stay in heap*/

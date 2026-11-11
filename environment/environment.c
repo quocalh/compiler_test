@@ -44,6 +44,7 @@ void environment_define(Status* status, Environment* env,
     hash_str_to_ins_add_key(status, &env->map, name, value);
 }
 
+// return a NULL upon can't find a variable
 Value* environment_find(Status* status, Environment* env, 
     const char* name)
 {

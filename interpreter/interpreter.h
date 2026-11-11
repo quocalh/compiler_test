@@ -10,7 +10,8 @@ typedef struct{
     // statement parsing and interpret iterate
     Vector* _statments;
 
-    Environment* runtime_env;
+    // a tracing garbage collector will  be implemented, no need for an external env
+    // Environment* runtime_env;
     Environment* cur_env;
 
     // can be disposed if do parsing and interpret at the same time
@@ -24,7 +25,10 @@ void interpreter_destruct(Status* status, Interpreter* interpreter);
 void interpreter_interpret(Status* status, 
     Interpreter* interpreter);
 
-const Value* interpreter_lookup_variable(Status* status, 
+void interpreter_env_destruct(Status* status, 
+    Environment* env);
+
+Value* interpreter_lookup_variable(Status* status, 
     Interpreter* interpreter, const char* name);
 
 #endif

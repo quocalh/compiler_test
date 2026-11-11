@@ -13,21 +13,22 @@ Interpreter* interpreter_init(Status* status, Vector* _statments)
         goto ERROR_RETURN;
     }
 
-    Environment* runtime_env = environment_init(status, NULL);
-    if (!STATUS_OK(status))
-        goto ERROR_MALLOC;
+    // Environment* runtime_env = environment_init(status, NULL);
+    // if (!STATUS_OK(status))
+    //     goto ERROR_MALLOC;
 
     // assume that this prog only run once
     // if not, then env is null, will be init in the interpret function
     Environment* env = environment_init(status, NULL);
     if (!STATUS_OK(status))
-        goto ERROR_OMNI_ENV;
+        // goto ERROR_OMNI_ENV;
+        goto ERROR_MALLOC;
     
     *interpreter = (Interpreter) {
         ._statments = _statments,
 
         .cur_env = env,
-        .runtime_env = runtime_env,
+        // .runtime_env = runtime_env,
 
         .current = 0,
     };
@@ -36,8 +37,8 @@ Interpreter* interpreter_init(Status* status, Vector* _statments)
     ERROR_ENV:
     environment_destruct(status, env);
 
-    ERROR_OMNI_ENV:
-    environment_destruct(status, runtime_env);
+    // ERROR_OMNI_ENV:
+    // environment_destruct(status, runtime_env);
         
     ERROR_MALLOC:
     free(interpreter);
@@ -55,21 +56,18 @@ void interpreter_destruct(Status* status, Interpreter* interpreter)
             "interpreter cant be null.");
     }
 
-    // just not sure if
-    HashStringToIns* slot, *tmp;
-    HASH_ITER(hh, interpreter->cur_env->map, slot, tmp)
+    // check if this is the root env
+    if (interpreter->cur_env->enclosing)
     {
-        HASH_DEL(interpreter->cur_env->map, slot); 
-        free(slot);
-    } 
-    environment_destruct(status, interpreter->cur_env);
-    
-    HASH_ITER(hh, interpreter->runtime_env->map, slot, tmp)
-    {
-        HASH_DEL(interpreter->cur_env->map, slot); 
-        free(slot);
+        SET_STATUS(status, INTERPRETER_INVALID_ROOT_ENV,
+            "this is not the root env.");
     }
-    environment_destruct(status, interpreter->runtime_env);
+
+    interpreter_env_destruct(status, interpreter->cur_env);
+    // interpreter_env_destruct(status, interpreter->runtime_env);
+
+    environment_destruct(status, interpreter->cur_env);
+    // environment_destruct(status, interpreter->runtime_env);
     
     free(interpreter); 
 }
@@ -92,8 +90,21 @@ void interpreter_interpret(Status* status,
     printf("\n");
 }
 
+void interpreter_env_destruct(Status* status, 
+    Environment* env)
+{
+    HashStringToIns* slot, *tmp;
+    HASH_ITER(hh, env->map, slot, tmp)
+    {
+        HASH_DEL(env->map, slot); 
+        value_destruct(status, slot->ins);
+        free(slot);
+    } 
+}
+
 // produce the blueprint data, don't modify the value_slot
-const Value* interpreter_lookup_variable(Status* status, 
+// a status variable_not_found wrapper of environment_find
+Value* interpreter_lookup_variable(Status* status, 
     Interpreter* interpreter, const char* name)
 {
     // check the current env
@@ -103,15 +114,15 @@ const Value* interpreter_lookup_variable(Status* status,
     if (value) return value;
 
     // check the runtime env
-    value = environment_find(status, 
-        interpreter->runtime_env, name);
-    if (!STATUS_OK(status)) return NULL;
-    if (value) return value;
+    // value = environment_find(status, 
+    //     interpreter->runtime_env, name);
+    // if (!STATUS_OK(status)) return NULL;
+    // if (value) return value;
     
     // can't find anything, return error
     SET_STATUS(status, ENV_VARIABLE_NOT_FOUND, 
-        "environment not found "
-        "(both env and runtime env - var name: %s)", 
+        "variable not found "
+        "(var name: %s)", 
         name);
     return NULL;
     

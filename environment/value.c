@@ -13,6 +13,7 @@ Value* value_allocate(Status* status)
     return value;
 }
 
+// can tolerate a NULL
 void value_destruct(Status* status, Value* value)
 {
     if (!value)

@@ -34,7 +34,7 @@ Value* evaluate_expr_dispatch(Status* status, Interpreter* interpreter, Expr* ex
         break;
 
     case ASSIGN:
-        // evaluate_assign(status, interpreter, (Assign*)expr);
+        value = evaluate_assign(status, interpreter, (Assign*)expr);
         break;
     
     case POSTFIX:
@@ -426,7 +426,6 @@ Value* evaluate_binary(Status* status,
     COMPOSITE_ERROR:
     value_destruct(status, left);
     value_destruct(status, right);
-
     return NULL;
 
     ERROR_RIGHT:
@@ -492,6 +491,27 @@ Value* evaluate_unary(Status* status, Interpreter* interpreter, Unary* unary)
 
     ERROR_REACH:
     value_destruct(status, value);
+    return NULL;
+}
+    
+
+Value* evaluate_assign(Status* status, Interpreter* interpreter, Assign* assign)
+{
+    Value* eax_value = evaluate_expr_dispatch(status, interpreter, assign->rvalue); // register
+    if (!STATUS_OK(status)) goto EAX_ERROR;
+
+    // get the word in the environment dict, ready for primitive memcpy
+    Value* origin =  interpreter_lookup_variable(status, interpreter, assign->_name);
+    if (!STATUS_OK(status)) goto LOOK_UP_ERROR;
+
+    // memcpy eax into the variable's slot (shallow copy)
+    memcpy(origin, eax_value, sizeof(*eax_value));
+    return eax_value;
+
+    LOOK_UP_ERROR: 
+    value_destruct(status, eax_value);
+     
+    EAX_ERROR:
     return NULL;
 }
 

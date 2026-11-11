@@ -1,10 +1,32 @@
-// PRINT -1 + 1;
+
+
+
+
+
+
+
 PRINT -1 + 1;
+var a = 5 + 7;
+var a = 13;
+
+a;
+PRINT "previous a";
+PRINT a;
+a = 3 * 7;
+PRINT "modified a";
+PRINT a;
 
 PRINT 2 + 1 * 5 * 5 * 5 / 6.0;
-PRINT false * 3500; // promoting system
-PRINT true + 1;
-PRINT "the emperor protects";
+
+PRINT 2 + a * 1.0;
+PRINT 2 + a;
+
+
+
+
+// PRINT false * 3500; // promoting system
+// PRINT true + 1;
+// PRINT "the emperor protects";
 
 // for now the system only interact with normal primitive values, 
 // as compositive value requires garbage collecting, of which will be implemented soon after class

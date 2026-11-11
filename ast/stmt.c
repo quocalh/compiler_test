@@ -53,7 +53,7 @@ void stmt_debug_print_stmt(Status* status, PrintStmt* print_stmt,
 void stmt_debug_var_declare_stmt(Status* status, VarDeclareStmt* var_declare_stmt, 
     int indent)
 {
-    PRINT_TABS(indent); printf("init var: %s\n", var_declare_stmt->name);
+    PRINT_TABS(indent); printf("var declare: %s\n", var_declare_stmt->name);
 
     indent++;
     PRINT_TABS(indent); printf("init expr: \n");

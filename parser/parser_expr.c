@@ -153,7 +153,7 @@ Expr* parser_assignment(Status* status, Parser* parser)
     Token* token = parser_peek_token(status, parser, parser->current);
     if (!STATUS_OK(status)) return NULL;
 
-    // consume the equal
+    // found an initializer
     if (token->type == EQUAL)
     {
         parser->current++;

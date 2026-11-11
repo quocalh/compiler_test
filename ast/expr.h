@@ -32,7 +32,24 @@ typedef struct Expr{
 
 typedef struct{
     ExpressionType type;
-    ExpressionType lvalue_type;
+    /*
+    kinda useless (or maybe not)
+
+    since the format is a = b; 
+    or in a formal form: lvalue = rvalue;
+    QUESTION: for now the lvalue_type just 
+    exist as a architecture overhead for next update
+    
+    -> assumme that assign isn't made solely for evaluating variables
+    -> but based on the book, it likely to be a false assumption
+    (it really does exist, only for variable lookups, maybe)
+
+    by the time advances to classes but still no uses, 
+    we can discard this attrib
+
+    for now we can ignore it (11/11/26)
+    */
+    ExpressionType lvalue_type; 
     const char* _name; // lvalue kinda
     Expr* rvalue;
 } Assign;
