@@ -165,7 +165,13 @@ void print_value(Status* status, Value* value)
             break;
 
         case DATA_STRING:
-            printf("%s", payload.string);
+            {
+                size_t str_len = strlen(payload.string);
+                printf("%.*s", 
+                    (int)(str_len - 2), // discard the \0 and the '"'
+                    (char*)payload.string + 1 // offset the first '"'
+                );
+            }
             break;
 
         case DATA_ARRAY:

@@ -25,7 +25,7 @@ void interpreter_destruct(Status* status, Interpreter* interpreter);
 void interpreter_interpret(Status* status, 
     Interpreter* interpreter);
 
-void interpreter_env_destruct(Status* status, 
+void interpreter_env_erase(Status* status, 
     Environment* env);
 
 Value* interpreter_lookup_variable(Status* status, 

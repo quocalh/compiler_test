@@ -185,7 +185,7 @@ Expr* parser_equality(Status* status, Parser* parser)
     Expr* left = parser_comparision(status, parser);
     if (!STATUS_OK(status)) return NULL;
 
-    while (parser->current < parser->_tokens->index)
+    while (parser->current < parser->_tokens->length)
     {
         Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
@@ -219,7 +219,7 @@ Expr* parser_comparision(Status* status, Parser* parser)
     Expr* left = parser_term(status, parser);
     if (!STATUS_OK(status)) return NULL;
     
-    while (parser->current < parser->_tokens->index)
+    while (parser->current < parser->_tokens->length)
     {
         Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
@@ -252,7 +252,7 @@ Expr* parser_term(Status* status, Parser* parser)
     Expr* left = parser_factor(status, parser);
     if (!STATUS_OK(status)) return NULL;
     
-    while (parser->current < parser->_tokens->index)
+    while (parser->current < parser->_tokens->length)
     {
         Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
@@ -283,7 +283,7 @@ Expr* parser_factor(Status* status, Parser* parser)
     Expr* left = parser_unary(status, parser);
     if (!STATUS_OK(status)) return NULL;
     
-    while (parser->current < parser->_tokens->index)
+    while (parser->current < parser->_tokens->length)
     {
         Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
@@ -380,7 +380,7 @@ Expr* parser_postfix(Status* status, Parser* parser)
     Expr* post_fix = parser_primary(status, parser);
     if (!STATUS_OK(status)) return NULL;
 
-    while (parser->current < parser->_tokens->index)
+    while (parser->current < parser->_tokens->length)
     {
         Token* token = parser_peek_token(status, parser, parser->current);
         if (!STATUS_OK(status)) return NULL;
@@ -504,7 +504,7 @@ Expr* parser_list_creation(Status* status, Parser* parser)
     Expr* list = parser_expression(status, parser);
     if (!STATUS_OK(status)) return NULL;
 
-    while (parser->current < parser->_tokens->index)
+    while (parser->current < parser->_tokens->length)
     {
 
         // consume a coma

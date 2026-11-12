@@ -63,8 +63,8 @@ void interpreter_destruct(Status* status, Interpreter* interpreter)
             "this is not the root env.");
     }
 
-    interpreter_env_destruct(status, interpreter->cur_env);
-    // interpreter_env_destruct(status, interpreter->runtime_env);
+    interpreter_env_erase(status, interpreter->cur_env);
+    // interpreter_env_erase(status, interpreter->runtime_env);
 
     environment_destruct(status, interpreter->cur_env);
     // environment_destruct(status, interpreter->runtime_env);
@@ -79,7 +79,7 @@ void interpreter_interpret(Status* status,
 
     // start here
     Stmt** stmts = (Stmt**)(interpreter->_statments->ptr);
-    for (int i = 0; i < interpreter->_statments->index; i++)
+    for (int i = 0; i < interpreter->_statments->length; i++)
     {
         Stmt* stmt = stmts[i];
         interpreter_execute_stmt_dispatch(status, interpreter, stmt);
@@ -90,7 +90,7 @@ void interpreter_interpret(Status* status,
     printf("\n");
 }
 
-void interpreter_env_destruct(Status* status, 
+void interpreter_env_erase(Status* status, 
     Environment* env)
 {
     HashStringToIns* slot, *tmp;
@@ -121,7 +121,7 @@ Value* interpreter_lookup_variable(Status* status,
     
     // can't find anything, return error
     SET_STATUS(status, ENV_VARIABLE_NOT_FOUND, 
-        "variable not found "
+        "variable not found or not yet assigned "
         "(var name: %s)", 
         name);
     return NULL;

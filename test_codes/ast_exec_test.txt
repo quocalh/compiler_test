@@ -22,8 +22,6 @@ PRINT 2 + a * 1.0;
 PRINT 2 + a;
 
 
-
-
 // PRINT false * 3500; // promoting system
 // PRINT true + 1;
 // PRINT "the emperor protects";

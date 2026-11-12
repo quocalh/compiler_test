@@ -34,7 +34,7 @@ int main()
     
     // init scanner
     // Scanner* scanner = scanner_init(status, "test_codes/ast_expr_test.txt");
-    Scanner* scanner = scanner_init(status, "test_codes/ast_exec_test.txt");
+    Scanner* scanner = scanner_init(status, "test_codes/ast_exec_block_test.txt");
     if (!STATUS_OK(status)) goto CLEAN_SCANNER;
 
     // extracting tokens
@@ -47,7 +47,7 @@ int main()
     parser_parse(status, parser);
     if (!STATUS_OK(status)) goto CLEAN_PARSER;
 
-    for (int i = 0; i < parser->statements->index; i++) 
+    for (int i = 0; i < parser->statements->length; i++) 
     {
         Stmt* stmt = parser_peek_stmt(status, parser, i);
         if (!STATUS_OK(status)) goto CLEAN_PARSER;

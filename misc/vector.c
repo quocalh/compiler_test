@@ -23,7 +23,7 @@ Vector* vector_init(Status* status, size_t size)
 
     vector->ptr = ptr;
     vector->allocated_length = 1;
-    vector->index = 0;
+    vector->length = 0;
     vector->item_size = size;
     return vector;
 }
@@ -60,14 +60,14 @@ void* vector_allocate(Status* status, Vector* vector)
         return NULL;
     }
 
-    if (vector->index >= vector->allocated_length)
+    if (vector->length >= vector->allocated_length)
     {
         vector_double_allocate(status, vector);
         if (!STATUS_OK(status)) return NULL;
     }
 
-    void* dest = (char*)vector->ptr + vector->item_size * vector->index;
-    vector->index++;
+    void* dest = (char*)vector->ptr + vector->item_size * vector->length;
+    vector->length++;
      
     return dest;
 }

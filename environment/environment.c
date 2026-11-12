@@ -26,7 +26,7 @@ Environment* environment_init(Status* status, Environment* enclosing)
 
 void environment_destruct(Status* status, Environment* env)
 {
-    // don't do status check return in destruct funciton
+    // don't do status check return in destruct function
     if (!env)
     {
         SET_STATUS(status, NULL_INVALID_VALUE, 

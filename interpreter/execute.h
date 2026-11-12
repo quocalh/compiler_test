@@ -17,6 +17,9 @@ void interpreter_execute_statement(Status* status,
 void interpreter_execute_print_statement(Status* status, 
     Interpreter* interpreter, PrintStmt* stmt);
 
+void interpreter_execute_block_statement(Status* status, 
+    Interpreter* interpreter, BlockStmt* stmt);
+
 void interpreter_execute_vardecl_statement(Status* status,
     Interpreter* interpreter, VarDeclareStmt* stmt);
 

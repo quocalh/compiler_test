@@ -19,6 +19,11 @@ void interpreter_execute_stmt_dispatch(Status* status,
                 interpreter, (PrintStmt*)stmt);
             break;
 
+        case BLOCK_STMT:
+            interpreter_execute_block_statement(status, 
+                interpreter, (BlockStmt*)stmt);
+            break;
+
         case VARDECL_STMT:
             interpreter_execute_vardecl_statement(status, 
                 interpreter, (VarDeclareStmt*)stmt);
@@ -46,10 +51,39 @@ void interpreter_execute_print_statement(Status* status,
 {
     Value* value = evaluate_expr_dispatch(status, 
         interpreter, stmt->expression);
+    // if fail to evaluate, 
+    // the evaluate will not return, nor create any trailing malloc
+    if (!STATUS_OK(status)) return;
 
     print_value(status, value);
     printf("\n");
+    
     value_destruct(status, value);
+}
+
+void interpreter_execute_block_statement(Status* status, 
+    Interpreter* interpreter, BlockStmt* stmt)
+{
+    // create + assign new env
+    Environment* new = environment_init(status, interpreter->cur_env);
+    if (!STATUS_OK(status)) return;
+    interpreter->cur_env = new;
+
+    Stmt** stmts = (Stmt**)stmt->head;
+    for (size_t i = 0; i < stmt->length; i++)
+    {
+        Stmt* inner_stmt = stmts[i];
+        interpreter_execute_stmt_dispatch(status, interpreter, inner_stmt);
+        if (!STATUS_OK(status)) goto FREE_NEW_ENV;
+    }
+
+    // failed -> return the prev env
+    FREE_NEW_ENV:
+
+    // reset prev env + destruct new env
+    interpreter->cur_env = new->enclosing;
+    interpreter_env_erase(status, new);
+    environment_destruct(status, new);
 }
 
 void interpreter_execute_vardecl_statement(Status* status,
@@ -63,9 +97,8 @@ void interpreter_execute_vardecl_statement(Status* status,
     {
         value = evaluate_expr_dispatch(status, 
             interpreter, 
-            stmt->initializer
-        );
-        if (!STATUS_OK(status)) goto ERROR_CONTROVERSIAL_TYPE;
+            stmt->initializer);
+        if (!STATUS_OK(status)) goto ERROR_EVALUATE;
 
         // since we are not yet ready to evaluate lists, we don't accept that for now
         // look into the lifetime problem in the codebase
@@ -81,17 +114,18 @@ void interpreter_execute_vardecl_statement(Status* status,
     {
         value = NULL;
     }
-    if (!STATUS_OK(status)) goto ERROR_CONTROVERSIAL_TYPE;
+    if (!STATUS_OK(status)) goto ERROR_EVALUATE;
+
 
     HashStringToIns* slot;
     slot = hash_str_to_ins_find(status, &interpreter->cur_env->map, stmt->name);
-    if (!STATUS_OK(status)) goto ERROR_CONTROVERSIAL_TYPE;
+    if (!STATUS_OK(status)) goto ERROR_EVALUATE;
 
     // if not yet defined then fill in
     if (!slot)
     {
         hash_str_to_ins_add_key(status, &interpreter->cur_env->map, stmt->name, value); 
-        if (!STATUS_OK(status)) goto ERROR_CONTROVERSIAL_TYPE;
+        if (!STATUS_OK(status)) goto ERROR_EVALUATE;
     }
     // if already defined, then replace the value if it is not NULL
     else
@@ -100,13 +134,15 @@ void interpreter_execute_vardecl_statement(Status* status,
         {
             *(Value*)slot->ins = *value;
             value_destruct(status, value);
-            // error status also counted as a success route
+            // error status also go in the success route
+            // to be catched in the parent func
         }
     }
 
     return;
 
     ERROR_CONTROVERSIAL_TYPE:
+    ERROR_EVALUATE:
     value_destruct(status, value);
     return;
 }

@@ -521,11 +521,15 @@ Value* evaluate_variable(Status* status, Interpreter* interpreter, Variable* var
     if (!STATUS_OK(status)) return NULL;
 
     // create a shallow copy of the subject
-    Value* mirror = value_allocate(status);
-    if (!STATUS_OK(status)) return NULL;
+    Value* buffer = value_allocate(status);
+    if (!STATUS_OK(status)) 
+    {
+        value_destruct(status, buffer);
+        return NULL;
+    }
 
-    memcpy(mirror, origin, sizeof(*mirror));
-    return mirror;     
+    memcpy(buffer, origin, sizeof(*buffer));
+    return buffer;     
 }
 
 /*

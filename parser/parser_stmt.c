@@ -1,5 +1,7 @@
 #include "parser_stmt.h"
 #include "parser_expr.h"
+#include "parser.h"
+#include <string.h>
 
 // allocate
 Stmt* parser_arena_stmt_allocate_stmt(Status* status, Parser* parser, 
@@ -25,6 +27,20 @@ PrintStmt* parser_arena_stmt_allocate_print_stmt(Status* status, Parser* parser,
     *stmt = (PrintStmt){
         .type = PRINT_STMT,
         .expression = expr,
+    };
+    return stmt;
+}
+
+BlockStmt* parser_arena_stmt_allocate_block_stmt(Status* status, Parser* parser, 
+    size_t length, Stmt* head)
+{
+    BlockStmt* stmt = arena_allocate(status, parser->statement_arena, sizeof(*stmt));
+    if (!STATUS_OK(status)) return NULL;
+
+    *stmt = (BlockStmt){
+        .type = BLOCK_STMT,
+        .length = length,
+        .head = head
     };
     return stmt;
 }
@@ -78,6 +94,65 @@ PrintStmt* parser_print_stmt(Status* status, Parser* parser)
     PrintStmt* stmt = parser_arena_stmt_allocate_print_stmt(status, parser, expr);
     if (!STATUS_OK(status)) return NULL;
 
+    return stmt;
+}
+
+BlockStmt* parser_block_stmt(Status* status, Parser* parser)
+{
+    BlockStmt* stmt = NULL;
+
+    // consume the left brace
+    parser->current++;
+
+    Vector* arena_loc_buffer = vector_init(status, sizeof(Stmt*));
+    if (!STATUS_OK(status)) return NULL;
+    size_t length = 0;
+    Stmt* head = NULL;
+
+    Token* token;
+    while (true)
+    {
+        token = parser_peek_token(status, parser, parser->current);
+        if (!STATUS_OK(status)) goto EXIT;
+
+        // stop cond
+        if (token->type == RIGHT_BRACE || 
+            parser->current >= parser->_tokens->length - 1
+        ) break;
+
+        Stmt* stmt = parser_parse_declaration(status, parser);
+        if (!STATUS_OK(status)) goto EXIT;
+
+        vector_add(status, arena_loc_buffer, &stmt);
+        if (!STATUS_OK(status)) goto EXIT;
+        length++;
+    }
+    PARSE_CONSUME_TOKEN(status, parser, RIGHT_BRACE, 
+        PARSER_PARSE_EXPECT_CHARACTER, "expect a right brace '}'.");
+    
+
+    // create a continous array of Stmt* in arena
+
+    head = (Stmt*)(parser->statement_arena->ptr + 
+        parser->statement_arena->current_offset);
+    for (size_t i = 0; i < length; i++)
+    {
+        Stmt* slot = arena_allocate(status, parser->statement_arena, 
+            sizeof(Stmt*));
+        if (!STATUS_OK(status)) goto EXIT;
+        
+        memcpy(
+            slot, 
+            arena_loc_buffer->ptr + sizeof(Stmt*) * i, 
+            sizeof(Stmt*)
+        );
+    }
+    
+    stmt = parser_arena_stmt_allocate_block_stmt(status, parser, 
+        length, head);
+
+    EXIT: 
+    vector_destruct(status, arena_loc_buffer);
     return stmt;
 }
 

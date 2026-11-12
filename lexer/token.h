@@ -40,6 +40,7 @@ typedef enum
 
     // mnemonics
     PRINT,
+    END_LINE,
     TOKEN_TYPE_COUNT,
 } TokenType; 
 

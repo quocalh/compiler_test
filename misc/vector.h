@@ -15,7 +15,7 @@ typedef struct{
     void* ptr;    
     size_t item_size;
 
-    int index;
+    int length;
     int allocated_length;
 } Vector;
 

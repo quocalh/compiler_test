@@ -25,6 +25,7 @@ static HashStringToInt* scanner_set_keywords(Status* status)
         {"nil",      NIL},
         {"EOF",      END_OF_FILE},
         {"PRINT",    PRINT},
+        {"ENDL",     END_LINE},
     };
 
     // wil return a null upon a success init
@@ -104,7 +105,7 @@ void scanner_destruct(Status* status, Scanner* scanner)
     free(scanner->stream);
 
     // free lexeme
-    for (int i = 0; i < scanner->tokens->index; i++)
+    for (int i = 0; i < scanner->tokens->length; i++)
     {
         Token* token = (Token*)(scanner->tokens->ptr) + i;
         free(token->lexeme);
