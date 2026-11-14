@@ -23,6 +23,10 @@ Value* evaluate_expr_dispatch(Status* status, Interpreter* interpreter, Expr* ex
     case LITERAL:
         value = evaluate_literal(status, interpreter, (Literal*)expr);
         break;
+    
+    case LOGICAL:
+        value = evaluate_logic(status, interpreter, (Logical*)expr);
+        break;
 
     // hell hole
     case BINARY:
@@ -186,6 +190,67 @@ Value* evaluate_literal(Status* status, Interpreter* interpreter, Literal* liter
     return value;
 }
 
+Value* evaluate_logic(Status* status, Interpreter* interpreter, Logical* logic)
+{
+    // we can do short-circuit but im too lazy
+    Value* lvalue = evaluate_expr_dispatch(status, interpreter, logic->left);
+    if (!STATUS_OK(status)) goto FREE;
+    Value* rvalue = evaluate_expr_dispatch(status, interpreter, logic->right);
+    if (!STATUS_OK(status)) goto LVALUE_FREE;
+
+    // 'booleanize' lvalue and rvalue
+    value_is_truthy(status, lvalue);
+    if (!STATUS_OK(status)) goto RVALUE_FREE;
+    value_is_truthy(status, rvalue);
+    if (!STATUS_OK(status)) goto RVALUE_FREE;
+
+    switch (logic->op) 
+    {
+        case OR:
+        {
+            if (lvalue->payload.boolean)
+            {
+                SET_VALUE_TRUE(lvalue);
+                break;
+            }
+            if (rvalue->payload.boolean)
+            {
+                SET_VALUE_FALSE(lvalue);
+                break;
+            }
+            SET_VALUE_FALSE(lvalue);
+            break;
+        }
+
+        case AND:
+        {
+            if (lvalue->payload.boolean && rvalue->payload.boolean)
+                SET_VALUE_TRUE(lvalue);
+            else 
+                SET_VALUE_FALSE(lvalue);
+            break;
+        }
+        
+        default:
+            SET_STATUS(status, INVALID_TOKEN, 
+                "either a 'and' or an 'or' token (%s ID: %d).", 
+                STR(TokenType), logic->op
+            );
+            goto RVALUE_FREE;
+    }
+
+    value_destruct(status, rvalue);
+    return lvalue;
+
+    RVALUE_FREE:
+    value_destruct(status, rvalue);
+
+    LVALUE_FREE:
+    value_destruct(status, lvalue);
+
+    FREE:
+    return NULL;
+}
 
 // evaluate_binary composite
 

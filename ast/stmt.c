@@ -38,7 +38,6 @@ void stmt_debug_stmt(Status* status, Stmt* stmt,
     PRINT_TABS(indent); printf("STMT:\n");
 
     indent++;
-    PRINT_TABS(indent); printf("expr: \n");
     expr_debug_dispatch(status, stmt->expression, indent);
     indent--;
 }
@@ -49,7 +48,6 @@ void stmt_debug_print_stmt(Status* status, PrintStmt* print_stmt,
     PRINT_TABS(indent); printf("PRINT:\n");
 
     indent++;
-    PRINT_TABS(indent); printf("expr: \n");
     expr_debug_dispatch(status, print_stmt->expression, indent);
     indent--;
 }
@@ -77,7 +75,7 @@ void stmt_debug_var_declare_stmt(Status* status, VarDeclareStmt* var_declare_stm
     PRINT_TABS(indent); printf("VAR DECL: %s\n", var_declare_stmt->name);
 
     indent++;
-    PRINT_TABS(indent); printf("init expr: \n");
+    PRINT_TABS(indent); printf("initializer: \n");
 
     Expr* initializer = var_declare_stmt->initializer;
     if (!initializer)

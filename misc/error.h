@@ -69,6 +69,9 @@ typedef enum{
     NULL_INVALID_VALUE,
     NOT_YET_IMPLEMENTED,
 
+    // token
+    INVALID_TOKEN,
+
     // misc/vector.h
     VECTOR_ALLOCATE_FAILED, 
     VECTOR_INDEXING_ERROR,

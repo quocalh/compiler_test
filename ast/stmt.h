@@ -11,12 +11,20 @@ typedef enum{
     PRINT_STMT,
     BLOCK_STMT,
     VARDECL_STMT,
+    IF_STMT
 } StmtType;
+
 
 typedef struct{
     StmtType type; 
     Expr* expression;
 } Stmt;
+
+typedef struct{
+    Expr* cond;
+    Stmt* if_brnch;
+    Stmt* else_brnch;
+} IfStmt;
 
 typedef struct{
     StmtType type; 

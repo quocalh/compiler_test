@@ -31,6 +31,21 @@ Assign* parser_arena_expr_allocate_assign(Status* status, Parser* parser,
     return ass;
 }
 
+Logical* parser_arena_expr_allocate_logical(Status* status, Parser* parser, 
+    Expr* left, Expr* right, TokenType op)
+{
+    Logical* logic = arena_allocate(status, parser->expression_arena, sizeof(*logic));
+    if (!STATUS_OK(status)) return NULL;
+
+    *logic = (Logical){
+        .left = left,
+        .right = right,
+        .op = op, 
+        .type = LOGICAL,
+    };
+    return logic;
+}
+
 Binary* parser_arena_expr_allocate_binary(Status* status, Parser* parser, 
     Expr* left, Expr* right, TokenType op)
 {
@@ -147,7 +162,7 @@ Expr* parser_expression(Status* status, Parser* parser)
 Expr* parser_assignment(Status* status, Parser* parser)
 {
     // get the lvalue
-    Expr* lvalue = parser_equality(status, parser);
+    Expr* lvalue = parser_or(status, parser);
     if (!STATUS_OK(status)) return NULL;
 
     Token* token = parser_peek_token(status, parser, parser->current);
@@ -159,7 +174,7 @@ Expr* parser_assignment(Status* status, Parser* parser)
         parser->current++;
 
         // allow the a = b = c = 5; syntax
-        Expr* rvalue = parser_assignment(status, parser); 
+        Expr* rvalue = parser_or(status, parser); 
         if (!STATUS_OK(status)) return NULL;
 
         if (lvalue->type == VARIABLE) 
@@ -176,6 +191,60 @@ Expr* parser_assignment(Status* status, Parser* parser)
     }
 
     return lvalue;
+}
+
+// BUG BUG BUG BUG check this and parser_and function, 
+// then test expression | parser | and implement the execute
+Expr* parser_or(Status* status, Parser* parser)
+{
+    Expr* left = parser_and(status, parser);
+    if (!STATUS_OK(status)) return NULL;
+
+    while (parser->current < parser->_tokens->length)
+    {
+        Token* token = parser_peek_token(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+
+        if (token->type == OR)
+            parser->current++;
+        else break;
+
+        Expr* right = parser_and(status, parser);
+        if (!STATUS_OK(status)) return NULL;
+
+        left = (Expr*)parser_arena_expr_allocate_logical(
+            status, parser, left, right, OR
+        );
+        if (!STATUS_OK(status)) return NULL;
+    }
+
+    return left;
+}
+
+Expr* parser_and(Status* status, Parser* parser)
+{
+    Expr* left = parser_equality(status, parser);
+    if (!STATUS_OK(status)) return NULL;
+
+    while (parser->_tokens->length)
+    {
+        Token* token = parser_peek_token(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+
+        if (token->type == AND)
+            parser->current++;
+        else break;
+
+        Expr* right = parser_equality(status, parser);
+        if (!STATUS_OK(status)) return NULL;
+
+        left = (Expr*) parser_arena_expr_allocate_logical(
+            status, parser, left, right, AND
+        );
+        if (!STATUS_OK(status)) return NULL;
+    }
+
+    return left;
 }
 
 // return NULL is justified as the release routine is 

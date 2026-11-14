@@ -16,6 +16,10 @@ void expr_debug_dispatch(Status* status, Expr* expr, int indent)
         case ASSIGN:
             expr_debug_assign(status, (Assign*)expr, indent);
             break;
+        
+        case LOGICAL:
+            expr_debug_logical(status, (Logical*)expr, indent);
+            break;
 
         case BINARY:
             expr_debug_binary(status, (Binary*)expr, indent);
@@ -78,6 +82,34 @@ void expr_debug_assign(Status* status, Assign* assign, int indent)
     PRINT_TABS(indent); printf("rvalue:\n");
     indent++;
     expr_debug_dispatch(status, assign->rvalue, indent);
+    indent--;
+}
+
+void expr_debug_logical(Status* status, Logical* logic, int indent)
+{
+    PRINT_TABS(indent); printf("logic ");
+    switch(logic->op){
+        case AND:
+            printf("(and):\n");
+            break;
+
+        case OR:
+            printf("(or):\n");
+            break;
+
+        default:
+            SET_STATUS(status, INVALID_TOKEN, "invalid token.");
+            printf("\n");
+            return;
+    }
+    PRINT_TABS(indent); printf("left: \n");
+    indent++;
+    expr_debug_dispatch(status, logic->left, indent);
+    indent--;
+
+    PRINT_TABS(indent); printf("right: \n");
+    indent++;
+    expr_debug_dispatch(status, logic->right, indent);
     indent--;
 }
 

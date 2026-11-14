@@ -11,6 +11,7 @@ typedef enum
     LEFT_BRACKET, RIGHT_BRACKET,
 
     PLUS, SIGN, STAR, SLASH, 
+    OR, AND,
 
     SEMICOLON,
     COMA,

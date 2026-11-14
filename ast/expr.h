@@ -6,19 +6,16 @@
 
 typedef enum{
     EXPRESSION,
+    ASSIGN,
+    LOGICAL,
     BINARY,
     UNARY,    
     GROUPING,
-    LITERAL,
-    VARIABLE,
-    ASSIGN,
-
-    // propose an existence of an array, vector
     POSTFIX,
-    // creation of list
+    LITERAL,
     LIST_LITERAL,
-    
-    
+    VARIABLE,
+
     // propose an existence of a hash map (valuetype, value -> buffer)
     GET,
 } ExpressionType;
@@ -69,6 +66,13 @@ typedef struct{
 
 typedef struct{
     ExpressionType type;
+    Expr* left;
+    Expr* right;
+    TokenType op;
+} Logical;
+
+typedef struct{
+    ExpressionType type;
     void* expr;
 } Grouping;
 
@@ -104,6 +108,7 @@ typedef struct{
 void expr_debug_dispatch(Status* status, Expr* expr, int indent);
 void expr_debug_expr(Status* status, Expr* expr, int indent);
 void expr_debug_assign(Status* status, Assign* assign, int indent);
+void expr_debug_logical(Status* status, Logical* logic, int indent);
 void expr_debug_binary(Status* status, Binary* binary, int indent);
 void expr_debug_unary(Status* status, Unary* unary, int indent);
 void expr_debug_grouping(Status* status, Grouping* grouping, int indent);

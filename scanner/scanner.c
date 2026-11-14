@@ -15,17 +15,25 @@ static HashStringToInt* scanner_set_keywords(Status* status)
 
     static const KeyWord keywords[] = {
         {"function", FUNCTION},
-        {"var",      VAR},
-        {"for",      FOR},
-        {"while",    WHILE},
-        {"if",       IF},
-        {"else",     ELSE},
-        {"true",     TRUE},
-        {"false",    FALSE},
-        {"nil",      NIL},
-        {"EOF",      END_OF_FILE},
-        {"PRINT",    PRINT},
-        {"ENDL",     END_LINE},
+
+        {"var",         VAR},
+
+        {"for",         FOR},
+        {"while",       WHILE},
+
+        {"if",          IF},
+        {"else",        ELSE},
+
+        {"or",          OR},
+        {"and",         AND},
+
+        {"true",        TRUE},
+        {"false",       FALSE},
+        {"nil",         NIL},
+
+        {"EOF",         END_OF_FILE},
+        {"PRINT",       PRINT},
+        {"ENDL",        END_LINE},
     };
 
     // wil return a null upon a success init
