@@ -59,6 +59,22 @@ VarDeclareStmt* parser_arena_stmt_allocate_vardecl_stmt(Status* status, Parser* 
     return stmt;
 }
 
+IfStmt* parser_arena_stmt_allocate_if_stmt(Status* status, Parser* parser, 
+    Expr* cond, Stmt* then_brnch, Stmt* else_brnch)
+{
+    IfStmt* stmt = arena_allocate(status, parser->statement_arena, sizeof(*stmt));
+    if (!STATUS_OK(status)) return NULL;
+
+    *stmt = (IfStmt){
+        .type = IF_STMT,
+        .cond = cond,
+        .then_brnch = then_brnch,
+        .else_brnch = else_brnch
+    };
+    return stmt;
+    
+}
+
 // parser statements
 Stmt* parser_stmt(Status* status, Parser* parser)
 {
@@ -153,6 +169,54 @@ BlockStmt* parser_block_stmt(Status* status, Parser* parser)
 
     EXIT: 
     vector_destruct(status, arena_loc_buffer);
+    return stmt;
+}
+
+IfStmt* parser_if_stmt(Status* status, Parser* parser)
+{   // if (cond) stmt (else stmt)
+    Stmt* else_brnch = NULL;
+    Stmt* then_brnch = NULL;
+
+    // consume the if keyword
+    parser->current++;
+
+    // consume the left paren
+    PARSE_CONSUME_TOKEN(status, parser, LEFT_PAREN, 
+        PARSER_PARSE_EXPECT_CHARACTER, "expect a left paren '('.");
+    
+    // consume an expression
+    Expr* cond = parser_expression(status, parser);
+    if (!STATUS_OK(status)) return NULL;
+
+    // consume the right paren
+    PARSE_CONSUME_TOKEN(status, parser, RIGHT_PAREN, 
+        PARSER_PARSE_EXPECT_CHARACTER, "expect a right paren ')'.");
+    
+    then_brnch = parser_parse_declaration(status, parser);
+    if (!STATUS_OK(status)) return NULL;
+
+    // if this is not the end of tokens, then scan the else
+    if (parser->current < parser->_tokens->length)
+    {
+        // consume the else (optional)    
+        Token* token = parser_peek_token(status, parser, parser->current);
+        if (!STATUS_OK(status)) return NULL;
+        if (token->type  == ELSE)
+        {
+            // consume the else
+            parser->current++;
+
+            // consume the else branch
+            else_brnch = parser_parse_declaration(status, parser);
+            if (!STATUS_OK(status)) return NULL;
+        }
+    }
+
+    IfStmt* stmt = parser_arena_stmt_allocate_if_stmt(status, parser, 
+        cond, then_brnch, else_brnch
+    );
+    if (!STATUS_OK(status)) return NULL;
+
     return stmt;
 }
 

@@ -112,6 +112,9 @@ Stmt* parser_parse_statement(Status* status, Parser* parser)
 
     if (token->type == LEFT_BRACE)
         return (Stmt*)parser_block_stmt(status, parser);
+    
+    if (token->type == IF)
+        return (Stmt*)parser_if_stmt(status, parser);
 
     return parser_stmt(status, parser);
 }

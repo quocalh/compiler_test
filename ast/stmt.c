@@ -21,6 +21,10 @@ void stmt_debug_dispatch(Status* status, void* stmt,
             stmt_debug_block_stmt(status, stmt, indent);
             break;
 
+        case IF_STMT:
+            stmt_debug_if_stmt(status, stmt, indent);
+            break;
+
         case VARDECL_STMT:
             stmt_debug_var_declare_stmt(status, stmt, indent);
             break;
@@ -67,6 +71,27 @@ void stmt_debug_block_stmt(Status* status, BlockStmt* block_stmt,
     }
     indent--;
     PRINT_TABS(indent); printf("}\n");
+}
+
+void stmt_debug_if_stmt(Status* status, IfStmt* stmt, int indent)
+{
+    PRINT_TABS(indent); printf("IF COND: \n");
+    indent++;
+    expr_debug_dispatch(status, stmt->cond, indent);
+    indent--;
+
+    PRINT_TABS(indent); printf("THEN: \n");
+    indent++;
+    stmt_debug_dispatch(status, stmt->then_brnch, indent);
+    indent--;
+
+    if (stmt->else_brnch)
+    {
+        PRINT_TABS(indent); printf("ELSE: \n");
+        indent++;
+        stmt_debug_dispatch(status, stmt->else_brnch, indent);
+        indent--;
+    }
 }
 
 void stmt_debug_var_declare_stmt(Status* status, VarDeclareStmt* var_declare_stmt, 

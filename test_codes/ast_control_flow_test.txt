@@ -1,9 +1,41 @@
 
 var a = 6;
 var b = 5;
+
 PRINT 0 and 2 and 3;
 PRINT 1 and 2 and 3;
 PRINT 1 or a or b;
 PRINT 0 or 0;
 
+PRINT "|";
+PRINT "set a = 6";
 
+
+PRINT "|";
+PRINT "if a > 6: say 1 and knee hurt";
+PRINT "if a < 6: say 2";
+PRINT "if a < 6: say ghetto";
+PRINT "|";
+
+
+a = 6;
+
+if (a > 6){
+    PRINT 1;
+    PRINT "knee hurt";
+}
+else if (a < 6){
+    PRINT 2;
+} else 
+    PRINT "ghetto";
+
+var a = 10;
+
+PRINT "|";
+PRINT "set a = 10"; 
+PRINT "|";
+
+if (a == 10)
+{
+    PRINT ("snicker");
+}

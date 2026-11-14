@@ -23,6 +23,11 @@ void interpreter_execute_stmt_dispatch(Status* status,
             interpreter_execute_block_statement(status, 
                 interpreter, (BlockStmt*)stmt);
             break;
+        
+        case IF_STMT:
+            interpreter_execute_if_statement(status, 
+                interpreter, (IfStmt*)stmt);
+            break;
 
         case VARDECL_STMT:
             interpreter_execute_vardecl_statement(status, 
@@ -84,6 +89,38 @@ void interpreter_execute_block_statement(Status* status,
     interpreter->cur_env = new->enclosing;
     interpreter_env_erase(status, new);
     environment_destruct(status, new);
+}
+
+static bool evaluate_truthy_bool_value(Value* value)
+{
+    return (value->payload.boolean);
+}
+void interpreter_execute_if_statement(Status* status, 
+    Interpreter* interpreter, IfStmt* stmt)
+{
+    Value* value = evaluate_expr_dispatch(status, interpreter, stmt->cond);
+    if (!STATUS_OK(status)) return;
+    value_is_truthy(status, value);
+    if (!STATUS_OK(status)) goto VALUE_DESTRUCT;
+
+    bool cond_truthy = evaluate_truthy_bool_value(value);
+
+    value_destruct(status, value);
+    if (!STATUS_OK(status)) return;
+
+    if (cond_truthy)
+    {
+        interpreter_execute_stmt_dispatch(status, interpreter, stmt->then_brnch);
+    }
+    else if (stmt->else_brnch)
+    {
+        interpreter_execute_stmt_dispatch(status, interpreter, stmt->else_brnch);
+    }
+    return;
+
+    VALUE_DESTRUCT:
+    value_destruct(status, value);
+    return;
 }
 
 void interpreter_execute_vardecl_statement(Status* status,

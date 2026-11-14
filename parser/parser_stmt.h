@@ -26,10 +26,16 @@
 
 Stmt* parser_arena_stmt_allocate_stmt(Status* status, Parser* parser, 
     Expr* expr);
+
 PrintStmt* parser_arena_stmt_allocate_print_stmt(Status* status, Parser* parser, 
     Expr* expr);
+
 BlockStmt* parser_arena_stmt_allocate_block_stmt(Status* status, Parser* parser, 
     size_t length, Stmt* head);
+
+VarDeclareStmt* parser_arena_stmt_allocate_vardecl_stmt(Status* status, Parser* parser, 
+    const char* name, Expr* initializer);
+
 VarDeclareStmt* parser_arena_stmt_allocate_vardecl_stmt(Status* status, Parser* parser, 
     const char* name, Expr* initializer);
 
@@ -41,6 +47,7 @@ Stmt* parser_parse_declaration(Status* status, Parser* parser);
 Stmt* parser_stmt(Status* status, Parser* parser);
 PrintStmt* parser_print_stmt(Status* status, Parser* parser);
 BlockStmt* parser_block_stmt(Status* staus, Parser* parser);
+IfStmt* parser_if_stmt(Status* status, Parser* parser);
 VarDeclareStmt* parser_vardecl_stmt(Status* status, Parser* parser);
 
 #endif

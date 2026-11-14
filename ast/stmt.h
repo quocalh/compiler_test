@@ -11,7 +11,9 @@ typedef enum{
     PRINT_STMT,
     BLOCK_STMT,
     VARDECL_STMT,
-    IF_STMT
+    IF_STMT,
+    FOR_STMT,
+    WHILE_STMT,
 } StmtType;
 
 
@@ -21,8 +23,9 @@ typedef struct{
 } Stmt;
 
 typedef struct{
+    StmtType type; 
     Expr* cond;
-    Stmt* if_brnch;
+    Stmt* then_brnch;
     Stmt* else_brnch;
 } IfStmt;
 
@@ -57,9 +60,14 @@ void stmt_debug_dispatch(Status* status, void* stmt,
 
 void stmt_debug_stmt(Status* status, Stmt* stmt, 
     int indent);
+
 void stmt_debug_print_stmt(Status* status, PrintStmt* print_stmt, 
     int indent);
+
 void stmt_debug_block_stmt(Status* status, BlockStmt* block_stmt, 
+    int indent);
+
+void stmt_debug_if_stmt(Status* status, IfStmt* stmt, 
     int indent);
 
 void stmt_debug_var_declare_stmt(Status* status, VarDeclareStmt* 
